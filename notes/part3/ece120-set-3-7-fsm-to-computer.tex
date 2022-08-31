@@ -1,0 +1,515 @@
+\classtitle
+
+\subsection{From FSM to Computer}
+
+The FSM designs we have explored so far have started with a human-based
+design process in which someone writes down the desired behavior in
+terms of states, inputs, outputs, and transitions.  Such an approach
+makes it easier to build a digital FSM, since the abstraction used
+corresponds almost directly to the implementation.
+
+As an alternative, one can start by mapping the desired task into a
+high-level programming language, then using components such as registers,
+counters, and memories to implement the variables needed.  In this approach,
+the control structure of the code maps into a high-level FSM design.
+Of course, in order to implement our FSM with digital logic, we eventually
+still need to map down to bits and gates.
+
+In this set of notes, we show how one can transform a piece of code
+written in a high-level language into an FSM.  This process is meant to
+help you understand how we can design an FSM that executes simple
+pieces of a flow chart such as assignments, {\tfix if} statements, and 
+loops.  Later, we generalize this concept and build an FSM that allows
+the pieces to be executed to be specified after the FSM is built---in 
+other words, the FSM executes a program specified by bits stored in 
+memory.  This more general model, as you might have already guessed, 
+is a computer.  \\
+
+\subsubsection{Specifying the Problem}
+
+Let's begin by specifying the problem that we want to solve.
+Say that we want to find the minimum value in a set of~10 integers.
+Using the~C programming language, we can write the following fragment of 
+code:\\
+
+\centerline{\begin{minipage}{4in}
+{\fix
+\begin{tabbing}
+aaaa\=aaaa\=\kill
+int \>values[10];~~~~/* 10 integers--filled in by other code */\\
+int \>idx;\\
+int \>min\\
+\\
+min = values[0];\\
+for (idx = 1; 10 > idx; idx = idx + 1) \{\\
+\>  if (min > values[idx]) \{\\
+\>  \>  min = values[idx];\\
+\>  \}\\
+\}\\
+/* The minimum value from array is now in min. */
+\end{tabbing}
+}
+\end{minipage}}
+
+The code uses array notation, which we have not used previously in our 
+class, so let's first discuss the meaning of the code.
+
+The code uses three variables.
+%
+The variable {\tfix values} represents the~10 values in our set.
+The suffix ``[10]'' after the variable name tells the compiler that
+we want an array of~10 integers~({\tfix int}) indexed from~0 to~9.
+These integers can be treated as~10 separate variables, but can be
+accessed using the single name ``{\tfix values}'' along with an index
+(again, from~0 to~9 in this case).
+%
+The variable {\tfix idx} holds a loop index that we use to examine each
+of the values one by one in order to find the minimum value in the set.
+%
+Finally, the variable {\tfix min} holds the smallest known value as 
+the program examines each of the values in the set.
+
+The program body consists of two statements.  
+%
+We assume that some other piece of code---one not shown here---has 
+initialized the~10 values in our set before the code above executes.
+%
+The first statement initializes the
+minimum known value ({\tfix min}) to the value stored at index~0 in the 
+array~({\tfix values[0]}).
+The second statement is a loop in which the variable {\tfix index} 
+takes on values from~1 to~9.  For each value, an {\tfix if} statement
+compares the current
+known minimum with the value stored in the array at index given by the
+{\tfix idx} variable.  If the stored value is smaller, the current known 
+value (again, {\tfix min}) is updated to reflect the program's
+having found a smaller value.  When the loop finishes all nine iterations,
+the variable {\tfix min} holds the smallest value among the set of~10 
+integers stored in the {\tfix values} array.
+
+\begin{minipage}{2.47in}
+As a first step towards designing an FSM to implement the code, we transform
+the code into a flow chart, as shown to the right.  The program again begins
+with initialization, which appears in the second column of the flow chart.  
+The loop in the program translates to the third column of the flow chart, 
+and the {\tfix if} statement to the middle comparison and update 
+of {\tfix min}.\mpline
+
+Our goal is now to design an FSM to implement the flow chart.  In order
+to do so, we want to leverage the same kind of abstraction that we used
+earlier, when extending our keyless entry system with a timer.  Although the
+timer's value was technically also\linebreak\mpdone
+\end{minipage}\hspace{.25in}%
+\begin{minipage}{3.78in}
+\centerline{\epsfig{file=part3/figs/part3-min-flow-chart.eps,width=3.78in}}
+\end{minipage}
+
+part of the FSM's state, we treated it
+as data and integrated it into our next-state decisions in only a couple
+of cases.
+
+For our minimum value problem, we have two sources of data.  First, an
+external program supplies data in the form of a set of~10 integers.  If
+we assume~\mbox{32-bit} integers, these data technically form 320~input bits!
+Second, as with the keyless entry system timer, we have data used internally
+by our FSM, such as the loop index and the current minimum value.  These
+are technically state bits.  For both types of data, we treat them
+abstractly as values rather than thinking of them individually as bits,
+allowing us to develop our FSM at a high-level and then to implement it 
+using the components that we have developed earlier in our course.\\
+
+\subsubsection{Choosing Components and Identifying States}
+
+Now we are ready to design an FSM that implements the flow chart.
+What components do we need, other than our state logic?
+We use registers and counters to implement the variables {\tfix idx}
+and {\tfix min} in the program.
+For the array {\tfix values}, we use a~\mbox{16$\times$32-bit} 
+memory.\footnote{We technically only need a~\mbox{10$\times$32-bit} 
+memory, but we round up the size of the address space to reflect more
+realistic memory designs; one can always optimize later.}
+We need a comparator to implement the test for the {\tfix if} statement.
+We choose to use a serial comparator, which allows us to illustrate again
+how one logical high-level state can be subdivided into many actual states.
+To operate the serial comparator, we make use of two shift registers that 
+present the comparator with one bit per cycle on each input, and a counter
+to keep track of the comparator's progress.
+
+How do we identify high-level states from our flow chart?  Although
+the flow chart attempts to break down the program into `simple' steps,
+one step of a flow chart may sometimes require more than one state
+in an FSM.  Similarly, one FSM state may be able to implement several
+steps in a flow chart, if those steps can be performed simultaneously.
+Our design illustrates both possibilities.
+
+How we map flow chart elements into FSM states also depends to some 
+degree on what components we use, which is why we began with some discussion
+of components.  In practice, one can go back and forth between the two, 
+adjusting components to better match the high-level states, and adjusting 
+states to better match the desired components.
+
+Finally, note that we are only concerned with high-level states, so we do 
+not need to provide details (yet) down to the level of individual clock 
+cycles, but we do want to define high-level states that can be implemented
+in a fixed number of cycles, or at least a controllable number of cycles.
+If we cannot specify clearly when transitions occur from an FSM state, we
+may not be able to implement the state.
+
+\pagebreak
+
+Now let's go through the flow chart and identify states.  Initialization of
+{\tfix min} and {\tfix idx} need not occur serially, and the result of the
+first comparison between {\tfix idx} and the constant~10 is known in advance,
+so we can merge all three operations into a single state, which we 
+call {\tfix INIT}.
+
+We can also merge the updates of {\tfix min} and {\tfix idx} into a second
+FSM state, which we call {\tfix COPY}.  However, the update to {\tfix min} 
+occurs only when the comparison ({\tfix min > value[idx]}) is true.  
+We can use logic to predicate execution of the update.  In other words, we 
+can use the output of the comparator, which is available after the comparator 
+has finished comparing the two values (in a high-level FSM state that we 
+have yet to define), to determine whether or not the register holding 
+{\tfix min} loads a new value in the {\tfix COPY} state.
+
+Our model of use for this FSM involves external logic filling the memory
+(the array of integer values), executing the FSM ``code,'' and then
+checking the answer.  To support this use model, we create a FSM state 
+called {\tfix WAIT} for cycles in which the FSM has no work to do.
+Later, we also make use of an external input signal {\tfix START} 
+to start the FSM
+execution.  The {\tfix WAIT} state logically corresponds to the ``START'' 
+bubble in the flow chart.
+
+\begin{minipage}{2.29in}
+Only the test for the {\tfix if} statement remains.  Using a serial
+comparator to compare two~\mbox{32-bit} values requires~32~cycles.
+However, we need an additional cycle to move values into our shift 
+registers so that the comparator can see the first bit.  Thus our
+single comparison operation breaks into two high-level states.  In the
+first state, which we call {\tfix PREP}, we copy {\tfix min} to one
+of the shift registers, copy {\tfix values[idx]} to the other shift
+register, and reset the counter that measures the cycles needed for
+our serial comparator.  We then move to a second high-level state,
+which we call {\tfix COMPARE}, in which we feed one bit per cycle
+from each shift register to the serial comparator.  The {\tfix COMPARE} 
+state\linebreak\mpdone
+\end{minipage}\hspace{.25in}%
+\begin{minipage}{3.96in}
+\centerline{\epsfig{file=part3/figs/part3-min-flow-chart-states.eps,width=3.96in}}
+\end{minipage}
+
+executes for~32~cycles, after which the comparator
+produces the one-bit answer that we need, and we can move to the
+{\tfix COPY} state.  The association between the flow chart and the
+high-level FSM states is illustrated in the figure shown to the right
+above.
+
+\begin{minipage}{3.25in}
+We can now also draw an abstract state diagram for our FSM, as shown
+to the right.  The FSM begins in the {\tfix WAIT} state.  After external
+logic fills the {\tfix values} array, it signals the FSM to begin by
+raising the {\tfix START} signal.  The FSM transitions into the 
+{\tfix INIT} state, and in the next cycle into the {\tfix PREP} state.
+From {\tfix PREP}, the FSM always moves to {\tfix COMPARE}, where it
+remains for 32~cycles while the serial comparator executes a comparison.
+After {\tfix COMPARE}, the FSM moves to the {\tfix COPY}\linebreak\mpdone
+\end{minipage}\hspace{.25in}%
+\begin{minipage}{3in}
+\centerline{\epsfig{file=part3/figs/part3-min-state-diag.eps,width=3in}}
+\end{minipage}
+
+state, where
+it remains for one cycle.  The transition from {\tfix COPY} depends on
+how many loop iterations have executed.  If more loop iterations remain,
+the FSM moves to {\tfix PREP} to execute the next iteration.  If the
+loop is done, the FSM returns to {\tfix WAIT} to allow external logic
+to read the result of the computation.\\
+
+\pagebreak
+
+\subsubsection{Laying Out Components}
+
+\begin{minipage}{2.41in}
+Our high-level FSM design tells us what our components need to be able to
+do in any given cycle.  For example, when we load new values into the shift
+registers that provide bits to the serial comparator, we always copy 
+{\tfix min} into one shift register and {\tfix values[idx]} into the second.
+Using this information, we can put together our components and simplify our
+design by fixing the way in which bits flow between them.\mpline
+
+The figure at the right shows how we can organize our components.
+Again, in practice, one goes back and forth thinking about states,
+components, and flow from state to state.  In these notes, we 
+present only a completed design.\mpline
+
+Let's take a detailed look at each of the components.
+%
+At the upper left of the figure is a \mbox{4-bit} binary counter called
+{\tfix IDX} to hold the {\tfix idx}
+variable.  The counter can be reset to~0 using the {\tfix RST} input.
+Otherwise, the {\tfix CNT} input controls whether or not the counter
+increments its value.  With this counter design, we can force {\tfix idx} 
+to~0 in the {\tfix WAIT} state and then count upwards in the {\tfix INIT}
+and {\tfix COPY} states.
+\end{minipage}\hspace{.25in}%
+\begin{minipage}{3.84in}
+\centerline{\epsfig{file=part3/figs/part3-min-components.eps,width=3.84in}}
+\end{minipage}
+
+A memory labeled {\tfix VALUES} to hold the array {\tfix values} appears 
+in the upper right of
+the figure.  The read/write control for the memory is hardwired to~1~(read)
+in the figure, and the data input lines are unattached.  To integrate 
+with other logic that can operate our FSM, we need to add more 
+control logic to allow writing into the memory and to attach the data
+inputs to something that provides the data bits.  The address input of
+the memory comes always from the {\tfix IDX} counter value; in other words,
+whenever we access this memory by making use of the data output lines,
+we read {\tfix values[idx]}.
+
+In the middle left of the figure is a \mbox{32-bit} register for the 
+{\tfix min} variable.  It has a control input {\tfix LD} that 
+determines whether or not it loads a new value at the end of the clock
+cycle.  If a new value is loaded, the new value always corresponds to
+the output of the {\tfix VALUES} memory, {\tfix values[idx]}.  Recall
+that {\tfix min} always changes in the {\tfix INIT} state, and may change
+in the {\tfix COPY} state.  But the new value stored in {\tfix min}
+is always {\tfix values[idx]}. 
+Note also that when the FSM completes its task, the result of the 
+computation is left in the {\tfix MIN} register for external logic to
+read (connections for this purpose are not shown in the figure).
+
+Continuing downward in the figure, we see two right shift registers
+labeled~{\tfix A} and~{\tfix B}.  Each has a control input {\tfix LD}
+that enables a parallel load.  Register~{\tfix A} loads from register
+{\tfix MIN}, and register~{\tfix B} loads from the memory data output
+({\tfix values[idx]}).  These loads are needed in the {\tfix PREP}
+state of our FSM.  When {\tfix LD} is low, the shift registers
+simply shifts to the right.  The serial output {\tfix SO} makes the
+least significant bit of each shift register available.  Shifting
+is necessary to feed the serial comparator in the {\tfix COMPARE} state.
+
+Below register~{\tfix A} is a \mbox{5-bit} binary counter called {\tfix CNT}.
+The counter is used to control the serial comparator in the {\tfix COMPARE}
+state.  A reset input {\tfix RST} allows it to be forced to~0 in the 
+{\tfix PREP} state.  When the counter value is exactly zero, the 
+output~{\tfix Z} is high.
+
+\pagebreak
+
+The last major component is the serial comparator, which is based on the
+design developed in Notes~Set~3.1.  The two bits to be compared in 
+a cycle come from shift registers~{\tfix A} and~{\tfix B}.  The first
+bit indicator comes from the zero indicator of counter~{\tfix CNT}.
+The comparator actually produces two outputs ({\tfix Z1} and {\tfix Z0}),
+but the meaning of the
+{\tfix Z1} output by itself is {\tfix A~$>$~B}.  In the diagram,
+this signal has been labeled~{\tfix THEN}.
+
+There are two additional elements in the figure that we have yet to discuss.
+Each simply compares the value in a register with a fixed constant and 
+produces a~\mbox{1-bit} signal.  When the FSM finishes an iteration of
+the loop in the {\tfix COPY} state, it must check the loop condition
+({\tfix 10~$>$~idx}) and move either to the {\tfix PREP} state or, when
+the loop finishes, to the {\tfix WAIT} state to let the external logic
+read the answer from the {\tfix MIN} register.  The loop is done when the
+current iteration count is nine, so we compare {\tfix IDX} with nine to
+produce the {\tfix DONE} signal.  The other constant comparison is between
+the counter {\tfix CNT} and the value~31 to produce the {\tfix LAST} signal,
+which indicates that the serial comparator is on its last cycle of 
+comparison.  In the cycle after {\tfix LAST} is high, the {\tfix THEN} 
+output of the comparator indicates whether or not {\tfix A~$>$~B}.\\
+
+\subsubsection{Control and Data}
+
+One can think of the components and the interconnections between them
+as enabling the movement of data between registers, while the high-level 
+FSM controls which data move from register to register in each cycle.  
+%
+With this model in mind, we call the components and interconnections
+for our design the {\bf datapath}---a term that we will see again when
+we examine the parts of a computer in the coming weeks.
+%
+The datapath requires several inputs to control the operation of the
+components---these we can treat as outputs of the FSM.
+These signals allow the FSM to control the motion of data in the 
+datapath, so we call them {\bf control signals}.
+%
+Similarly, the datapath produces several outputs that we can treat
+as inputs to the FSM.
+%
+The tables below summarize the control signals (left) and outputs (right)
+from the datapath for our FSM.
+
+\begin{minipage}[t]{3in}
+\begin{tabular}{|c|l|}\hline
+datapath& \\
+input& \multicolumn{1}{|c|}{meaning}\\ \hline
+{\tfix IDX.RST}& reset {\tfix IDX} counter to 0\\
+{\tfix IDX.CNT}& increment {\tfix IDX} counter\\
+{\tfix MIN.LD}& load new value into {\tfix MIN} register\\
+{\tfix A.LD}& load new value into shift register {\tfix A}\\
+{\tfix B.LD}& load new value into shift register {\tfix B}\\
+{\tfix CNT.RST}& reset {\tfix CNT} counter\\ \hline
+\end{tabular}
+\end{minipage}\hspace{0.15in}%
+\begin{minipage}[t]{3.35in}
+\begin{tabular}{|c|l|c|}\hline
+datapath& &\\
+output& \multicolumn{1}{|c|}{meaning}& based on\\ \hline
+{\tfix DONE}& last loop iteration finished& {\tfix IDX~=~9}\\
+{\tfix LAST}& serial comparator executing& {\tfix CNT~=~31}\\
+& ~~~last cycle&\\
+{\tfix THEN}& {\tfix if} statement condition true& {\tfix A~$>$~B}\\ \hline
+\multicolumn{3}{c}{}\\
+\multicolumn{3}{c}{}\\
+\end{tabular}
+\end{minipage}\\
+
+Using the datapath controls signals and outputs, we can now write a more
+formal state transition table for the FSM, as shown below.
+%
+The ``actions'' column of the table
+lists the changes to register and counter values
+that are made in each of the FSM states.  The notation used to represent
+the actions is called {\bf register transfer language} ({\bf RTL}).
+The meaning of an individual action is similar to the meaning of the 
+corresponding statement from our C~code or from the flow chart.
+For example, in the {\tfix WAIT} state, ``{\tfix IDX~$\leftarrow$~0}''
+means the same thing as ``{\tfix idx = 0;}''.  In particular, both mean
+that the value currently stored in the {\tfix IDX} counter is overwritten 
+with the number~0 (all~0 bits).
+
+
+\begin{minipage}{1.25in}
+The meaning of RTL is slightly different from the usual interpretation of
+high-level programming languages, however, in terms of when the actions
+happen.  A list of C statements is generally executed one at a time.
+%
+In contrast, the entire list of RTL actions\linebreak\mpdone
+\end{minipage}\hspace{.25in}%
+\begin{minipage}{5in}
+\begin{tabular}{|c|l|c|c|}\hline
+state& \multicolumn{1}{|c|}{actions (simultaneous)}& condition& next state\\ \hline
+{\tfix WAIT}& {\tfix IDX}~$\leftarrow$~0 (to read {\tfix VALUES[0]} in {\tfix INIT})& {\tfix START}& {\tfix INIT}\\ 
+&& $\overline{\mbox{\tfix START}}$& {\tfix WAIT}\\ \hline
+{\tfix INIT}& {\tfix MIN}~$\leftarrow$~{\tfix VALUES[IDX]} ({\tfix IDX} is 0 in this state)& (always)& {\tfix PREP}\\ 
+& {\tfix IDX}~$\leftarrow$~{\tfix IDX} + 1& &\\ \hline
+{\tfix PREP}& {\tfix A}~$\leftarrow$~{\tfix MIN}& (always)& {\tfix COMPARE}\\
+& {\tfix B}~$\leftarrow$~{\tfix VALUES[IDX]}& &\\
+& {\tfix CNT}~$\leftarrow$~0& &\\ \hline
+{\tfix COMPARE}& run serial comparator& {\tfix LAST}& {\tfix COPY}\\
+&& $\overline{\mbox{\tfix LAST}}$& {\tfix COMPARE}\\ \hline
+{\tfix COPY}& {\tfix THEN}: {\tfix MIN}~$\leftarrow$~{\tfix VALUES[IDX]}& {\tfix DONE}& {\tfix WAIT}\\ 
+& {\tfix IDX}~$\leftarrow$~{\tfix IDX} + 1& $\overline{\mbox{\tfix DONE}}$& {\tfix PREP}\\ \hline
+\end{tabular}
+\end{minipage}
+
+for an FSM state is executed
+simultaneously, at the end of the clock cycle.  As you know, an FSM moves 
+from its current state into a new state at the end of every clock cycle,
+so actions during different cycles usually are associated with different 
+states.
+We can, however, change the value in more than one register at the end 
+of the same clock cycle, so we can execute more than one RTL action in
+the same state, so long as the actions do not exceed the capabilities
+of our datapath (the components must be able to support the simultaneous 
+execution of the actions).  Some care must be taken with states that 
+execute for more than one cycle to ensure that repeating the 
+RTL actions is appropriate.  In our design, only the {\tfix WAIT} and
+{\tfix COMPARE} states execute for more than one cycle.  The {\tfix WAIT}
+state resets the {\tfix IDX} counter repeatedly, which causes no problems.
+The {\tfix COMPARE} statement has no RTL actions---all of the shifting,
+comparison, and counting activity needed to do its work occurs within 
+the datapath itself.
+
+One additional piece of RTL syntax needs explanation.  In the {\tfix COPY}
+state, the first action begins with ``{\tfix THEN}:,'' which means that the 
+prefixed RTL action occurs only when the {\tfix THEN} signal is high.
+Recall that the {\tfix THEN} signal indicates that the comparator has
+found {\tfix A~$>$~B}, so the equivalent C~code is ``{\tfix if (A~$>$~B) 
+\{min~=~values[idx]\}}''.\\
+
+\subsubsection{State Representation and Logic Expressions}
+
+Let's think about the representation for the FSM states.  The FSM has 
+five states, so we could use as few as three flip-flops.  Instead, we choose
+to use a {\bf one-hot encoding}, in which any valid bit pattern has exactly
+one~1~bit.  In other words, we use five flip-flops instead of three,
+and our states are represented with the bit patterns 10000, 01000, 00100,
+00010, and 00001.
+
+The table below shows the mapping from each high-level state to 
+both the five-bit encoding for the state as well as the six control signals 
+needed for the datapath.  For each state, the values of the control signals
+can be found by examining the actions necessary in that state.\\
+
+\centerline{
+\begin{tabular}{|c|c|cccccc|}\hline
+state& {\tfix S$_4$S$_3$S$_2$S$_1$S$_0$}& {\tfix IDX.RST}& {\tfix IDX.CNT}& {\tfix MIN.LD}& {\tfix A.LD}& {\tfix B.LD}& {\tfix CNT.RST}\\ \hline
+{\tfix WAIT}& {\tfix 1~0~0~0~0}& 1& 0& 0& 0& 0& 0\\
+{\tfix INIT}& {\tfix 0~1~0~0~0}& 0& 1& 1& 0& 0& 0\\
+{\tfix PREP}& {\tfix 0~0~1~0~0}& 0& 0& 0& 1& 1& 1\\
+{\tfix COMPARE}& {\tfix 0~0~0~1~0}& 0& 0& 0& 0& 0& 0\\
+{\tfix COPY}& {\tfix 0~0~0~0~1}& 0& 1& {\tfix THEN}& 0& 0& 0\\ \hline
+\multicolumn{8}{c}{}\\
+\end{tabular}
+}
+
+The {\tfix WAIT} state needs to set {\tfix IDX} to~0 but need not affect 
+other register or counter values, so {\tfix WAIT} produces a~1 only for
+{\tfix IDX.RST}.  The {\tfix INIT} state needs to load {\tfix values[0]} into 
+the {\tfix MIN} register while simultaneously incrementing the {\tfix IDX}
+counter (from~0 to~1), so {\tfix INIT} produces~1s for {\tfix IDX.CNT}
+and {\tfix MIN.LD}.  The {\tfix PREP} state loads both shift registers
+and resets the counter {\tfix CNT} by producing~1s for {\tfix A.LD},
+{\tfix B.LD}, and {\tfix CNT.RST}.  The {\tfix COMPARE} state does not
+change any register values, so it produces all~0s.  Finally, the {\tfix COPY}
+state increments the {\tfix IDX} counter while simultaneously loading a
+new value into the {\tfix MIN} register.  The {\tfix COPY} state produces~1
+for {\tfix IDX.CNT}, but must use the signal {\tfix THEN} coming from the
+datapath to decide whether or not {\tfix MIN} is loaded.
+
+\begin{minipage}{2.15in}
+\vspace{8pt}
+The advantage of a one-hot encoding becomes obvious when we write
+equations for the six control signals and the next-state logic, as shown
+to the right.  
+%
+Implementing the logic to complete our design now requires only a handful 
+of small logic gates.
+\end{minipage}\hspace{0.4in}%
+\begin{minipage}{1.7in}
+\begin{eqnarray*}
+{\tfix IDX.RST} & = & {\tfix S}_4\\
+{\tfix IDX.CNT} & = & {\tfix S}_3 + {\tfix S}_0\\
+{\tfix MIN.LD} & = & {\tfix S}_3 + {\tfix S}_0 \cdot {\tfix THEN}\\
+{\tfix A.LD} & = & {\tfix S}_2\\
+{\tfix B.LD} & = & {\tfix S}_2\\
+{\tfix CNT.RST} & = & {\tfix S}_2
+\end{eqnarray*}
+\end{minipage}\hspace{0.4in}%
+\begin{minipage}{1.85in}
+\begin{eqnarray*}
+{\tfix S}_4^+ & = & {\tfix S}_4 \cdot \overline{\tfix START} + {\tfix S}_0 \cdot {\tfix DONE}\\
+{\tfix S}_3^+ & = & {\tfix S}_4 \cdot {\tfix START}\\
+{\tfix S}_2^+ & = & {\tfix S}_3 + {\tfix S}_0 \cdot \overline{\tfix DONE}\\
+{\tfix S}_1^+ & = & {\tfix S}_2 + {\tfix S}_1 \cdot \overline{\tfix LAST}\\
+{\tfix S}_0^+ & = & {\tfix S}_1 \cdot {\tfix LAST}\\
+\end{eqnarray*}
+\end{minipage}
+
+Notice that the terms in each control signal can be read directly from 
+the rows of the state table and OR'd together.  The terms in each of the
+next-state equations represent the incoming arcs for the corresponding
+state.  For example, the {\tfix WAIT} state has one self-loop (the first
+term) and a transition arc coming from the {\tfix COPY} state when the
+loop is done.
+%
+These expressions complete our design.
+
+\vfill
+
+\pagebreak
+

@@ -1,0 +1,255 @@
+\classtitle
+
+\subsection{Summary of Part 2 of the Course}
+
+These notes supplement the Patt and Patel textbook, so you will also 
+need to read and understand the relevant chapters (see the syllabus)
+in order to master this material completely.
+
+The difficulty of learning depends on the type of task involved.
+Remembering new terminology is relatively easy, while applying
+the ideas underlying design decisions shown by example to new problems 
+posed as human tasks is relatively hard.
+%
+In this short summary, we give you lists at several levels of difficulty 
+of what we expect you to be able to do as a result of the last few weeks 
+of studying (reading, listening, doing homework, discussing your 
+understanding with your classmates, and so forth).
+
+We'll start with the skills, and leave the easy stuff for the next page.
+%
+We expect you to be able to exercise the following skills:
+
+\begin{list}{$\bullet$}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+
+\item{Design a CMOS gate for a simple Boolean function from n-type 
+and p-type transistors.}
+
+\item{Apply DeMorgan's laws repeatedly to simplify the form of
+the complement of a Boolean expression.}
+
+\item{Use a K-map to find a reasonable expression for a Boolean function (for
+example, in POS or SOP form with the minimal number of terms).}
+
+\item{More generally, translate Boolean logic functions among 
+concise algebraic, truth table, K-map, and canonical (minterm/maxterm) forms.}
+
+\end{list}
+
+When designing combinational logic, we expect you to be able to apply
+the following design strategies:
+
+\begin{list}{$\bullet$}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+
+\item{Make use of human algorithms 
+(for example, multiplication from addition).}
+
+\item{Determine whether a bit-sliced approach is applicable, and, if so,
+make use of one.}
+
+\item{Break truth tables into parts so as to solve each part of a function 
+separately.}
+
+\item{Make use of known abstractions (adders, comparators, muxes, or other
+abstractions available to you) to simplify the problem.}
+
+\end{list}
+
+And, at the highest level, we expect that you will be able to do the following:
+
+\begin{list}{$\bullet$}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+
+\item{Understand and be able to reason at a high-level about circuit design
+tradeoffs between area/cost and performance (and to know that power is also 
+important, but we haven't given you any quantification methods).}
+
+\item{Understand the tradeoffs typically made to develop bit-sliced 
+designs---typically, bit-sliced designs are simpler but bigger and 
+slower---and how one can develop variants between the extremes of
+the bit-sliced approach and optimization of functions specific
+to an~\mbox{$N$-bit} design.}
+
+\item{Understand the pitfalls of marking a function's value as ``don't care'' 
+for some input combinations, and recognize that implementations do not 
+produce ``don't care.''}
+
+\item{Understand the tradeoffs involved in selecting a representation for
+communicating information between elements in a design, such as the bit 
+slices in a bit-sliced design.}
+
+\item{Explain the operation of a latch or a flip-flop, particularly in 
+terms of the bistable states used to hold a bit.}
+
+\item{Understand and be able to articulate the value of the clocked 
+synchronous design abstraction.}
+
+\end{list}
+
+\vfill
+
+\pagebreak
+
+You should recognize all of these terms
+and be able to explain what they mean.  For the specific circuits, you 
+should be able to draw them and explain how they work.
+%
+Actually, we don't care whether you can draw something from memory---a full
+adder, for example---provided that you know what a full adder does and can
+derive a gate diagram correctly for one in a few minutes.  Higher-level
+skills are much more valuable.  
+
+\begin{minipage}[t]{2.8in}
+\begin{list}{$\bullet$}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+
+\item{Boolean functions and logic gates}
+\begin{list}{-}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item{NOT/inverter}
+\item{AND}
+\item{OR}
+\item{XOR}
+\item{NAND}
+\item{NOR}
+\item{XNOR}
+\item{majority function}
+\end{list}
+
+\item{specific logic circuits}
+\begin{list}{-}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item{full adder}
+%\item{half adder}
+\item{ripple carry adder}
+\item N-to-M multiplexer (mux)
+\item N-to-2N decoder
+\item{\mbox{$\bar{\mbox{R}}$-$\bar{\mbox{S}}$~latch}}
+\item{\mbox{R-S~latch}}
+\item{gated D latch}
+%
+% SSL altered term 3 Dec 21 
+%
+%\item{master-slave implementation of a positive edge-triggered D~flip-flop}
+\item{dual-latch implementation of a positive edge-triggered D~flip-flop}
+\item{(bidirectional) shift register}
+\item{register supporting parallel load}
+\end{list}
+
+\item{design metrics}
+\begin{list}{-}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item{metric}
+\item{optimal}
+\item{heuristic}
+\item{constraints}
+\item{power, area/cost, performance}
+\item{computer-aided design (CAD) tools}
+\item{gate delay}
+\end{list}
+
+\item{general math concepts}
+\begin{list}{-}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item{canonical form}
+%\item{domain of a function}
+\item{\mbox{$N$-dimensional} hypercube}
+\end{list}
+
+\item{tools for solving logic problems}
+\begin{list}{-}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item{truth table}
+\item{Karnaugh map (K-map)}
+\item{implicant}
+\item{prime implicant}
+\item{bit-slicing}
+\item{timing diagram}
+\end{list}
+
+\end{list}
+\end{minipage}\hspace{.70in}%
+\begin{minipage}[t]{3in}
+\begin{list}{$\bullet$}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+
+\item{device technology}
+\begin{list}{-}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item{complementary metal-oxide\\ semiconductor (CMOS)}
+\item{field effect transistor (FET)}
+\item{transistor gate, source, drain}
+\end{list}
+
+\item{Boolean logic terms}
+\begin{list}{-}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item{literal}
+\item{algebraic properties}
+\item{dual form, principle of duality}
+\item{sum, product}
+\item{minterm, maxterm}
+\item{sum-of-products (SOP)}
+\item{product-of-sums (POS)}
+\item{canonical sum/SOP form}
+\item{canonical product/POS form}
+\item{logical equivalence}
+\end{list}
+
+\item{digital systems terms}
+\begin{list}{-}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item{word size}
+\item{\mbox{$N$-bit} Gray code}
+\item{combinational/combinatorial logic}
+\begin{list}{-}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item{two-level logic}
+\item{``don't care'' outputs (x's)}
+\end{list}
+\item{sequential logic}
+\begin{list}{-}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item{state}
+\item{active low input}
+\item{set a bit (to 1)}
+\item{reset a bit (to 0)}
+%
+% SSL altered term 3 Dec 21 
+%
+%\item{master-slave implementation}
+\item{dual-latch implementation}
+\item{positive edge-triggered}
+\end{list}
+\item{clock signal}
+\begin{list}{-}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item{square wave}
+\item{rising/positive clock edge}
+\item{falling/negative clock edge}
+\item{clock gating}
+\end{list}
+\item{clocked synchronous sequential circuit}
+\item{parallel/serial load of register}
+% FIXME?  too informal to ask them to remember it
+% \item{glue logic}
+\item{logical/arithmetic/cyclic shift}
+\end{list}
+
+
+\end{list}
+
+\end{minipage}\hspace{.25in}
+
+\pagebreak
+
+\mbox{~~~} % blank 3rd page
+
+
+
+\vfill
+
+\pagebreak
+

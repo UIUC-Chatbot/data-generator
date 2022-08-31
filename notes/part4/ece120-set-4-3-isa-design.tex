@@ -1,0 +1,805 @@
+\classtitle
+
+\subsection{Instruction Set Architecture*}
+
+This set of notes discusses 
+tradeoffs and design elements of instruction set architectures (ISAs).
+{\it The material is beyond the scope of our class, and is provided purely
+for your interest.}  Those who find these topics interesting
+may also want to read the ECE391 notes, which describe similar material
+with a focus on the x86 ISA.
+
+As you know, the ISA
+defines the interface between software and hardware, abstracting the
+capabilities of a computer's datapath and standardizing the format of
+instructions to utilize those capabilities.  Successful ISAs are
+rarely discarded, as success implies the existence of large amounts of
+software built to use the ISA.  Rather, they are extended, and their
+original forms must be supported for decades (consider, for example,
+the IBM~360 and the Intel~x86).  Employing sound design principles
+is thus imperative in an ISA.\\
+
+\subsubsection{Formats and Fields*}
+
+The LC-3 ISA 
+employs fixed-length instructions and a load-store architecture, two
+aspects that help to reduce the design space to a manageable set of
+choices.  In a general ISA design, many other options exist for
+instruction formats.
+
+Recall the idea of separating the bits of an instruction into
+(possibly non-contiguous) fields.  One of the fields must contain an
+opcode, which specifies the type of operation to be performed by the
+instruction.  In the \mbox{LC-3} ISA, most opcodes specify both
+the type of operation and the types of arguments to the operation.  
+More generally, many addressing modes are possible for
+each operand, and we can think of the bits
+that specify the addressing mode as a separate field, known as the
+{\bf mode} field.  
+%
+As a simple example, the \mbox{LC-3's} ADD and AND instructions 
+contain a \mbox{1-bit} mode field that specifies whether the second
+operand of the ADD/AND comes from a register or is an immediate value.
+
+Several questions must be answered in order to define the possible
+instruction formats for an ISA.  First, are instructions fixed-length
+or variable-length?  Second, how many addresses are needed for each
+instruction, and how many of the addresses can be memory addresses?
+Finally, what forms of addresses are possible for each operand?
+For example, can one use
+full memory addresses or only limited offsets relative to a register?
+
+The answer to the first question depends on many factors, but several
+clear advantages exist for both answers.  {\bf Fixed-length
+instructions} are easy to fetch and decode.  A processor knows in
+advance how many bits must be fetched to fetch a full instruction;
+fetching the opcode and mode fields in order to decide how many more
+bits are necessary to complete the instruction may require more than
+one cycle.  Fixing the time necessary for instruction fetch also
+simplifies pipelining.  Finally, fixed-length instructions simplify
+the datapath by restricting instructions to the size of the bus and
+always fetching properly aligned instructions.  As an example of this
+simplification, note that the \mbox{LC-3} ISA does not support 
+addressing for individual bytes, only for \mbox{16-bit} words.
+
+{\bf Variable-length instructions} also have benefits, however.
+Variable-length encodings allow more efficient encodings, saving both
+memory and disk space.  A register transfer operation, for example,
+clearly requires fewer bits than addition of values at two direct
+memory addresses for storage at a third.  Fixed-length instructions
+must be fixed at the length of the longest possible instruction,
+whereas variable-length instructions can use lengths appropriate to
+each mode.  The same tradeoff has another form in the sense that
+fixed-length ISAs typically eliminate many addressing modes in order
+to limit the size of the instructions.  Variable-length instructions
+thus allow more flexibility; indeed, extensions to a variable-length
+ISA can incorporate new addressing modes that require longer
+instructions without affecting the original ISA.
+%
+For example, the maximum length of x86 instructions has grown from six 
+bytes in 1978 (the 8086~ISA) to fifteen bytes in today's version of the
+ISA.
+
+\vfill
+\pagebreak
+
+Moving to the last of the three questions posed for instruction format
+definition, operand address specification,
+we explore a range of answers developed over the last few
+decades.  Answers are usually chosen based on the number of bits
+necessary, and we use this metric to organize the possibilities.  The
+figure below separates approaches into two dimensions: the vertical
+dimension divides addressing into registers and memory, and the
+horizontal dimension into varieties within each type.\\
+
+\centerline{\psfig{file=part4/figs/lec23-1.eps,width=4in}}
+
+As a register file contains fewer registers than a memory does words,
+the use of register operands rather than memory addresses reduces the
+number of bits required to specify an operand.  The \mbox{LC-3} ISA
+uses a restricted set of addressing modes to stay within the limit
+imposed by the use of \mbox{16-bit} instructions.  Both
+register and memory addresses, however, admit a wide range of
+implementations.
+
+{\bf Implicit operands} of either type require no additional bits for
+the implicit address.  The \mbox{LC-3} procedure call instruction, JSR,
+for example, stores the return address in~R7.  No bits in the JSR 
+encoding name the R7 register; R7 is used implicitly for every JSR
+executed.
+%
+Similarly, the procedure call instructions in many ISAs push the 
+return address onto a stack using an implicit register for the top 
+of stack pointer.
+%
+Memory addresses can also be implicitly equated to other memory
+addresses.  An increment instruction operating on a memory address, for
+example, implicitly writes the result back to the same address.  
+
+At the opposite extreme, an instruction may include a full address,
+either to any register in the register file or to any address in the 
+memory.  The term {\bf general-purpose registers} indicates that 
+registers are used in any operation.
+%
+{\bf Special-purpose registers}, in contrast, split the register file
+and allow only certain registers to be used in each operation.  For
+example, the Motorola 680x0 series, used in early Apple
+Macintosh computers, provides distinct sets of address and data
+registers.  Loads and stores use the address registers; arithmetic,
+logic, and shift operations use the data registers.  As a result, 
+each instruction
+selects from a smaller set of registers and thus requires fewer bits
+in the instruction to name the register for use.
+
+As full memory addresses require many more bits than full register
+addresses, a wider range of techniques has been employed to reduce the
+length.  ``Zero page'' addresses, as defined in the 6510~(6502) ISA
+used by Commodore PET's,\footnote{My computer in junior high school.}
+C64's,\footnote{My computer in high school.} and VIC~20's, prefixed a
+one-byte address with a zero byte, allowing shorter instructions when
+memory addresses fell within the first~256 memory locations.  Assembly
+and machine language programmers made heavy use of these locations to
+produce shorter programs.  
+
+Relative addressing is quite common in the \mbox{LC-3} ISA, in which many
+addresses are PC-relative.  Typical commerical ISAs also make use of
+relative addressing.  The Alpha ISA, for example, has a PC-relative form of
+procedure call with a \mbox{21-bit} offset (plus or minus a megabyte),
+and the x86 ISA has a ``short'' form of branch instructions that
+uses an \mbox{8-bit} offset.
+
+Segmented memory is a form of relative addressing that uses a register
+(usually implicit) to provide the high bits of an address and an
+explicit memory address (or another register) to provide the low bits.
+In the early x86 ISAs, for example, \mbox{20-bit} addresses are
+found by adding a \mbox{16-bit} segment register extended with four
+zero bits to a \mbox{16-bit} offset.\\
+
+\vfill
+
+\pagebreak
+
+\subsubsection{Addressing Architectures*}
+
+One question remains for the definition of instruction formats: how
+many addresses are needed for each instruction, and how many of the
+addresses can be memory addresses?  The first part of this question
+usually ranges from zero to three, and is rarely allowed to go
+beyond three.  The answer to the second part determines the {\bf
+addressing architecture} implemented by an ISA.  We now illustrate the
+tradeoffs between five distinct addressing architectures through the
+use of a running example, the assignment $X=AB+C/D$.
+
+A binary operator requires two source operands and one destination
+operand, for a total of three addresses.  The ADD instruction, for
+example, has a {\bf \mbox{3-address}} format:
+%
+\vspace{-6pt}\begin{tabbing}
+\hspace{.5in}\=WW\=WWW\=WW,WW,WW\=\kill
+\>\>ADD\>A,B,C\>; $M[A] \leftarrow M[B] + M[C]$\\
+\>or\>ADD\>R1,R2,R3\>; $R1 \leftarrow R2 + R3$
+\end{tabbing}\vspace{-6pt}
+%
+If all three addresses can be memory addresses, the ISA is dubbed a
+{\bf memory-to-memory architecture}.  Such architectures may have
+small register sets or even lack a register file completely.  To
+implement the assignment, we assume the availability of two memory
+locations, T1 and T2, for temporary storage:
+%
+\vspace{-6pt}\begin{tabbing}
+\hspace{.5in}\=WWW\=WW,WW,WW\=\kill
+\>MUL\>T1,A,B\>; $T1 \leftarrow M[A] * M[B]$\\
+\>DIV\>T2,C,D\>; $T2 \leftarrow M[C] / M[D]$\\
+\>ADD\>X,T1,T2\>; $X \leftarrow M[T1] + M[T2]$
+\end{tabbing}\vspace{-6pt}
+%
+The assignment requires only three instructions to implement, but each
+instruction contains three full memory addresses, and is thus quite long.
+
+At the other extreme is the {\bf load-store architecture} used by the
+\mbox{LC-3} ISA.  In a load-store architecture, only
+loads and stores can use memory addresses; all other operations use
+only registers.  As most instructions use only registers, this type of
+addressing architecture is also called a {\bf register-to-register
+architecture}.  The example assignment translates to the code shown below,
+which assumes that R1, R2, and R3 are free for use (the instructions
+are {\bf NOT} \mbox{LC-3} instructions, but rather a generic assembly
+language for a load-store architecture). 
+
+\vspace{-6pt}\begin{tabbing}
+\hspace{.5in}\=WWW\=WW,WW,WW\=\kill
+\>LD\>R1,A\>; $R1 \leftarrow M[A]$\\
+\>LD\>R2,B\>; $R2 \leftarrow M[B]$\\
+\>MUL\>R1,R1,R2\>; $R1 \leftarrow R1 * R2$\\
+\>LD\>R2,C\>; $R2 \leftarrow M[C]$\\
+\>LD\>R3,D\>; $R3 \leftarrow M[D]$\\
+\>DIV\>R2,R2,R3\>; $R2 \leftarrow R2 / R3$\\
+\>ADD\>R1,R1,R2\>; $R1 \leftarrow R1 + R2$\\
+\>ST\>R1,X\>; $M[X] \leftarrow R1$
+\end{tabbing}\vspace{-6pt}
+%
+Eight instructions are necessary, but no instruction requires more
+than one full memory address, and several use only register addresses,
+allowing the use of shorter instructions.  The need to move data in
+and out of memory explicitly, however, also requires a reasonably
+large register set, as is available in the ARM, Sparc, Alpha, and IA-64
+ISAs.  
+
+Architectures that use other combinations of memory and register
+addresses with \mbox{3-address} formats are not named.  Unary
+operators and transfer operators require only one source operand, thus
+can use a \mbox{2-address} format (for example, NOT~A,B).  Binary operations
+can also use {\bf \mbox{2-address}} format if one operand is implicit,
+as in the following instructions:
+%
+\vspace{-6pt}\begin{tabbing}
+\hspace{.5in}\=WW\=WWW\=WW,WW,WW\=\kill
+\>\>ADD\>A,B\>; $M[A] \leftarrow M[A] + M[B]$\\
+\>or\>ADD\>R1,B\>; $R1 \leftarrow R1 + M[B]$
+\end{tabbing}\vspace{-6pt}
+%
+The second instruction, in which one address is a register and the
+second is a memory address, defines a {\bf register-memory
+architecture}.  As shown by the code on the next page, 
+such architectures strike a balance
+between the two architectures just discussed.
+
+\vfill
+\pagebreak
+
+\vspace{-6pt}\begin{tabbing}
+\hspace{.5in}\=WWW\=WW,WW,WW\=\kill
+\>LD\>R1,A\>; $R1 \leftarrow M[A]$\\
+\>MUL\>R1,B\>; $R1 \leftarrow R1 * M[B]$\\
+\>LD\>R2,C\>; $R2 \leftarrow M[C]$\\
+\>DIV\>R2,D\>; $R2 \leftarrow R2 / M[D]$\\
+\>ADD\>R1,R2\>; $R1 \leftarrow R1 + R2$\\
+\>ST\>R1,X\>; $M[X] \leftarrow R1$
+\end{tabbing}\vspace{-6pt}
+%
+The assignment now requires six instructions using at most one memory
+address each; like memory-to-memory architectures, register-memory
+architectures use relatively few registers.  Note that two-register
+operations are also allowed.  Intel's x86 ISA is a register-memory
+architecture.
+
+Several ISAs of the past\footnote{The 6510/6502 as well, if memory
+serves, as the 8080, Z80, and Z8000, which used to drive parlor video
+games.}  used a special-purpose register called the accumulator for
+ALU operations, and are called {\bf accumulator architectures}.  The
+accumulator in such architectures is implicitly both a source and the
+destination for any such operation, allowing a {\bf \mbox{1-address}}
+format for instructions, as shown below.
+%
+\vspace{-6pt}\begin{tabbing}
+\hspace{.5in}\=WW\=WWW\=WW,WW,WW\=\kill
+\>\>ADD\>B\>; $ACC \leftarrow ACC + M[B]$\\
+\>or\>ST\>E\>; $M[E] \leftarrow ACC$
+\end{tabbing}\vspace{-6pt}
+%
+Accumulator architectures strike the same balance as register-memory
+architectures, but use fewer registers.  Note that memory location~X
+is used as a temporary storage location as well as the final storage
+location in the following code:
+%
+\vspace{-6pt}\begin{tabbing}
+\hspace{.5in}\=WWW\=WW,WW,WW\=\kill
+\>LD\>A\>; $ACC \leftarrow M[A]$\\
+\>MUL\>B\>; $ACC \leftarrow ACC * M[B]$\\
+\>ST\>X\>; $M[X] \leftarrow ACC$\\
+\>LD\>C\>; $ACC \leftarrow M[C]$\\
+\>DIV\>D\>; $ACC \leftarrow ACC / M[D]$\\
+\>ADD\>X\>; $ACC \leftarrow ACC + M[X]$\\
+\>ST\>X\>; $M[X] \leftarrow ACC$
+\end{tabbing}\vspace{-6pt}
+%
+The last addressing architecture that we discuss is rarely used for
+modern general-purpose processors, but may be familiar to
+you because of its historical use in scientific and engineering calculators.
+%
+A {\bf stack architecture}
+maintains a stack of values and draws all ALU operands from this
+stack, allowing these instructions to use a {\bf \mbox{0-address}}
+format.  A special-purpose stack pointer (SP) register points to the
+top of the stack in memory, and operations analogous to load ({\bf
+push}) and store ({\bf pop}) are provided to move values on and off
+the stack.  To implement our example assignment, we first transform it
+into postfix notation (also called reverse Polish notation):
+
+\vspace{-6pt}\begin{tabbing}
+\hspace{.5in}\=\kill
+\>A~~B~~*~~C~~D~~/~~+
+\end{tabbing}\vspace{-6pt}
+%
+The resulting sequence of symbols transforms on a one-to-one basis
+into instructions for a stack architecture:
+%
+\vspace{-6pt}\begin{tabbing}
+\hspace{.5in}\=WWWW\=WW\=; $M[SP+1] \leftarrow M[SP] + M[SP + 1], SP \leftarrow SP + 1$WW\=AB+C/DW\=AB+C/DW\=\kill
+\>PUSH\>A\>; $SP \leftarrow SP - 1, M[SP] \leftarrow M[A]$\>A\\
+\>PUSH\>B\>; $SP \leftarrow SP - 1, M[SP] \leftarrow M[B]$\>B\>A\\
+\>MUL\>\>; $M[SP+1] \leftarrow M[SP+1] * M[SP], SP \leftarrow SP + 1$\>AB\\
+\>PUSH\>C\>; $SP \leftarrow SP - 1, M[SP] \leftarrow M[C]$\>C\>AB\\
+\>PUSH\>D\>; $SP \leftarrow SP - 1, M[SP] \leftarrow M[D]$\>D\>C\>AB\\
+\>DIV\>\>; $M[SP+1] \leftarrow M[SP+1] / M[SP], SP \leftarrow SP + 1$\>C/D\>AB\\
+\>ADD\>\>; $M[SP+1] \leftarrow M[SP+1] + M[SP], SP \leftarrow SP + 1$\>AB+C/D\\
+\>POP\>X\>; $M[X] \leftarrow M[SP], SP \leftarrow SP + 1$
+\end{tabbing}\vspace{-6pt}
+%
+The values to the right are the values on the stack, starting with the
+top value on the left and progressing downwards, {\em after the
+completion of each instruction}.\\
+
+
+\vfill
+\pagebreak
+
+\subsubsection{Common Special-Purpose Registers*}
+
+This section illustrates the uses of special-purpose registers through
+a few examples. 
+
+The {\bf stack pointer (SP)} points to the top of the stack in memory.
+Most older architectures support push and pop operations that
+implicitly use the stack pointer.  Modern architectures assign a
+general-purpose register to be the stack pointer and reference it
+explicitly, although an assembler may support
+instructions that appear to use implicit operands but in fact
+translate to machine instructions with explicit reference to the
+register defined to be the SP.
+
+The {\bf program counter (PC)} points to the next instruction to be
+executed.  Some modern architectures expose it as a general-purpose
+register, although its distinct role in the implementation keeps such
+a model from becoming as common as the use of a general-purpose
+register for the SP.
+
+The {\bf processor status register (PSR)}, also known as the {\bf
+processor status word (PSW)}, contains all status bits as well as a
+mode bit indicating whether the processor is operating in user mode or
+privileged (operating system) mode.  Having a register with this
+information allows more general access than is possible solely through
+the use of control flow instructions.
+
+The {\bf zero register} appears in modern architectures of the RISC
+variety (defined in the next section of these notes).  The register is
+read-only and serves both as a useful constant and as a destination
+for operations performed only for their side-effects (for example, setting
+status bits).  The availability of a zero register also allows certain
+opcodes to serve double duty.  A register-to-register add instruction
+becomes a register move instruction when one source operand is zero.
+Similarly, an immediate add instruction becomes an immediate load
+instruction when one source operand is zero.\\
+
+
+\subsubsection{Reduced Instruction Set Computers*}
+
+By the mid-1980's, the VAX architecture dominated the workstation and
+minicomputer markets, which included most universities.  Digital
+Equipment Corporation, the creator of the VAX, was second only to IBM
+in terms of computer sales.  VAXen, as the machines were called, used
+microprogrammed control units and supported numerous addressing modes
+as well as complex instructions ranging from ``square root'' to
+``find roots of polynomial equation.''
+
+The impact of increasingly dense integrated circuit technology had
+begun to have its effect, however, and in view of increasing processor
+clock speeds, more and more programmers were using high-level
+languages rather than writing assembly code.  Although assembly
+programmers often made use of the complex VAX instructions, compilers
+were usually unable to recognize the corresponding high-level language
+constructs and thus were unable to make use of the instructions.
+
+Increasing density also led to rapid growth in memory sizes, to the
+point that researchers began to question the need for variable-length
+instructions.  Recall that variable-length instructions allow shorter
+codes by providing more efficient instruction encodings.  With the
+trend toward larger memories, code length was less important.  The
+performance advantage of fixed-length instructions, which simplifies
+the datapath and enables pipelining, on the other hand, was 
+attractive.
+
+Researchers leveraged these ideas, which had been floating around the
+research community (and had appeared in some commercial architectures)
+to create {\bf reduced instruction set computers}, or {\bf RISC}
+machines.  The competing VAXen were labeled {\bf CISC} machines, which
+stands for {\bf complex instruction set computers}.
+
+RISC machines employ fixed-length instructions and a load-store
+architecture, allowing only a few addressing modes and small offsets.
+This combination of design decisions enables deep pipelines and
+multiple instruction issues in a single cycle (termed superscalar
+implementations), and for years, RISC machines were viewed by many
+researchers as the proper design for future ISAs.  However, companies
+such as Intel soon learned to pipeline microoperations after decoding
+instructions, and CISC architectures now offer competitive if not
+superior performance in comparison with RISC machines.  The VAXen are
+dead, of course,\footnote{Unless you talk with customer support
+employees, for whom no machine ever dies.}  having been replaced by
+the Alpha, which in turn fell to x86, which is now struggling with ARM
+to enter the mobile market.  \\
+
+
+\subsubsection{Procedure and System Calls*}
+
+A {\bf procedure} is a sequence of instructions that executes a
+particular task.  Procedures are used as building blocks for multiple,
+larger tasks.  The concept of a procedure is fundamental to
+programming, and appears in some form in every high-level language as
+well as in most ISAs.
+%
+For our purposes, the terms procedure, subroutine,
+function, and method are synonymous, although they usually have
+slightly different meanings from the linguistic point of view.
+Procedure calls are supported through {\bf call} and {\bf return}
+control flow instructions.  The first instruction in the code below,
+for example, transfers control to the procedure ``DoSomeWork,'' which
+presumably does some work, then returns control to the instruction
+following the call.
+
+\vspace{-6pt}
+\begin{tabbing}
+\hspace{.5in}\=DoSomeWork:WW\=WWWW\=DoSomeWorkWW\= \kill
+\>loop:\>CALL\>DoSomeWork\\
+\>\>CMP\>R6,\#1\>; compare return value in R6 to 1\\
+\>\>BEQ\>loop\>; keep doing work until R6 is not 1\\
+\\
+\>DoSomeWork:\>$\cdots$\>\> ; set R6 to 0 when all work is done, 1 otherwise \\
+\>\>RETN
+\end{tabbing}
+\vspace{-6pt}
+
+The procedure also places a return value in R6, which the instruction
+following the call compares with immediate value 1.  Until the two are
+not equal (when all work is done), the branch returns control to the
+call and executes the procedure again.
+
+As you may recall, the call and return use the stack pointer to keep
+track of nested calls.  Sample RTL for these operations appears below.\\
+%
+\begin{minipage}{3.25in}
+\begin{eqnarray*}
+\mbox{call RTL}&&SP \leftarrow SP - 1\\
+&& M[SP] \leftarrow PC\\
+&& PC \leftarrow \mbox{procedure start}
+\end{eqnarray*}
+\end{minipage}%
+\begin{minipage}{3.25in}
+\begin{eqnarray*}
+\mbox{return RTL}&&PC \leftarrow M[SP]\\
+&&SP \leftarrow SP + 1\\
+\end{eqnarray*}
+\end{minipage}\\
+
+While an ISA provides the call and return instructions necessary to
+support procedures, it does not specify how information is passed to
+or returned from a procedure.  A standard for such decisions is
+usually developed and included in descriptions of the architecture,
+however.  This {\bf calling convention} specifies how information is
+passed between a caller and a callee.  In particular, it specifies the
+following: where arguments must be placed, either in registers or in
+specific stack memory locations; which registers can be used or
+changed by the procedure; and where any return value must be placed.
+
+The term ``calling convention'' is also used in the programming
+language community to describe the convention for deciding what
+information is passed for a given call operation.  For example, are
+variables passed by value, by pointers to values, or in some other
+way?  However, once the things to be sent are decided, the
+architectural calling convention that we discuss here is used
+to determine where to put the data in order for the callee to be able
+to find it.
+
+Calling conventions for architectures with large register sets
+typically pass arguments in registers, and nearly all conventions
+place the return value in a register.  A calling convention also
+divides the register set into {\bf caller-saved} and 
+{\bf callee-saved} registers.  Caller-saved registers can be modified 
+arbitrarily
+by the called procedure, whereas any value in a callee-saved register
+must be preserved.  Similarly, before calling a procedure, a caller
+must preserve the values of any caller saved registers that are needed
+after the call.  Registers of both types usually saved on the stack by
+the appropriate code (caller or callee).
+
+\vfill
+\pagebreak
+
+\begin{minipage}{5in}
+A typical stack structure appears in the figure to the right.  In
+preparation for a call, a caller first stores any caller-saved
+registers on the stack.  Arguments to the procedure to be called are
+pushed next.  The procedure is called next, implicitly pushing the
+return address (the address of the instruction following the call
+instruction).  Finally, the called procedure may allocate space on the
+stack for storage of callee-saved registers as well as local
+variables.\mpline
+
+As an example, the following calling convention can be applied to 
+an \mbox{8-register} load-store architecture similar to the \mbox{LC-3}
+ISA: the first three arguments must be placed in R0 through R2 (in order), 
+with any remaining arguments on the stack; the return value must be placed 
+in R6; R0 through R2 are caller-saved, as
+is R6, while R3 through R5 are callee-saved; R7 is used as the stack
+pointer.  The code fragments below use this calling convention to
+implement a procedure and a call of that procedure.
+\end{minipage}\hspace{.25in}%
+\begin{minipage}{1.25in}
+\psfig{file=part4/figs/lec23-2.eps,width=1.25in}
+\end{minipage}
+
+\begin{minipage}[t]{2.25in}
+\centerline{
+\begin{minipage}[t]{.5in}
+\begin{tabbing}
+int \=add3 (int n1, int n2, int n3) \{\\
+\>return (n1 + n2 + n3);\\
+\}\\
+$\ldots$\\
+printf (``\%d'', add3 (10, 20, 30));\\
+\end{tabbing}
+\vfill
+\begin{tabbing}
+by convention:\\
+\hspace{.25in}\= n1 is in R0\\
+\>n2 is in R1\\
+\>n3 is in R2\\
+\>return value is in R6
+\end{tabbing}
+\end{minipage}}
+\end{minipage}\hspace{.25in}%
+\begin{minipage}[t]{4.25in}
+\begin{tabbing}
+add3:~~\= WWWW\= WWWWW\= \kill
+add3:\>ADD\>R0,R0,R1\\
+\>ADD\>R6,R0,R2\\
+\>RETN\\
+\>$\ldots$\\
+\>PUSH\>R1\>; save the value in R1\\
+\>LDI\>R0,\#10\>; marshal arguments\\
+\>LDI\>R1,\#20\\
+\>LDI\>R2,\#30\\
+\>CALL\>add3\\
+\>MOV\>R1,R6\>; return value becomes 2nd argument\\
+\>LDI\>R0,``\%d''\>; load a pointer to the string\\
+\>CALL\>printf\\
+\>POP\>R1\>; restore R1
+\end{tabbing}
+\end{minipage}
+
+The add3 procedure takes three integers as arguments, adds them
+together, and returns the sum.  The procedure is called with the
+constants 10, 20, and 30, and the result is printed.  By the calling
+convention, when the call is made, R0 must contain the value 10, R1
+the value 20, and R2 the value 30.  We assume that the caller wants to
+preserve the value of R1, but does not care about R3 or R5.  In the
+assembly language version on the right, R1 is first saved to the
+stack, then the arguments are marshaled into position, and finally the
+call is made.  The procedure itself needs no local storage and does
+not change any callee-saved registers, thus must simply add the
+numbers together and place the result in~R6.  After add3 returns, its
+return value is moved from R6 to R1 in preparation for the call to
+printf.  After loading a pointer to the format string into R0, the
+second call is made, and R1 is restored, completing the translation.
+
+{\bf System calls} are almost identical to procedure calls.  As with
+procedure calls, a calling convention is used: before invoking a
+system call, arguments are marshaled into the appropriate registers or
+locations in the stack; after a system call returns, any result
+appears in a pre-specified register.  The calling convention used for
+system calls need not be the same as that used for procedure calls.
+Rather than a call instruction, system calls are usually initiated
+with a {\bf trap} instruction, and system calls are also known as
+traps.  With many architectures, a system call places the processor in
+privileged or kernel mode, and the instructions that implement the
+call are considered to be part of the operating system.  The term
+system call arises from this fact.\\
+
+
+\vfill
+\pagebreak
+
+\subsubsection{Interrupts and Exceptions*}
+
+Unexpected processor interruptions arise both from interactions
+between a processor and external devices and from errors or unexpected
+behavior in the program being executed.  The term {\bf interrupt} is
+reserved for asynchronous interruptions generated by other devices,
+including disk drives, printers, network cards, video cards,
+keyboards, mice, and any number of other possibilities.  {\bf
+Exceptions} occur when a processor encounters an unexpected opcode or
+operand.  An undefined instruction, for example, gives rise to an
+exception, as does an attempt to divide by zero.  Exceptions usually
+cause the current program to terminate, although many operating
+systems will allow the program to catch the exception and to handle it
+more intelligently.  The table below summarizes the characteristics of
+the two types and compares them to system calls.\\
+
+\centerline{\scriptsize
+\begin{tabular}{|l|l|l|c|c|}\hline
+\multicolumn{1}{|c|}{type}& \multicolumn{1}{c|}{generated by}& \multicolumn{1}{c|}{example}& asynchronous& unexpected\\ \hline
+interrupt& external device& packet arrived at network card& yes& yes\\
+exception& invalid opcode or operand& divide by zero& no& yes\\
+trap/system call& deliberate, via trap instruction& print character to console& no& no\\ \hline
+\end{tabular}
+}\vspace{6pt}
+
+Interrupts occur asynchronously with respect to the program.  Most
+designs only recognize interrupts between instructions.  In other words, 
+the presence of interrupts is checked only after completing an instruction
+rather than in every cycle.  In pipelined designs, however,
+instructions execute simultaneously, and the decision as to which
+instructions occur ``before'' an interrupt and which occur ``after''
+must be made by the processor.  Exceptions are not asynchronous in the
+sense that they occur for a particular instruction, thus no decision
+need be made as to instruction ordering.  After determining which
+instructions were before an interrupt, a pipelined processor discards
+the state of any partially executed instructions that occur ``after''
+the interrupt and completes all instructions that occur ``before.''
+The terminated instructions are simply restarted after the interrupt
+completes.  Handling the decision, the termination, and the
+completion, however, significantly increases the design complexity of
+the system.
+
+The code associated with an interrupt, an exception, or a system call
+is a form of procedure called a {\bf handler}, and is found by looking
+up the interrupt number, exception number, or trap number in a table
+of functions called a {\bf vector table}.  Vector tables
+for each type (interrupts, exceptions, and system calls) may be separate,
+or may be combined into a single table.
+Interrupts and exceptions share a need to save all registers and
+status bits before execution of the corresponding handler code (and to
+restore those values afterward).  Generally, the
+\mbox{values---including} the status word \mbox{register---are} placed
+on the stack.  With system calls, saving and restoring any necessary
+state is part of the calling convention.  A special return from
+interrupt instruction is used to return control from the interrupt
+handler to the interrupted code; a similar instruction forces the
+processor back into user mode when returning from a system call.
+
+Interrupts are also interesting in the sense that typical computers
+often have many interrupt-generating devices but only a few
+interrupts.  Interrupts are prioritized by number, and only an
+interrupt with higher priority can interrupt another interrupt.
+Interrupts with equal or lower priority are blocked while an interrupt
+executes.  Some interrupts can also be blocked in some architectures
+by setting bits in a special-purpose register called an interrupt
+mask.  While an interrupt number is masked, interrupts of that type
+are blocked, and can not occur.
+
+As several devices may generate interrupts with the same interrupt
+number, interrupt handlers can be {\bf chained} together.  Each
+handler corresponds to a particular device.  When an interrupt occurs,
+control is passed to the handler for the first device, which accesses
+device registers to determine whether or not that device generated an
+interrupt.  If it did, the appropriate service is provided.  If not,
+or after the service is complete, control is passed to the next
+handler in the chain, which handles interrupts from the second device,
+and so forth until the last handler in the chain completes.  At this
+point, registers and processor state are restored and control is
+returned to the point at which the interrupt occurred.\\
+
+
+\vfill
+\pagebreak
+
+\subsubsection{Control Flow Conditions*}
+
+Control flow instructions may change the PC, loading it with an
+address specified by the instruction.  Although any addressing mode
+can be supported, the most common specify an address directly in the
+instruction, use a register as an address, or use an address relative
+to a register.  
+
+Unconditional control flow instructions typically provided by an ISA
+include procedure calls and returns, traps, and jumps.  Conditional
+control flow instructions are branches, and are logically based on
+status bits set by two types of instructions: {\bf comparisons} and
+{\bf bit tests}.  Comparisons subtract one value from another to set
+the status bits, whereas bit tests use an AND operation to
+check whether certain bits are set or not in a value.
+
+Many ISAs implement
+status bits as special-purpose registers and implicitly set them when
+executing
+certain instructions.  A branch based on R2 being less or equal to R3
+can then be written as shown below.  The status bits are set by
+subtracting R3 from R2 with the ALU.
+
+\begin{tabbing}
+\hspace{.5in}\=WWWWW\=WW,WW,WW\=\kill
+\>CMP\>R2,R3\>; $R2 < R3: CNZ \leftarrow 110, R2 = R3: CNZ \leftarrow 001,$\\
+\>\>\>;~~~~~$R2 > R3: CNZ \leftarrow 000$\\
+\>BLE\>R1\>; $Z~\mbox{XOR}~C = 1: PC \leftarrow R1$
+\end{tabbing}\vspace{-6pt}
+%
+The status bits are not always implemented as special-purpose
+registers; instead, they may be kept in general-purpose registers or
+not kept at all.  For example, the Alpha ISA stores the results of
+comparisons in general-purpose registers, and the same branch is
+instead implemented as follows:
+%
+\vspace{-6pt}\begin{tabbing}
+\hspace{.5in}\=WWWWW\=WW,WW,WW\=\kill
+\>CMPLE\>R4,R2,R3\>; $R2 \leq R3: R4 \leftarrow 1, R2 > R3: R4 \leftarrow 0$\\
+\>BNE\>R4,R1\>; $R4 \neq 0: PC \leftarrow R1$
+\end{tabbing}\vspace{-6pt}
+%
+Finally, status bits can be calculated, used, and discarded within
+a single instruction, in which case the branch is written as follows:
+%
+\vspace{-6pt}\begin{tabbing}
+\hspace{.5in}\=WWWWW\=WW,WW,WW\=\kill
+\>BLE\>R1,R2,R3\>; $R2 \leq R3: PC \leftarrow R1$
+\end{tabbing}\vspace{-6pt}
+%
+The three approaches have advantages and disadvantages similar to
+those discussed in the section on addressing architectures: the first
+has the shortest instructions, the second is the most general and
+simplest to implement, and the third requires the fewest instructions.\\
+
+
+\subsubsection{Stack Operations*}
+
+Two types of stack operations are commonly supported.  Push and pop
+are the basic operations in many older architectures, and values can
+be placed upon or removed from the stack using these instructions.  In
+more modern architectures, in which the SP becomes a general-purpose
+register, push and pop are replaced with indexed loads and stores,
+that is, loads and stores using the stack pointer and an offset as the
+address for the memory operation.  Stack updates are performed using
+the ALU, subtracting and adding immediate values from the SP as
+necessary to allocate and deallocate local storage.
+
+Stack operations serve three purposes in a typical architecture.  The
+first is to support procedure calls, as illustrated in a previous
+section.  The second is to provide temporary storage during
+interrupts, which was also mentioned earlier.  
+
+The third use of stack operations is to support {\bf spill code}
+generated by compilers.  Compilers first translate high-level
+languages into an intermediate representation much like assembly code
+but with an extremely large (theoretically infinite) register set.
+The final translation step translates this intermediate representation
+into assembly code for the target architecture, assigning
+architectural registers as necessary.  However, as real ISAs support
+only a finite number of registers, the compiler must occasionally
+spill values into memory.  For example, if ten values are in use at
+some point in the code, but the architecture has only eight registers,
+spill code must be generated to store the remaining two values on the
+stack and to restore them when they are needed.\\
+
+
+\subsubsection{I/O*}
+
+As a final topic, we now consider how a processor
+connects to other devices to allow input and output.  We have already
+discussed interrupts, which are a special form of I/O in which only
+the signal requesting attention is conveyed to the processor.
+Communication of data occurs through instructions similar to loads and
+stores.  A processor is designed with a number of \mbox{{\bf I/O
+ports}---usually} read-only or write-only registers to which devices
+can be attached with opposite semantics.  That is, a port is usually
+written by the processor and read by a device or written by a device
+and read by the processor.
+
+The question of exactly how I/O ports are accessed is an interesting
+one.  One option is to create special instructions, such as the {\bf
+in} and {\bf out} instructions of the x86 architecture.  Port
+addresses can then be specified in the same way that memory addresses
+are specified, but use a distinct address space.  Just as two sets of
+special-purpose registers can be separated by the ISA, such an {\bf
+independent I/O} system separates I/O ports from memory addresses by
+using distinct instructions for each class of operation.
+
+Alternatively, device registers can be accessed using the same load and store
+instructions as are used to access memory.  This approach, known as
+{\bf memory-mapped I/O}, requires no new instructions for I/O, but
+demands that a region of the memory address space be set aside for
+I/O.  The memory words with those addresses, if they exist, can not be
+accessed during normal processor operations.
+
+\vfill
+
+\pagebreak
+

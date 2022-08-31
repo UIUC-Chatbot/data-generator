@@ -1,0 +1,251 @@
+\classtitle
+
+\subsection{Summary of Part 3 of the Course}
+
+
+%In this short summary, we 
+%give you lists at several levels of difficulty 
+%of what we expect you to be able to do as a result of the last few weeks 
+%of studying (reading, listening, doing homework, discussing your 
+%understanding with your classmates, and so forth).
+
+Students often find this part of the course more challenging than the
+earlier parts of the course.
+%
+In addition to these notes, you should read Chapters~4 and~5 of the 
+Patt and Patel textbook, which cover the von Neumann
+model, instruction processing, and ISAs.  
+
+%Students typically find that the homeworks in this part of the course
+%require more time than did those in earlier parts of the course.
+%Problems on the exam will be similar in nature but designed to require 
+%less actual time to solve (assuming that you have been doing the homeworks).  
+
+%We'll start with the easy stuff.  
+
+You should recognize all of these terms and be able
+to explain what they mean.  For the specific circuits, you should be able 
+to draw them and explain how they work.  Actually, we don't care whether 
+you can draw something from memory---a mux, for example---provided that 
+you know what a mux does and can derive a gate diagram correctly for one 
+in a few minutes.  Higher-level skills are much more valuable.
+
+\begin{minipage}[t]{2.75in}
+\begin{list}{$\bullet$}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+
+\item{digital systems terms
+\begin{list}{--}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item module
+\item fan-in
+\item fan-out
+\item machine models: Moore and Mealy
+\end{list}
+}
+
+\item{simple state machines
+\begin{list}{--}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item synchronous counter
+\item ripple counter
+\item serialization (of bit-sliced design)
+\end{list}
+}
+
+\item{finite state machines (FSMs)
+\begin{list}{--}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item states and state representation
+\item transition rule
+\item self-loop
+\item next state (+) notation
+\item meaning of don't care in input \\ combination
+\item meaning of don't care in output
+\item unused states and initialization
+\item completeness (with regard to \\ FSM specification)
+\item list of (abstract) states
+\item next-state table/state transition table/state table
+\item state transition diagram/transition \\ diagram/state diagram
+\end{list}
+}
+
+\item{memory
+\begin{list}{--}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item number of addresses
+\item addressability
+\item read/write logic
+\item serial/random access memory (RAM)
+\item volatile/non-volatile (N-V)
+\item static/dynamic RAM (SRAM/DRAM)
+\item SRAM cell
+\item DRAM cell
+\item design as a collection of cells
+\item coincident selection
+%\item bit lines and sense amplifiers
+\end{list}
+}
+
+\end{list}
+\end{minipage}\hfill%
+\begin{minipage}[t]{3.1in}
+\begin{list}{$\bullet$}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+
+\item{von Neumann model
+\begin{list}{--}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item{processing unit
+\begin{list}{--}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item register file
+\item arithmetic logic unit (ALU)
+\item word size
+\end{list}
+}
+\item{control unit
+\begin{list}{--}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item program counter (PC)
+\item instruction register (IR)
+\item implementation as FSM
+\end{list}
+}
+\item input and output units
+\item{memory
+\begin{list}{--}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item memory address register (MAR)
+\item memory data register (MDR)
+\end{list}
+}
+\item{processor datapath}
+\item{bus}
+\item{control signal}
+\end{list}
+}
+
+\item{tri-state buffer
+\begin{list}{--}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item meaning of Z/hi-Z output
+\item use in distributed mux
+\end{list}
+}
+
+\item{instruction processing}
+\begin{list}{-}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item{fetch}
+\item{decode}
+\item{execute}
+\item{register transfer language (RTL)}
+\end{list}
+
+\item{Instruction Set Architecture (ISA)}
+\begin{list}{-}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item{instruction encoding}
+\item{field (of an encoded instruction)}
+\item{operation code (opcode)}
+\item{types of instructions}
+\begin{list}{-}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item{operations}
+\item{data movement}
+\item{control flow}
+\end{list}
+\item{addressing modes}
+\begin{list}{-}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+\item{immediate}
+\item{register}
+\item{PC-relative}
+\item{indirect}
+\item{base + offset}
+\end{list}
+\end{list}
+
+
+\end{list}
+\end{minipage}
+
+\vfill
+
+\pagebreak
+
+We expect you to be able to exercise the following skills:
+
+\begin{list}{$\bullet$}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+
+\item{Transform a bit-sliced design into a serial design, and explain the 
+tradeoffs involved in terms of area and time required to compute a result.}
+\item{Based on a transition diagram, implement a synchronous counter from 
+flip-flops and logic gates.}
+\item{Implement a binary ripple counter (but not necessarily a more general 
+type of ripple counter) from flip-flops and logic gates.}
+\item{Given an FSM implemented as digital logic, analyze the FSM to produce 
+a state transition diagram.}
+\item{Design an FSM to meet an abstract specification for a task, including 
+production of specified output signals, and possibly including selection 
+of appropriate inputs.}
+\item{Complete the specification of an FSM by ensuring that each state 
+includes a transition rule for every possible input combination.}
+\item{Compose memory chips into larger memory systems, using additional
+decoders when necessary.}
+\item{Encode \mbox{LC-3} instructions into machine code.}
+\item{Read and understand programs written in \mbox{LC-3} assembly/machine code.}
+\end{list}
+
+At a higher level, we expect that you understand the concepts and ideas 
+sufficiently well to do the following:
+
+\begin{list}{$\bullet$}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+
+\item{Abstract design symmetries from an FSM specification in order to 
+simplify the implementation.}
+\item{Make use of a high-level state design, possibly with many sub-states 
+in each high-level state, to simplify the implementation.}
+\item{Use counters to insert time-based transitions between states (such 
+as timeouts).}
+\item{Implement an FSM using logic components such as registers, 
+counters, comparators, and adders as building blocks.}
+\item{Explain the basic organization of a computer's microarchitecture
+as well as the role played by elements of a von Neumann design in the
+processing of instructions.}
+\item{Identify the stages of processing an instruction (such as fetch,
+decode, getting operands, execution, and writing back results) in a 
+processor control unit state machine diagram.}
+\end{list}
+
+And, at the highest level, we expect that you will be able to do the following:
+
+\begin{list}{$\bullet$}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}%
+\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}\setlength{\parsep}{0pt}}
+
+\item{Explain the difference between the Moore and Mealy machine models, 
+as well as why you might find each of them useful when designing an FSM.}
+\item{Understand the need for initialization of an FSM, be able to analyze 
+and identify potential problems arising from lack of initialization, and 
+be able to extend an implementation to include initialization to an 
+appropriate state when necessary.}
+\item{Understand how the choice of internal state bits for an FSM can 
+affect the complexity of the implementation of next-state and output 
+logic, and be able to select a reasonable state assignment.}
+\item{Identify and fix design flaws in simple FSMs by analyzing an existing 
+implementation, comparing it with the specification, and removing any 
+differences by making any necessary changes to the implementation.}
+
+\end{list}
+
+\pagebreak
+
+\mbox{~~~} % empty 3rd page
+
+\vfill
+
+\pagebreak
+
