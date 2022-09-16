@@ -30,7 +30,7 @@ def tokenize_function(examples): return tokenizer(examples["text"])
 custom_QA_dataset = load_dataset("json", data_files="./all_data.jl", field="gpt-3")
 tokenized_datasets = custom_QA_dataset["train"].map(tokenize_function, batched=True, remove_columns=custom_QA_dataset["train"].column_names)
 
-block_size = 1024
+block_size = 1024 # block_size == max_tokens. todo: might need tuning. Maybe 2048 is better.
 # Main data processing function that will concatenate all texts from our dataset and generate chunks of block_size.
 def group_texts(examples):
     # Concatenate all texts.
@@ -67,7 +67,7 @@ print(tokenized_datasets)
 # training_args = TrainingArguments(output_dir="test_trainer", evaluation_strategy="epoch")
 
 # todo try: auto_find_batch_size=True
-# prediction_loss_only
+# prediction_loss_only 
 training_args = TrainingArguments(output_dir="opt_fine_tune_logs", per_device_train_batch_size=1, prediction_loss_only=True)
 
 trainer = Trainer(
