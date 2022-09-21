@@ -5,8 +5,9 @@ from datasets import load_dataset, load_metric
 import numpy as np
 from itertools import chain
 
+CUSTOM_DATASET_PATH = "./all_data.jsonl"
 
-model = OPTForCausalLM.from_pretrained("facebook/opt-125m") # my favorite: facebook/opt-2.7b or 6.7b or 13b
+model = OPTForCausalLM.from_pretrained("facebook/opt-125m") # options: facebook/opt-350m, 1.3b, 2.7b, 6.7b, 13b, 30b, 66b
 tokenizer = GPT2Tokenizer.from_pretrained("facebook/opt-125m", use_fast=False)
 tokenizer.add_bos_token = False
 
@@ -27,7 +28,7 @@ datasets.disable_caching() # Don't use dataset cache (for debugging)
 # todo: to help with above, find tokenizer params here: https://huggingface.co/docs/transformers/v4.21.3/en/main_classes/tokenizer#transformers.PreTrainedTokenizer
 # def tokenize_function(examples): return tokenizer.encode(examples["text"], padding=True, truncation=True, max_length=2048, return_tensors="pt")
 def tokenize_function(examples): return tokenizer(examples["text"])
-custom_QA_dataset = load_dataset("json", data_files="./all_data.jl", field="gpt-3")
+custom_QA_dataset = load_dataset("json", data_files=CUSTOM_DATASET_PATH, field="gpt-3")
 tokenized_datasets = custom_QA_dataset["train"].map(tokenize_function, batched=True, remove_columns=custom_QA_dataset["train"].column_names)
 
 block_size = 1024 # block_size == max_tokens. todo: might need tuning. Maybe 2048 is better.
