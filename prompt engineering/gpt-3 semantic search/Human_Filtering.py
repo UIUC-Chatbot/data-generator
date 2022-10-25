@@ -82,6 +82,7 @@ class Human_Filtering():
       print("")
       self.save_json_to_disk()
       print("Last completed index is: ", self.last_completed_index)
+      print("☝️ Use this to pick up where you left off last time.")
       exit(1)
 
 
