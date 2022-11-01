@@ -18,4 +18,8 @@ Inspired from this [paper's](https://arxiv.org/abs/2102.12128) second best model
 	* `ainze.json`
 	* Dataset Quality - Not Good
 
-### 
+### filtering
+* `cross_encoder.ipynb`
+	* Uses this [model](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-12-v2?text=I+like+you.+I+love+you) on HuggingFace.
+* `scoring.ipynb`
+	* Uses bleu scores
