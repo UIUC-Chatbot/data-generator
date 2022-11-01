@@ -16,12 +16,11 @@ class filter(object):
             scores = model(**features).logits
         return scores
 
-
-    # def query_paragraph(query:str, paragraph:list):
-    #     model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-12-v2', max_length=512)
-    #     tuples = []
-    #     for p in paragraph:
-    #         tup = (query, p)
-    #         tuples.append(tup)
-    #     scores = model.predict(tuples)
-    #     return scores
+    def sentence_scorer(question:str, answers:list):
+        model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-12-v2', max_length=512)
+        tuples = []
+        for a in answers:
+            tup = (question, a)
+            tuples.append(tup)
+        scores = model.predict(tuples)
+        return scores
