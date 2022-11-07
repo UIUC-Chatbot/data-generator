@@ -78,7 +78,11 @@ class Human_Filtering():
       if self.QA_pairs.index(item) < start_index:
         continue
       
+      # todo: add facy printing here. try: except: with bold chars in specific json fields. 
       pprint.pprint(item, width=120, sort_dicts=False)
+      
+      
+      
       keep_val = input('Should we keep this?\n1 = top quality, 2 = decent enough to keep, 3 = to delete\n')
       try:
         keep_val = int(keep_val)
