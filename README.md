@@ -24,4 +24,4 @@ Inspired from this [paper's](https://arxiv.org/abs/2102.12128) second best model
 * `scoring.ipynb`
 	* Uses bleu scores
 * `Dialogue_RPT_Scoring.ipynb`
-	* Uses Dialogue RPT to rate the asnwers based on the Context of the GPT answer file
+	* Uses Dialogue RPT to rate the answers based on the Context of the GPT answer file
