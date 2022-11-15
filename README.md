@@ -23,3 +23,5 @@ Inspired from this [paper's](https://arxiv.org/abs/2102.12128) second best model
 	* Uses this [model](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-12-v2?text=I+like+you.+I+love+you) on HuggingFace.
 * `scoring.ipynb`
 	* Uses bleu scores
+* `Dialogue_RPT_Scoring.ipynb`
+	* Uses Dialogue RPT to rate the answers based on the Context of the GPT answer file
