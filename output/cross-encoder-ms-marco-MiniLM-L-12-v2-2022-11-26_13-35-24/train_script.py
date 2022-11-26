@@ -325,3 +325,7 @@ if __name__ == '__main__':
 
 # Script was called via:
 #python cross_mutlilingual.py --model microsoft/mdeberta-v3-base --cross_lingual_chance 0.33 --precision 32 --num_negs 5 --batch_size 24
+
+
+# Script was called via:
+#python /Users/joshuamin/Desktop/Internships/UIUC_chatbot_data_generator/filtering/train_script.py

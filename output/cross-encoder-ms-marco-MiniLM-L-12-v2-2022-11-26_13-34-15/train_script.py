@@ -206,8 +206,8 @@ def main(args):
 
     trainer = Trainer(#max_epochs=args.epochs, 
                     #precision=args.precision, 
-                    #strategy=args.strategy,    
-                    #default_root_dir=output_dir,
+                    strategy=args.strategy,    
+                    default_root_dir=output_dir,
                     callbacks=[checkpoint_callback]
                     )
 
@@ -307,7 +307,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("--batch_size", type=int, default=32)
     # parser.add_argument("--epochs", type=int, default=10)
-    # parser.add_argument("--strategy", default=None)
+    parser.add_argument("--strategy", default=None)
     parser.add_argument("--model", default='cross-encoder/ms-marco-MiniLM-L-12-v2')
     parser.add_argument("--eval", action="store_true")
     parser.add_argument("--ckpt")
@@ -325,3 +325,7 @@ if __name__ == '__main__':
 
 # Script was called via:
 #python cross_mutlilingual.py --model microsoft/mdeberta-v3-base --cross_lingual_chance 0.33 --precision 32 --num_negs 5 --batch_size 24
+
+
+# Script was called via:
+#python /Users/joshuamin/Desktop/Internships/UIUC_chatbot_data_generator/filtering/train_script.py
