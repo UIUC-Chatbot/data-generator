@@ -1,0 +1,34 @@
+{
+    "os": "macOS-12.6-arm64-arm-64bit",
+    "python": "3.10.8",
+    "heartbeatAt": "2022-11-26T22:24:20.355984",
+    "startedAt": "2022-11-26T22:24:19.867366",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/Users/joshuamin/Desktop/Internships/UIUC_chatbot_data_generator/filtering/train_script.py",
+    "codePath": "filtering/train_script.py",
+    "git": {
+        "remote": "https://github.com/UIUC-Chatbot/data-generator.git",
+        "commit": "c78323e614169de183340ecda1e2cb0dec64e9c1"
+    },
+    "email": "ijoshuamin@gmail.com",
+    "root": "/Users/joshuamin/Desktop/Internships/UIUC_chatbot_data_generator",
+    "host": "Joshuas-MacBook-Air-3.local",
+    "username": "joshuamin",
+    "executable": "/Users/joshuamin/miniconda3/envs/fine/bin/python",
+    "cpu_count": 8,
+    "cpu_count_logical": 8,
+    "disk": {
+        "total": 460.4317207336426,
+        "used": 118.82927703857422
+    },
+    "gpuapple": {
+        "type": "arm",
+        "vendor": "Apple"
+    },
+    "memory": {
+        "total": 16.0
+    }
+}

@@ -20,21 +20,17 @@ from argparse import ArgumentParser
 from datasets import load_dataset
 import tqdm
 import json
-import gzip
+# import gzip
 import random
 from pytorch_lightning.callbacks import ModelCheckpoint
 import numpy as np
 from shutil import copyfile
-from pytorch_lightning.loggers import WandbLogger
 import transformers
-
 
 class MSMARCOData(LightningDataModule):
     def __init__(
         self,
         model_name: str,
-        #triplets_path: str,
-        langs,
         max_seq_length: int = 250,
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
@@ -44,39 +40,17 @@ class MSMARCOData(LightningDataModule):
     ):
         super().__init__()
         self.model_name = model_name
-        #self.triplets_path = triplets_path
         self.max_seq_length = max_seq_length
         self.train_batch_size = train_batch_size
         self.eval_batch_size = eval_batch_size
-        self.langs = langs
         self.num_negs = num_negs
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         self.cross_lingual_chance = cross_lingual_chance  #Probability for cross-lingual batches
 
-    #def setup(self, stage: str):
-        print(f"!!!!!!!!!!!!!!!!!! SETUP {os.getpid()}  !!!!!!!!!!!!!!!")
-
-        #Get the queries
-        self.queries = {lang: {} for lang in self.langs}
-    
-        for lang in self.langs:
-            for row in tqdm.tqdm(load_dataset('unicamp-dl/mmarco', f'queries-{lang}')['train'], desc=lang):
-                self.queries[lang][row['id']] = row['text']
-
-        #Get the passages
-        self.collections = {lang: load_dataset('unicamp-dl/mmarco', f'collection-{lang}')['collection'] for lang in self.langs}
+    # def setup(self, stage: str):
 
         #Get the triplets
-        # with gzip.open(self.triplets_path, 'rt') as fIn:
-        #     self.triplets = [json.loads(line) for line in tqdm.tqdm(fIn, desc="triplets", total=502938)] 
-        #     """
-        #     self.triplets = []
-        #     for line in tqdm.tqdm(fIn):
-        #         self.triplets.append(json.loads(line))
-        #         if len(self.triplets) >= 1000:
-        #             break
-        #     """
-
+          
 
         s = open("/Users/joshuamin/Desktop/Internships/UIUC_chatbot_data_generator/prompt_engineering/gpt-3_semantic_search/1_top_quality.json")
         first = json.load(s)
@@ -97,36 +71,8 @@ class MSMARCOData(LightningDataModule):
             for row in dataset:
                 self.triplets.append([row['GPT-3-Semantic-Search-Generations']['question'], row['GPT-3-Semantic-Search-Generations']['answer'],random.choice(self.bad_data)])
 
-    def collate_fn(self, batch):
-        cross_lingual_batch = random.random() < self.cross_lingual_chance 
-
-        #Create data for list-rank-loss
-        query_doc_pairs = [[] for _ in  range(1+self.num_negs)]
-
-        for row in batch:
-            qid = row['qid']
-            pos_id = random.choice(row['pos'])
-
-            query_lang = random.choice(self.langs)
-            query_text = self.queries[query_lang][qid]
-            
-            doc_lang = random.choice(self.langs) if cross_lingual_batch else query_lang 
-            query_doc_pairs[0].append((query_text, self.collections[doc_lang][pos_id]['text']))
-
-            dense_bm25_neg = list(set(row['dense_neg'] + row['bm25_neg']))
-            neg_ids = random.sample(dense_bm25_neg, self.num_negs)
-
-            for num_neg, neg_id in enumerate(neg_ids):
-                doc_lang = random.choice(self.langs) if cross_lingual_batch else query_lang
-                query_doc_pairs[1+num_neg].append((query_text, self.collections[doc_lang][neg_id]['text']))
-
-        #Now tokenize the data
-        features = [self.tokenizer(qd_pair, max_length=self.max_seq_length, padding=True, truncation='only_second', return_tensors="pt") for qd_pair in query_doc_pairs]
-    
-        return features
-
     def train_dataloader(self):
-        return DataLoader(self.triplets, shuffle=True, batch_size=self.train_batch_size, num_workers=1, pin_memory=True, collate_fn=self.collate_fn)
+        return DataLoader(self.triplets, shuffle=True, batch_size=self.train_batch_size, num_workers=1, pin_memory=True)
 
     
 
@@ -141,6 +87,7 @@ class ListRankLoss(LightningModule):
         weight_decay: float = 0.01,
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
+        total_steps: int = 200,
         **kwargs,
     ):
         super().__init__()
@@ -214,31 +161,26 @@ class ListRankLoss(LightningModule):
         )
 
         scheduler = {"scheduler": lr_scheduler, "interval": "step", "frequency": 1}
-        return [optimizer], [scheduler]
+        return (optimizer, scheduler)
 
    
 
 def main(args):
     dm = MSMARCOData(
         model_name=args.model,
-        langs=args.langs,
-        #triplets_path='data/msmarco-hard-triplets.jsonl.gz',
         train_batch_size=args.batch_size,
-        cross_lingual_chance=args.cross_lingual_chance,
         num_negs=args.num_negs
     )
+
     output_dir = f"output/{args.model.replace('/', '-')}-{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
     print("Output_dir:", output_dir)
 
-    os.makedirs(output_dir, exist_ok=True)
-
-    wandb_logger = WandbLogger(project="multilingual-cross-encoder", name=output_dir.split("/")[-1])
+    os.makedirs(output_dir, exist_ok=True)  
 
     train_script_path = os.path.join(output_dir, 'train_script.py')
     copyfile(__file__, train_script_path)
     with open(train_script_path, 'a') as fOut:
         fOut.write("\n\n# Script was called via:\n#python " + " ".join(sys.argv))
-
     
     # saves top-K checkpoints based on "val_loss" metric
     checkpoint_callback = ModelCheckpoint(
@@ -249,19 +191,28 @@ def main(args):
         dirpath=output_dir,
         filename="ckpt-{global_train_step}",
     )
-
+  
+    # saves top-K checkpoints based on "val_loss" metric
+    checkpoint_callback = ModelCheckpoint(
+        every_n_train_steps=25000,
+        save_top_k=5,
+        monitor="global_train_step",
+        mode="max",
+        dirpath=output_dir,
+        filename="ckpt-{global_train_step}",
+    )
 
     model = ListRankLoss(model_name=args.model)
 
+
     trainer = Trainer(max_epochs=args.epochs, 
-                      accelerator="gpu", 
-                      devices=args.num_gpus, 
+                      accelerator="cpu", 
+                      devices=args.num_devices, 
                       precision=args.precision, 
                       strategy=args.strategy,    
                       default_root_dir=output_dir,
-                      callbacks=[checkpoint_callback],
-                      logger=wandb_logger
-                      )
+                      callbacks=[checkpoint_callback]
+                                            )
 
     trainer.fit(model, datamodule=dm)
 
@@ -357,7 +308,7 @@ def eval(args):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument("--num_gpus", type=int, default=1)
+    parser.add_argument("--num_devices", type=int, default=1)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--strategy", default=None)
@@ -367,13 +318,15 @@ if __name__ == '__main__':
     parser.add_argument("--cross_lingual_chance", type=float, default=0.0)
     parser.add_argument("--precision", type=int, default=16)
     parser.add_argument("--num_negs", type=int, default=3)
-    parser.add_argument("--langs", nargs="+", default=['english']) #, 'chinese', 'french', 'german', 'indonesian', 'italian', 'portuguese', 'russian', 'spanish', 'arabic', 'dutch', 'hindi', 'japanese', 'vietnamese'
     
     
     args = parser.parse_args()
-
-    if args.eval:
-        eval(args)
-    else:
-        main(args)
+    main(args)
+    # if args.eval:
+    #     eval(args)
+    # else:
+    #     main(args)
     
+
+# Script was called via:
+#python cross_mutlilingual.py --model microsoft/mdeberta-v3-base --cross_lingual_chance 0.33 --precision 32 --num_negs 5 --batch_size 24

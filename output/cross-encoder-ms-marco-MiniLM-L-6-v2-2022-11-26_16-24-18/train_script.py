@@ -377,3 +377,6 @@ if __name__ == '__main__':
     else:
         main(args)
     
+
+# Script was called via:
+#python /Users/joshuamin/Desktop/Internships/UIUC_chatbot_data_generator/filtering/train_script.py
