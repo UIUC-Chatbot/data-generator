@@ -5,7 +5,6 @@ from typing import Optional
 import datasets
 import torch
 from pytorch_lightning import LightningDataModule, LightningModule, Trainer, seed_everything
-from transformers import TrainingArguments, Trainer
 from torch.utils.data import DataLoader
 from transformers import (
     AutoConfig,
@@ -88,6 +87,7 @@ class ListRankLoss(LightningModule):
         weight_decay: float = 0.01,
         train_batch_size: int = 32,
         eval_batch_size: int = 32,
+        total_steps: int = 200,
         **kwargs,
     ):
         super().__init__()
@@ -129,7 +129,7 @@ class ListRankLoss(LightningModule):
         # Calculate total steps
         tb_size = self.hparams.train_batch_size * max(1, self.trainer.gpus)
         ab_size = self.trainer.accumulate_grad_batches
-        self.total_steps = (len(train_loader) // ab_size) # * self.trainer.max_epochs
+        self.total_steps = (len(train_loader) // ab_size) * self.trainer.max_epochs
 
         print(f"{tb_size=}")
         print(f"{ab_size=}")
@@ -161,7 +161,7 @@ class ListRankLoss(LightningModule):
         )
 
         scheduler = {"scheduler": lr_scheduler, "interval": "step", "frequency": 1}
-        return [optimizer], [scheduler]
+        return (optimizer, scheduler)
 
    
 
@@ -204,12 +204,15 @@ def main(args):
 
     model = ListRankLoss(model_name=args.model)
 
-    trainer = Trainer(#max_epochs=args.epochs, 
-                    #precision=args.precision, 
-                    #strategy=args.strategy,    
-                    #default_root_dir=output_dir,
-                    callbacks=[checkpoint_callback]
-                    )
+
+    trainer = Trainer(max_epochs=args.epochs, 
+                      accelerator="cpu", 
+                      devices=args.num_devices, 
+                      precision=args.precision, 
+                      strategy=args.strategy,    
+                      default_root_dir=output_dir,
+                      callbacks=[checkpoint_callback],
+                                            )
 
     trainer.fit(model, datamodule=dm)
 
@@ -305,13 +308,15 @@ def eval(args):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
+    parser.add_argument("--num_devices", type=str, default='cpu')
     parser.add_argument("--batch_size", type=int, default=32)
-    # parser.add_argument("--epochs", type=int, default=10)
-    # parser.add_argument("--strategy", default=None)
-    parser.add_argument("--model", default='cross-encoder/ms-marco-MiniLM-L-12-v2')
+    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--strategy", default=None)
+    parser.add_argument("--model", default='cross-encoder/ms-marco-MiniLM-L-6-v2')
     parser.add_argument("--eval", action="store_true")
     parser.add_argument("--ckpt")
-    # parser.add_argument("--precision", type=int, default=16)
+    parser.add_argument("--cross_lingual_chance", type=float, default=0.0)
+    parser.add_argument("--precision", type=int, default=16)
     parser.add_argument("--num_negs", type=int, default=3)
     
     
