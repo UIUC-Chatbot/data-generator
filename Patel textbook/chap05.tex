@@ -1,0 +1,3795 @@
+\documentclass{patt}
+\usepackage[section]{placeins}
+\usepackage{xr}
+\usepackage{alltt}
+\usepackage{longtable}
+\graphicspath{{../art/ch05/},{../art/designelements/},{../art/designelements/UnNumberedArt/}}
+
+\setcounter{part}{1}
+\setcounter{chapter}{4}
+\setcounter{page}{115}
+
+ \makeatletter
+ \def\@makechapterhead#1{%
+  \begingroup
+  \parindent \z@%
+  \vspace*{-8.5\p@}%
+  \begin{picture}(0,0)
+    \put(432,-577){\includegraphics[width=0.723333in,height=9.52667in]{PattChp.eps}}
+    \put(428,-577){\rule{1\p@}{9.52667in}}
+    \put(381.5,-181){\vbox{%
+        \includegraphics{PattIcon1\ifnum\value{part}=4
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon2\ifnum\value{part}=4
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon3\ifnum\value{part}=4
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon4\ifnum\value{part}=4
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon5\ifnum\value{part}=4
+            a\else b\fi.eps}\vspace{1pc}}}
+  \end{picture}%
+  \settowidth{\chapternumberwidth}{\fontsize{12}{12}\selectfont\industriasolid\trackonefifty{chapter}}%
+  \hfill\parbox{\chapternumberwidth}{%
+    \centering\industriasolid
+    \centerline{\hss\fontsize{12}{12}\selectfont\trackonefifty{chapter}\hss}\par\vspace{1.5pc}
+    \centerline{\sans\fontsize{72}{12}\selectfont\colour\thechapter}}
+  \par
+  \vspace{6.48pc}
+  {\industriasolid\fontsize{30}{32}\selectfont\trackten{#1}\par}%
+  \vspace{1.5pc}%
+  {\colour\rule{36.4pc}{4\p@}}
+  \vspace{4pt}
+  \endgroup}
+\makeatother
+
+\begin{document}
+
+\chapter{The LC-3}\label{chapt:lc2}
+
+In Chapter~4, we discussed the basic components of
+a computer---its memory, its processing unit, including the
+associated temporary storage (usually a set of registers),
+input and output devices, and the control unit that directs
+the activity of all the units (including itself!). We also
+studied the six phases of the instruction cycle---FETCH,
+DECODE, ADDRESS EVALUATION, OPERAND FETCH, EXECUTE, and STORE
+RESULT. We used elements of the LC-3 to illustrate some of the concepts.
+In fact, we introduced five opcodes: two operate instructions (ADD 
+and AND), one data movement instruction (LD), and two control instructions
+(BR and TRAP).  We are now ready to study the LC-3 in much greater detail.
+
+\enlargethispage{-\baselineskip}
+
+Recall from Chapter~1 that the ISA is the interface between what
+the software commands and what the hardware actually carries out.
+In this chapter, we will point out most of the important features 
+of the ISA of the LC-3. (A few elements we will leave for Chapter~8
+and Chapter~9.)  You will need these features to write programs in the 
+LC-3's own language, that is, in the LC-3's {\em machine language}.
+
+
+A complete description of the ISA of the LC-3 is contained in
+Appendix~A.
+
+\section{The ISA: Overview}
+
+The ISA specifies all the information about the computer
+that the software has to be aware of. In other words, the ISA
+specifies everything in the computer that is available to a
+programmer when he/she writes programs in
+the computer's own machine language.  Most people, however, do not write
+programs in the computer's own machine language, but rather opt for 
+writing programs in a high-level language like C++ or Python (or Fortran 
+or COBOL, which have been around for more than 50 years).  Thus, the ISA 
+also specifies everything in the computer that is needed by someone 
+(a compiler writer) who wishes to translate programs written in a 
+high-level language into the machine language of the computer.
+
+The ISA specifies the memory organization, register set, and
+instruction set, including the opcodes, data types, and addressing modes
+of the instructions in the instruction set.
+
+\subsection{Memory Organization}
+
+The LC-3 memory has an address space of $2^{16}$ (i.e.,
+65,536) locations, and an addressability of 16 bits. Not all
+65,536 addresses are actually used for memory locations, but
+we will leave that discussion for Chapter~9.
+Since the normal unit of data that is processed in the LC-3 is 16
+bits, we refer to 16 bits as one {\em word}, and we say the
+LC-3 is {\em word-addressable}.\index{LC-3!word size}\index{LC-3!addressability}
+
+\subsection{Registers}
+
+Since it usually takes far more than one clock cycle
+to obtain data from memory, the LC-3 provides (like almost all
+computers) additional temporary storage locations that can be
+accessed in a single clock cycle.
+
+The most common type of temporary storage locations and the one used in the 
+LC-3 is a set of registers.  Each register in the set is called 
+a {\em general purpose register} (GPR).  Like memory locations, registers 
+store information that can be operated on later.  The number of bits stored in 
+each register is usually one word.  In the LC-3, this means 16 bits.
+
+Registers must be uniquely identifiable. The LC-3 specifies eight
+GPRs, each identified by a 3-bit register number. They are referred
+to as R0, R1, $\ldots$ R7. Figure~5.1 shows a snapshot of the LC-3's
+register set, sometimes called a {\em register file}, with the eight
+values 1, 3, 5, 7, $-2$, $-4$, $-6$, and $-8$ stored in R0, $\ldots$ R7, respectively.
+
+%Figure 5.1
+\begin{figure}[b]
+\centerline{\includegraphics{pat67509_0501.eps}}
+\vspace{-1pt}
+\caption{A snapshot of the LC-3's register file}
+\end{figure}
+
+Recall from Chapter~4 that the instruction to ADD the contents of R0 to R1
+and store the result in R2 is specified as
+
+\begin{equation*}
+\mbox{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\hline
+\multicolumn{1}{|c}{\rule{0pt}{10pt}0\rule{0pt}{10pt}}& \multicolumn{1}{c}{0}& \multicolumn{1}{c}{0}& \multicolumn{1}{c}{1}&
+\multicolumn{1}{|c}{0}& \multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}& \multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}& \multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{0}& \multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}& \multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}& \multicolumn{1}{c|}{1}\\
+\hline
+\multicolumn{4}{c}{ADD} & \multicolumn{3}{c}{R2} &
+\multicolumn{3}{c}{R0} & \multicolumn{3}{c}{} & \multicolumn{3}{c}{R1}\\
+\end{tabular}}
+\end{equation*}
+
+where the two {\em sources} of the ADD instruction are
+specified in bits [8:6] and bits [2:0]. The {\em destination} of the ADD result
+is specified in bits [11:9]. Figure~5.2 shows the contents of the
+register file of Figure~5.1 AFTER the instruction 
+\begin{colorverbatim}
+                       ADD R2, R1, R0. 
+\end{colorverbatim}
+
+\noindent
+is executed.
+
+\FloatBarrier
+
+%Figure 5.2
+\begin{figure}
+\centerline{\includegraphics{pat67509_0502.eps}}
+\caption{The register file of Figure~5.1 after the ADD instruction}
+\end{figure}
+
+\FloatBarrier
+
+\subsection{The Instruction Set}
+
+Recall from Chapter~4 that an instruction is made up of two things, 
+its {\em opcode}
+(what the instruction is asking the computer to do) and its
+{\em operands} (who the computer is expected to do it to!). The
+instruction set is defined by its set of opcodes, {\em data types},
+and {\em addressing modes}. The addressing modes determine where the 
+operands are located.  The data type is the representation of the operands
+in 0's and 1's.
+
+The ADD example above has an opcode ADD, one addressing mode ({\em register 
+mode}), and one data type (2's complement integer).  The instruction directs 
+the computer to perform a 2's complement integer addition, and specifies the 
+locations (GPRs) where the computer is expected to find the operands and the 
+location (a GPR) where the computer is to write the result.
+
+We saw in Chapter~4 that the ADD instruction can also have two
+addressing modes (register mode and immediate mode), where one of
+the two operands is literally contained in bits[4:0] of the instruction.
+
+Figure~5.3 lists all the instructions of the LC-3, the
+bit encoding [15:12] for each opcode, and the format of each
+instruction.  Some of them you recognize from Chapter~4.  Many others will be 
+explained in Sections~5.2, 5.3, and~5.4.
+
+%Figure 5.3
+\begin{figure}
+\centerline{\includegraphics{pat67509_0503.eps}}
+\caption{Formats of the entire LC-3 instruction set. NOTE:
+$^{+}$ indicates instructions that modify condition codes\label{fig:inst_formats}}
+\end{figure}
+
+\FloatBarrier
+\subsection{Opcodes}
+
+Some ISAs have a very large number of opcodes, one for each of a very large 
+number of tasks that a program may wish to carry out. The x86 
+ISA has more than 200 opcodes.  Other ISAs have a very small set of opcodes. 
+Some ISAs have specific opcodes to help with processing scientific calculations.
+For example, the Hewlett Packard {\em Precision Architecture} can specify 
+the compound operation $(A\cdot B)+C$ with one opcode; that is, a multiply, 
+followed by an add on three source operands A,B, and C.  Other ISAs have 
+instructions that process video images obtained from the World Wide Web. 
+The Intel x86 ISA added a number of instructions which they originally 
+called {\em MMX instructions} because they e{\bf X}tended the ISA to assist
+with {\bf M}ulti{\bf M}edia applications that use the Web.  Still other ISAs
+have specific opcodes to help with handling the tasks of the operating system. 
+For example, the VAX ISA, popular in the 1980s, used a single opcode instead of
+a long sequence of instructions that other computers used to save the 
+information associated with a program that was in the middle of executing 
+prior to switching to another program.  The decision as to which instructions 
+to include or leave out of an ISA is usually a hotly debated topic in a 
+company when a new ISA is being specified.
+
+The LC-3 ISA has 15 instructions, each identified by its unique
+opcode. The opcode is specified in bits [15:12] of the instruction.
+Since four bits are used to specify the opcode, 16 distinct opcodes
+are possible. However, the LC-3 ISA specifies only 15 opcodes. The
+code 1101 has been left unspecified, reserved for some future need
+that we are not able to anticipate today.
+
+As we already discussed briefly in Chapter~4, there are three different 
+types of instructions, which means three
+different types of opcodes: {\em operates}, {\em data movement}, and
+{\em control}. Operate instructions process information. Data
+movement instructions move information between memory and the
+registers and between registers/memory and input/output devices.
+Control instructions change the sequence of instructions that will
+be executed. That is, they enable the execution of an instruction
+other than the one that is stored in the next sequential location in memory.
+
+\subsection{Data Types}
+
+As we first pointed out in Section~2.1.2, a {\em data type} is a 
+representation of information such that the ISA has opcodes that operate 
+on that representation. There are many ways to represent the same information 
+in a computer. That should not surprise us, since in our daily lives, we 
+regularly represent the same information in many different ways. For example, 
+a child, when asked how old he is, might hold up three fingers, signifying that
+he is 3~years old.\lightbulb[-33pt] If the child is particularly precocious,
+he might write the decimal digit {\em 3} to indicate his age. Or,
+if the child is a CS or CE major at the university, he might write
+0000000000000011, the 16-bit binary representation for 3. If he
+is a chemistry major, he might write $3.0 \cdot 10^0$. All four
+represent the same value:~3.\index{data type}
+
+In addition to the representation of a single number by different bit patterns 
+in different data types, it is also the case that the same bit pattern 
+can correspond to different numbers, depending on the data type.  
+For example, the 16 bits 0011000100110000
+represent the 2's complement integer 12,592, the ASCII code for 10, and a bit
+vector such that $b_13$, $b_12$, $b_7$, $b_4$, and $b_3$ have the relevant
+property of the bit vector.  
+
+That should also not surprise us, since in our daily lives, the same 
+representation can correspond to multiple interpretations, as is the case with
+a red light.  When you see it on the roadway while you are driving, it 
+means you should stop.  When you see it at Centre Bell where the Montreal
+Canadiens play hockey, it means someone has just scored a goal.
+
+Every opcode will interpret the bit patterns of its operands according to the
+data type it is designed to support.  In the case of the ADD opcode, for
+example, the hardware will interpret the bit patterns of its operands as 
+2's complement integers.  Therefore, if a programmer stored the bit pattern 
+0011000100110000 in R3, thinking that the bit pattern represented the integer 
+10, the instruction ADD R4,R3,\#10 would write the integer 12,602 into R4, 
+and not the ASCII code for the integer 20.  Why?  Because the opcode ADD 
+interprets the bit patterns of its operands as 2's complement integers, and 
+not ASCII codes, regardless what the person creating those numbers intended.
+
+\subsection{Addressing Modes}\label{sec:addr_modes}
+
+An addressing mode is a mechanism for specifying where
+the operand is located. An operand can generally be found in one of
+three places: in memory, in a register, or as a part of the
+instruction. If the operand is a part of the instruction, we
+refer to it as a {\em literal} or as an {\em immediate} operand.\index{immediate operand}
+The term {\em literal} comes from the fact that the bits of the
+instruction {\bf literally} form the operand. The term {\em immediate}
+comes from the fact that we can obtain the operand immediately from the 
+instruction, that is, we don't have to look elsewhere for it.
+
+The LC-3 supports five addressing modes: immediate (or literal),
+register, and three memory addressing modes: {\em PC-relative},
+{\em indirect}, and {\em Base$+$offset}.\index{LC-3!addressing modes}
+We will see in Section~5.2 that operate instructions use two
+addressing modes: register and immediate. We will see in
+Section~5.3 that data movement instructions use four of the five 
+addressing modes.
+
+\subsection{Condition Codes}
+
+One final item will complete our overview of the ISA
+of the LC-3: condition codes.\index{condition codes}
+The LC-3 has three single-bit registers that are individually set (set to 1)
+or cleared (set to 0) each time one of the eight general purpose registers is
+written into as a result of execution of one of the operate instructions or one 
+of the load instructions.  Each operate instruction performs a computation 
+and writes the result into a general purpose register.  Each load instruction 
+reads the contents of a memory location and write the value found there into 
+a general purpose register.  We will discuss all the operate instructions in 
+Section~5.2 and all the load instructions in Section~5.3.  
+
+The three single-bit registers are called
+$N$, $Z$, and $P$, corresponding to their meaning: negative, zero,
+and positive. Each time a GPR is written by an operate or a load instruction, 
+the N, Z, and P one-bit registers are individually set to 0 or 1, corresponding 
+to whether the result written to the GPR is negative, zero, or positive. 
+That is, if the result is negative, the N register is set, and Z and P are
+cleared. If the result is zero, Z is set and N and P are cleared.
+If the result is positive, P is set and N and Z are cleared.
+
+The set of three single-bit registers are referred to as {\em condition codes} 
+because the condition of those bits are used to change the sequence of 
+execution of the instructions in a computer program.  Many ISAs use condition 
+codes to change the execution sequence.  SPARC and x86 are two examples.  We 
+will show how the LC-3 does it in Section~5.4.
+
+\section{Operate Instructions}
+
+\subsection{ADD, AND, and NOT}
+
+Operate instructions process data. Arithmetic operations
+(like ADD, SUB, MUL, and DIV) and logical operations (like AND, OR,
+NOT, XOR) are common examples. The LC-3
+has three operate instructions: ADD, AND, and NOT.
+
+
+The {\bf NOT} (opcode{}${}={}${}1001) instruction is the only
+operate instruction that performs a {\em unary} operation,
+that is, the operation requires one source operand. The NOT
+instruction bit-wise complements a 16-bit source operand and stores the 
+result in a destination register. NOT uses the register addressing mode for 
+both its source and destination. Bits [8:6] specify the source register
+and bits [11:9] specify the destination register. Bits [5:0]
+must contain all 1s.
+
+If R5 initially contains 0101000011110000, after executing the following 
+instruction:
+
+\begin{equation*}
+\mbox{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{1}{|c}{\rule{0pt}{10pt}1\rule{0pt}{10pt}}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{|c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{|c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c|}{1}\\
+\hline
+\multicolumn{4}{c}{\rule{0pt}{10pt}NOT\rule{0pt}{10pt}} &\multicolumn{3}{c}{R3} &
+\multicolumn{3}{c}{R5}\\
+\end{tabular}}
+\end{equation*}
+
+R3 will contain 1010111100001111.
+
+
+Figure~5.4 shows the key parts of the data path that are used to perform
+the NOT instruction shown here. Since NOT is a unary operation, only the
+A input of the ALU is relevant. It is sourced from R5. The control
+signal to the ALU directs~the ALU to perform the bit-wise complement operation.
+The output of the ALU (the result of the operation) is stored into~R3 and the
+condition codes are set, completing the execution of the NOT instruction.
+
+%Figure 5.4
+\begin{figure}
+\centerline{\includegraphics{pat67509_0504.eps}}
+\caption{Data path relevant to the execution of NOT R3, R5}
+\end{figure}
+
+\FloatBarrier
+Recall from Chapter~4 that the {\bf ADD} ($\text{opcode}=\text{0001}$) 
+and {\bf AND} ($\text{opcode}=\text{0101}$) instructions both 
+perform {\em binary}
+operations; they require two 16-bit source operands. The ADD
+instruction performs a 2's complement addition of its two source
+operands. The AND instruction performs a bit-wise AND of each pair
+of bits of its two 16-bit operands. Like the NOT, the ADD and AND
+use the register addressing mode for one of the source operands
+and for the destination operand. Bits [8:6] specify the source
+register and bits [11:9] specify the destination register (where the result will be written).
+
+\subsection{Immediates}
+
+The second source operand for both ADD and AND instructions (as also discussed
+in Chapter~4) can be specified
+by either register mode or as an immediate operand. Bit [5]
+determines which.  If bit [5] is 0, then the second
+source operand uses a register, and bits [2:0] specify which register.
+In that case, bits [4:3] are set to 0 to complete the specification of 
+the instruction.
+
+In the ADD instruction shown below, if R4 contains the value 6 
+and R5 contains the value $-$18, then R1 will contain the value $-$12 
+after the instruction is executed.
+\begin{equation*}
+\mbox{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\hline
+\multicolumn{1}{|c}{\rule{0pt}{10pt}0\rule{0pt}{10pt}}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{|c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{|c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c|}{1}\\
+\hline
+\multicolumn{4}{c}{\rule{0pt}{10pt}ADD\rule{0pt}{10pt}} &\multicolumn{3}{c}{R1} &
+\multicolumn{3}{c}{R4} &\multicolumn{3}{c}{} &
+\multicolumn{3}{c}{R5}\\
+\end{tabular}}
+\end{equation*}
+
+If bit[5] is 1, the second source operand is contained within
+the instruction. In that case the second source operand is obtained
+by sign-extending bits [4:0] to 16 bits before performing the ADD
+or AND. The result of the ADD (or AND) instruction is written to the destination
+register and the condition codes are set, completing the execution of the
+ADD (or AND) 
+instruction.  Figure~5.5 shows the key parts of the data path that are used
+to perform the instruction 
+
+\begin{colorverbatim}
+              ADD R1, R4, #$-$2.
+\end{colorverbatim}
+
+%Figure 5.5
+\begin{figure}[b]
+\centerline{\includegraphics{pat67509_0505.eps}}
+\caption{Data path relevant to the execution of ADD R1, R4, \#-2}
+\end{figure}
+
+\FloatBarrier
+
+\lightbulb[6pt]
+\noindent Since the immediate operand in an ADD or AND instruction must fit in
+bits [4:0] of the instruction, not all 2's complement integers can
+be immediate operands. Question: Which integers are OK (i.e., which integers 
+can be used as immediate~operands)?
+
+\begingroup
+\makeatletter
+\renewenvironment{example}{%
+  \refstepcounter{example}%
+  \begin{colourframed}%
+    \def\@mathmargin{\z@}
+    \let\enumargs\exenumargs
+    \vspace*{-2\p@}%
+    \rlap{\hspace*{29pc}\hbox{\hspace*{-\fboxsep}%
+      \setlength{\fboxsep}{\z@}%
+      {\colorbox{SPOThundred}{\vbox to 13\p@{%
+          \vss\hbox to 7pc{\hss
+          \color{white}\sansbold\fontsize{10}{12}\selectfont
+          Example~\theexample\hss}\vss}}}}}%
+  \normalfont\fontsize{9.5}{11}\selectfont
+  \rightskip7.5pc\advance\rightskip by \fboxsep
+  \leftskip3\p@
+  \parindent1.5pc\@afterheading\@afterindentfalse
+  \vspace*{-14.5\p@}}%
+{\par\unskip\removelastskip\offinterlineskip\vspace{4\p@}\end{colourframed}}
+\makeatother
+\begin{example}
+What does the following instruction do?\\
+\noindent\hspace*{-9pt}\begin{minipage}{28pc}
+\begin{equation*}
+\mbox{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{1}{|c}{\rule{0pt}{10pt}0\rule{0pt}{10pt}}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{1}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c|}{0}\\
+\hline
+\end{tabular}}
+\end{equation*}
+\end{minipage}
+
+\answer{Register 2 is cleared (i.e., set to all 0s).}
+\end{example}
+
+\begin{example}
+What does the following instruction do?\\
+\noindent\hspace*{-9pt}\begin{minipage}{28pc}
+\begin{equation*}
+\mbox{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{1}{|c}{\rule{0pt}{10pt}0\rule{0pt}{10pt}}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{|c}{1}&\multicolumn{1}{ c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{|c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{1}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c|}{1}\\
+\hline
+\end{tabular}}
+\end{equation*}
+\end{minipage}
+
+\answer{Register 6 is incremented (i.e., ${\rm R6}\leftarrow{\rm R6}+1$).}
+
+Note that a register can be used as a source and also as a destination in
+the same instruction. This is true for all the instructions in the LC-3.
+\end{example}
+
+\begin{example}
+Recall that the negative of an integer represented in 2's complement can be 
+obtained by complementing the number and adding 1. Therefore, assuming the 
+values A and B are in R0 and
+R1, what sequence of three instructions performs ``A minus
+B'' and writes the result into~R2?
+
+\answer{\\
+\noindent\hspace*{-1pt}\begin{minipage}{28pc}
+\begin{equation*}
+\mbox{\renewcommand{\tabcolsep}{4.75pt}
+\begin{tabular}{ccccccccccccccccr}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 &\\
+\cline{1-16}
+\multicolumn{1}{|c}{\rule{0pt}{10pt}1\rule{0pt}{10pt}}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{|c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c|}{1}&
+\multicolumn{1}{l}{\color{seventyblack}\tt{R1 $\leftarrow$ NOT(B)}}\\
+\cline{1-16}
+\multicolumn{4}{c}{NOT} &\multicolumn{3}{c}{R1} &
+\multicolumn{3}{c}{R1}\\\\
+\cline{1-16}
+\multicolumn{1}{|c}{\rule{0pt}{10pt}0\rule{0pt}{10pt}}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{|c}{1}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c|}{1}&
+\multicolumn{1}{l}{\color{seventyblack}\tt{R2 $\leftarrow$ -B}}\\
+\cline{1-16}
+\multicolumn{4}{c}{ADD} &\multicolumn{3}{c}{R2} &
+\multicolumn{3}{c}{R1} &\multicolumn{1}{c}{} &
+\multicolumn{5}{c}{1}\\\\
+\cline{1-16}
+\multicolumn{1}{|c}{\rule{0pt}{10pt}0\rule{0pt}{10pt}}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c|}{0}&
+\multicolumn{1}{l}{\color{seventyblack}\tt{R2 $\leftarrow$ A +(-B)}}\\
+\cline{1-16}
+\multicolumn{4}{c}{ADD} &\multicolumn{3}{c}{R2} &
+\multicolumn{3}{c}{R0} &\multicolumn{3}{c}{} &
+\multicolumn{3}{c}{R2}\\
+\end{tabular}}
+\end{equation*}
+\vspace{6pt}
+\end{minipage}
+Question: What distasteful result is also produced by this
+sequence? How can it easily be avoided?}
+\end{example}\questionmark[-3.8pc]
+\endgroup
+
+\vspace{-24pt}
+
+\subsection{The LEA Instruction (although not really an operate)}
+
+Where to put the LEA instruction is a matter for
+debate (when you have nothing more important to do!).  It does not really
+operate on data, it simply loads a register with an address.  It clearly
+does not move data from memory to a register, nor is it a control instruction.
+We had to put it somewhere so we chose to discuss it here!
+
+{\bf LEA} ($\text{opcode}=1110$) loads the register specified by 
+bits [11:9] of the instruction with
+the value formed by adding the incremented program counter to the
+sign-extended bits [8:0] of the instruction.  We saw this method of
+constructing an address in Chapter~4 with the LD instruction.  However, in
+this case, the instruction does not access memory, it simply loads the
+computed address into a register.  Perhaps a better name for this opcode would
+be CEA (for Compute Effective Address).  However, since many microprocessors
+in industry that have this instruction in their ISAs call it LEA (for Load 
+Effective Address), we have chosen to use the same acronym.
+
+We shall see shortly that the LEA instruction is useful 
+to initialize a register with an address that is very close to
+the address of the instruction doing the initializing.
+
+If memory location x4018 contains the instruction LEA R5, \#$-$3, and 
+the PC contains x4018,
+
+\begin{equation*}
+\mbox{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{1}{|c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{|c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c|}{1}\\
+\hline
+\multicolumn{4}{c}{LEA} &\multicolumn{3}{c}{R5} &
+\multicolumn{9}{c}{$-3$}\\
+\end{tabular}}
+\end{equation*}
+
+\noindent
+R5 will contain x4016 after the instruction at x4018 is executed.
+Question: Why will R5 not contain the address x4015?
+
+Figure~5.6 shows the relevant parts of the data path required to execute
+the LEA instruction. Note that the value to be loaded into the register does
+{\bf not} involve any access to memory.  ...nor does it have any effect on the
+condition codes.
+
+%Figure 5.6
+\begin{figure}[b]
+\begin{minipage}{\textwidth}
+\centerline{\includegraphics{pat67509_0509.eps}}
+\caption{Data path relevant to the execution of LEA R5, \#$-$3}
+\end{minipage}
+\end{figure}
+
+\FloatBarrier
+\section{Data Movement Instructions}
+
+Data movement instructions move information between\enlargethispage{-14pt}
+the general purpose registers and memory, and between the registers and the
+input/output devices. We will ignore for now the business of
+moving information from input devices to registers and
+from registers to output devices. This will be 
+an important part of Chapter~9.
+In this chapter, we will confine ourselves to moving information
+between memory and the general purpose registers.
+
+The process of moving information from memory to a register is
+called a {\em load}, and the process of moving information
+from a register to memory is called a {\em store}. In both cases,
+the information in the location containing the source operand remains unchanged.
+In both cases, the location of the destination
+operand is overwritten with the source operand, destroying in the process
+the previous value that was in the destination location.
+
+The LC-3 contains six instructions that move information: LD,
+LDR, LDI, ST, STR, and STI.
+
+The format of the load and store instructions is as follows:\vadjust{\vspace{3pt}}
+
+\begin{equation*}
+\mbox{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\hline
+\multicolumn{4}{|c}{opcode}&\multicolumn{3}{|c|}{DR or SR}&
+\multicolumn{9}{c|}{Addr Gen bits}\\
+\hline
+\end{tabular}}
+\end{equation*}
+
+Data movement instructions require two operands, a source and
+a destination. The source is the data to be moved; the destination is the
+location where it is moved to. One of these locations is a register, the
+other is a memory location or an input/output device.
+In this chapter we will assume the second operand is in memory.
+In Chapter~9 we will study the cases where the second operand is an 
+input or output device.
+
+Bits[11:9] specify one of these operands, -- the register.
+If the instruction is a load, {\em DR} refers to the destination general 
+purpose register that will contain the value after it is read from memory
+(at the completion of the instruction cycle).
+If the instruction is a store, {\em SR} refers to the register
+that contains the value that will be written to memory.
+
+Bits [8:0] contain the {\em address generation bits}. That is, bits [8:0] 
+contain information that is used to compute the 16-bit address of
+the second operand. In the case of the LC-3's data movement instructions,
+there are three ways to interpret bits [8:0]. They are collectively called
+{\em addressing modes}. The opcode specifies how to interpret
+bits [8:0]. That is, the LC-3's opcode specifies which of the three addressing 
+modes should be used to obtain the address of the operand from bits [8:0] of 
+the instruction.
+
+\subsection{PC-Relative Mode}
+
+{\bf LD} ($\text{opcode}=0010$) and {\bf ST} ($\text{opcode}=0011$) specify 
+the {\em PC-relative} addressing mode.
+We have already discussed this addressing mode in Chapter~4.  It is so named 
+because bits [8:0] of the instruction
+specify an offset relative to the PC. The memory address is computed by
+sign-extending bits [8:0] to 16 bits, and adding the result to the
+incremented PC. The incremented PC is the contents of the program counter
+after the FETCH phase; that is, after the PC has been incremented.
+If a load, the memory location corresponding to the computed memory address 
+is read, and the result loaded into the register
+\index{LC-3!PC-relative addressing mode}
+specified by bits [11:9] of the instruction.  ...and the N, Z, and P one-bit
+condition codes are set depending on whether the value loaded is negative,
+positive or zero.
+
+If the following instruction is located at x4018, it will cause the contents 
+of x3FC8 to be loaded into R2.
+
+\begin{equation*}
+\mbox{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{1}{|c}{\rule{0pt}{10pt}0\rule{0pt}{10pt}}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{|c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c|}{1}\\
+\hline
+\multicolumn{4}{c}{LD} &\multicolumn{3}{c}{R2} &
+\multicolumn{9}{c}{x1AF}\\
+\end{tabular}}
+\end{equation*}
+
+
+Figure~5.7 shows the relevant parts of the data path required to
+execute this instruction. The three steps of the LD instruction
+are identified. In step 1, the incremented PC (x4019) is added to
+the sign-extended value contained in IR[8:0] (xFFAF), and the result
+(x3FC8) is loaded into the MAR. In step 2, memory is read and the contents
+of x3FC8 are loaded into the MDR. Suppose the value stored in x3FC8 is 5.
+In step~3, the value 5 is loaded into R2 and the NZP condition codes are set,
+completing the instruction cycle.
+
+%Figure 5.7
+\begin{figure}
+\centerline{\includegraphics{pat67509_0506.eps}}
+\caption{Data path relevant to execution of LD R2, x1AF}
+\end{figure}
+
+\FloatBarrier
+
+Note that the address of the memory operand is limited to a small range of
+the total memory. That is, the address can only be within $+256$ or $-255$ 
+locations of the LD or ST instruction.  This is the range provided by the
+sign-extended value contained in bits[8:0] of the instruction.  If a load
+instruction needs to access a memory location further away from the load
+instruction, one of the other two addressing modes must be used.
+
+\subsection{Indirect Mode}
+
+{\bf LDI} ($\text{opcode}=1010$) and {\bf STI} ($\text{opcode}=1011$)
+specify the {\em indirect} addressing mode. An address is first formed
+exactly the same way as with LD and ST. However, instead of this
+address being the {\bf address of the operand} to be loaded or stored,
+it is {\bf the address} of the address of the operand to be loaded or stored.
+Hence the name {\em indirect}.  Note that the address of the operand
+can be anywhere in the computer's memory, not just within the range
+provided by bits [8:0] of the instruction as is the case for LD and
+ST. The destination register for the LDI and the source register for
+STI, like all the other loads and stores, are specified in bits [11:9]
+of the instruction.\index{LC-3!indirect addressing mode}
+
+If the instruction
+
+\begin{equation*}
+\mbox{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{1}{|c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{|c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c|}{0}\\
+\hline
+\multicolumn{4}{c}{LDI} &\multicolumn{3}{c}{R3} &
+\multicolumn{9}{c}{x1CC}\\
+\end{tabular}}
+\end{equation*}
+
+is in x4A1B, and the contents of x49E8 is x2110,
+execution of this instruction results in the contents of
+x2110 being loaded into R3.
+
+%Figure 5.8
+\begin{figure}[b]
+\centerline{\includegraphics{pat67509_0507.eps}}
+\caption{Data path relevant to the execution of LDI R3, x1CC}
+\end{figure}
+
+Figure~5.8 shows the relevant parts of the data path required to
+execute this instruction. As is the case with the LD and ST instructions,
+the first step consists of adding the incremented PC (x4A1C) to
+the sign-extended value contained in IR[8:0] (xFFCC), and the result
+(x49E8) loaded into the MAR. In step 2, memory is read and the contents
+of x49E8 (x2110) is loaded into the MDR. In step 3, since x2110 is not the
+operand, but the address of the operand, it is loaded into the MAR. In step 4,
+memory is again read, and the MDR again loaded. This time the MDR is loaded
+with the contents of x2110. Suppose the value $-1$ is stored in memory
+location x2110. In step~5, the contents of the MDR (i.e., $-1$) are
+loaded into R3 and the NZP condition codes are set, completing the instruction 
+cycle.
+
+\FloatBarrier
+\subsection{Base$+$offset Mode}
+
+{\bf LDR} ($\text{opcode}=0110$) and {\bf STR} ($\text{opcode}=0111$)
+specify the {\em Base$+$offset} addressing mode. The Base$+$offset
+mode is so named because the address of the operand is obtained by
+adding a sign-extended 6-bit offset to a base register. The 6-bit
+offset is obtained from the instruction, bits[5:0]. The
+base register is specified by bits[8:6] of the instruction.
+\index{LC-3!base+offset addressing mode}
+
+If R2 contains the 16-bit quantity x2345, the following instruction
+loads R1 with the contents of x2362.
+
+\begin{equation*}
+\mbox{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c|}{1}\\
+\hline
+\multicolumn{4}{c}{LDR} &\multicolumn{3}{c}{R1} &
+\multicolumn{3}{c}{R2} &\multicolumn{6}{c}{x1D} \\
+\end{tabular}}
+\end{equation*}
+
+
+%Figure 5.9
+\begin{figure}[b]
+\centerline{\includegraphics{pat67509_0508.eps}}
+\caption{Data path relevant to the execution of LDR R1, R2, x1D}
+\end{figure}
+
+
+Figure~5.9 shows the relevant parts of the data path required to execute
+this instruction. First the contents of R2 (x2345) are added to the
+sign-extended value contained in IR[5:0] (x001D), and the result (x2362)
+is loaded into the MAR. Second, memory is read, and the contents of x2362 are
+loaded into the MDR. Suppose the value stored in memory location x2362 is x0F0F.
+Third, and finally, the contents of the MDR (in this case, x0F0F) are 
+loaded into R1 and the NZP condition codes are set, completing the execution
+of the LDR instruction.
+
+Note that the Base+offset addressing mode also allows the
+address of the operand to be anywhere in the computer's memory.
+
+\FloatBarrier
+\subsection{An Example}
+
+We conclude our study of addressing modes with a
+comprehensive example. Assume the contents of memory locations
+x30F6 through x30FC are as shown in Figure~5.10, and the PC
+contains x30F6. We will examine the effects of carrying out
+the seven instructions starting at location x30FC.
+
+%Figure 5.10
+\begin{figure}
+\vspace{12pt}
+$\mbox{\renewcommand{\tabcolsep}{3.25pt}
+\begin{tabular}{@{}cccccccccccccccccr}
+Address & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+\multicolumn{1}{c}{x30F6}&\multicolumn{1}{|c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{|c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c|}{1}&\multicolumn{1}{l}{\tt }\\
+\cline{2-17}
+\multicolumn{1}{c}{x30F7}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{|c}{1}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c|}{0}&\multicolumn{1}{l}{\tt }\\
+\cline{2-17}
+\multicolumn{1}{c}{x30F8}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c|}{1}&\multicolumn{1}{l}{\tt }\\
+\cline{2-17}
+\multicolumn{1}{c}{x30F9}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{|c}{1}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c|}{0}&\multicolumn{1}{l}{\tt }\\
+\cline{2-17}
+\multicolumn{1}{c}{x30FA}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{|c}{1}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c|}{1}&\multicolumn{1}{l}{\tt }\\
+\cline{2-17}
+\multicolumn{1}{c}{x30FB}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c|}{0}&\multicolumn{1}{l}{\tt }\\
+\cline{2-17}
+\multicolumn{1}{c}{x30FC}&\multicolumn{1}{|c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{|c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c|}{1}&\multicolumn{1}{l}{\tt }\\
+\cline{2-17}
+\end{tabular}}$
+\vspace{-1pt}
+\caption{A Code Fragment illustrating the three ddressing modes\label{fig:addr_mode}}
+\end{figure}
+
+\FloatBarrier
+
+Since the PC points initially to location x30F6, the first instruction
+to be executed is the one stored in location x30F6. The opcode
+of that instruction is 1110, load effective address (LEA). LEA loads the 
+register specified by bits [11:9] with the
+address formed by sign-extending bits [8:0] of the instruction and adding
+the result to the incremented PC. The 16-bit value obtained by sign-extending
+bits [8:0] of the instruction is xFFFD. The incremented PC is x30F7.
+Therefore, at the end of execution of the LEA instruction, R1
+contains x30F4, and the PC contains x30F7.
+
+Next, the instruction stored in location x30F7 is executed. Since the opcode 
+0001 specifies ADD, the sign-extended immediate in bits [4:0] (since bit[5] 
+is 1) is added to the contents of the register specified in bits [8:6], and 
+the result is written to the register specified by bits [11:9]. Since
+the previous instruction wrote x30F4 into R1, and the sign-extended
+immediate value is x000E, the sum is x3102.  At the end of execution of this 
+instruction, R2 contains x3102, and the
+PC contains x30F8. R1 still contains x30F4.
+
+Next, the instruction stored in x30F8. The opcode 0011 specifies the ST 
+instruction, which stores
+the contents of the register specified by bits[11:9] (R2) into the memory 
+location whose address is computed using the PC-relative addressing mode. 
+That is, the address is computed by adding the incremented PC (x30F9) to 
+the 16-bit value obtained by sign-extending bits[8:0] of the
+instruction (xFFFB).  Therefore, at the end of execution of the ST 
+instruction, memory location x30F4 (i.e., x30F9 + xFFFB) contains the value
+stored in R2 (x3102) and the PC contains x30F9.
+
+Next the instruction at x3059. The AND instruction, with an immediate operand
+x0000.  At the end of execution, R2 contains the value 0, and the PC contains 
+x30FA.
+
+At x30FA, the opcode 0001 specifies the ADD instruction.
+After execution, R2 contains the value 5, and the PC contains x30FB.
+
+\looseness=1
+At x30FB, the opcode 0111 signifies the STR instruction.  STR (like LDR)
+uses the Base+offset addressing mode. The memory address is obtained by 
+adding the contents of the BASE Register (specified by bits [8:6]) to the
+sign-extended offset contained in bits [5:0]. In this case, bits [8:6]
+specify R1, which contains x30F4. The 16-bit sign-extended offset is x000E. 
+Since x30F4${}+{}$x000E is x3102, the memory address is x3102.
+The STR instruction stores into x3102 the contents of the register specified by
+bits [11:9], in this case R2.  Since R2 contains the value 5, at the end of 
+execution of this instruction, M[x3102] contains the value 5, and the PC 
+contains x30FC.
+
+Finally the instruction at x30FC.  The opcode 1010 specifies LDI. 
+LDI (like STI) uses the indirect addressing mode. The memory address is 
+obtained by first forming an address as is done in the PC-relative addressing 
+mode.  Bits[8:0] are sign-extended to 16 bits (xFFF7) and added to the
+incremented PC (x30FD).  Their sum (x30F4) is the {\bf address} of the 
+operand address.  Since M[x30F4] contains x3102, x3102 is the operand address. 
+The LDI instruction loads the value found at this address (in this case 5) 
+into the register
+identified by bits [11:9] of the instruction (in this case R3). At the end
+of execution of this instruction, R3 contains the value 5 and the PC
+contains x30FD.
+
+\section{Control Instructions}
+
+Control instructions change the sequence of instructions to be
+executed. If there were no control instructions, the next instruction
+fetched after the current instruction finishes would always be the instruction
+located in the next sequential memory location. As you know, this is because
+the PC is incremented in the FETCH phase of each instruction cycle.  We have 
+already seen in the program of Section~4.4 that it is often useful to be able 
+to break that sequence.
+
+The LC-3 has five opcodes that enable the sequential execution flow to be 
+broken: conditional branch, unconditional jump, subroutine call (sometimes 
+called {\em function}), TRAP, and Return from Trap or Interrupt (RTI). In this 
+section, we will deal almost entirely with the most common control instruction,
+the {\em conditional branch}. We will also discuss the unconditional jump and
+\index{conditional branch}
+the TRAP instruction. The TRAP instruction, often called {\em service call},
+is useful because it allows a programmer to get help from the operating system 
+to do things that the typical programmer does not fully understand how to do. 
+Typical examples: getting information into the computer from
+input devices, displaying information to output devices, and stopping
+the computer.  The TRAP instruction breaks the sequential execution of a user
+program to start a sequence of instructions in the operating system.  How the
+TRAP instruction does this, and in fact, most of the discussion of the TRAP 
+instruction and all of the discussion of the subroutine call and the return 
+from interrupt we will leave for Chapters~8 and~9.
+
+\subsection{Conditional Branches}
+
+Of the five instructions which change the execution flow from the next 
+sequential instruction to an instruction located someplace else in the 
+program, only one of 
+them decides each time it is executed whether to execute the next instruction in
+sequence or whether to execute an instruction from outside that sequence.  
+The instruction that makes that decision each time it is executed is the 
+conditional branch instruction {\bf BR} (opcode = 0000). 
+
+Like all instructions in the LC-3, the PC is incremented during the FETCH phase
+of its instruction cycle.  Based on the execution of previous instructions in
+the program, the conditional branch's EXECUTE phase either does nothing or it
+loads the PC with the address of the instruction it wishes to execute next.
+If the conditional branch instruction does nothing during the EXECUTE phase,
+then the incremented PC will remain unchanged, and the next instruction 
+executed will be the next instruction in sequence.
+
+That decision, whether to do nothing to the incremented PC, or whether to 
+change it, is based on previous results computed by the program, which are
+reflected in the condition codes discussed in Section~5.1.7.  We will explain.
+
+The format of the conditional branch instruction is as follows:
+
+\begin{equation*}
+\mbox{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{1}{|c}{\rule{0pt}{10pt}0\rule{0pt}{10pt}}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{n}&\multicolumn{1}{|c}{z}&
+\multicolumn{1}{|c}{p}&\multicolumn{9}{|c|}{PCoffset}\\
+\hline
+\end{tabular}}
+\end{equation*}
+
+\noindent Bits [11], [10], and [9] are associated with the three condition 
+codes, N, Z, and P.
+
+As you know, the three operate instructions (ADD, AND, and NOT) and the three 
+load instructions (LD, LDI, and LDR) in the LC-3 write values into  
+general purpose registers, and also set the three condition codes in 
+accordance with whether the value written is negative, zero, or positive. 
+
+The conditional branch instruction uses that information to determine
+whether or not to depart from the usual sequential execution of instructions 
+that we get as a result of incrementing PC during the FETCH phase of
+each instruction.
+
+We said (without explanation) in the computer program we studied in 
+Section~4.4 that if bits [11:9] of the conditional branch instruction 
+is 101, we will depart from the usual 
+sequential execution if the last value written into a register by one 
+of the six instructions listed above is not 0.  We are now ready to see
+exactly what causes that to happen.
+
+During the EXECUTE phase of the BR instruction cycle, the processor examines 
+the condition codes whose associated bits in the instruction, bits [11:9], 
+are 1.  Note the lower case {\bf n}, {\bf z}, and {\bf p} in bits [11:9] of 
+the BR instruction format shown above.  If bit [11] is 1, condition code N is 
+examined. If bit [10] is 1, condition code Z is examined.  If bit [9] is~1, 
+condition code P is examined.  If any of bits [11:9] are 0, the associated 
+condition codes are not examined. If any of the condition codes that are 
+examined are set (i.e., equal to 1), then the PC is loaded with the address 
+obtained in the EVALUATE ADDRESS phase.  If none of the condition codes that 
+are examined are set, the incremented PC is left unchanged, and the next 
+sequential instruction will be fetched at the start of the next instruction
+cycle.
+
+The address obtained during the EVALUATE ADDRESS phase of the instruction
+cycle is generated using the PC-relative addressing mode.
+
+In our example in Section~4.4, the ADD instruction in memory location x3004
+subtracted 1 from R2, wrote the result to R2, and set the condition codes.
+The BR instruction in memory location x3005 shows bits[11:9] = 101.
+Since bit[11] is 1, if the N bit is set, the
+result of the ADD must have been negative.  Since bit[9] is also 1, if the
+P bit is set, the result must have been positive.  Since bit[10] is 0, we do 
+not examine the Z bit.  Thus if the previous result is positive or
+negative (i.e., not 0), the PC is loaded with x3003, the address calculated 
+in the EVALUATE ADDRESS phase of the branch instuction.
+
+Recall that the program of Figure~4.7 used R2 to keep track of the number of
+times the number 5 was added to R3.  As long as we were not done with all our 
+additions, the result of subtracting 1 from R2 was not zero.  When we were done
+with our additions, subtracting 1 from R2 produced the result 0, so Z was set
+to 1, N and P were set to 0.  At that point, bits[11:9] checked the N and P
+condition codes which were 0, so the incremented PC was not changed, and the 
+instruction at location x3006, a trap to the operating system to halt the
+computer was executed next.
+
+\paragraph{Let's look at another example.}  Suppose the following 
+instruction is located 
+at x4027, and the last value loaded into a general purpose register was 0.
+
+\begin{equation*}
+\mbox{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\hline
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c|}{1}\\
+\hline
+\multicolumn{4}{c}{BR} &\multicolumn{1}{c}{n} &
+\multicolumn{1}{c}{z} &\multicolumn{1}{c}{p} &
+\multicolumn{9}{c}{x0D9}\\
+\end{tabular}}
+\end{equation*}
+
+Figure~5.11 shows the data path elements that are required to execute
+this instruction. Note the logic required to determine whether the
+sequential instruction flow should be broken. Each of the three AND gates
+corresponds to one of the three condition codes.  The output of the AND gate
+is 1 if the corresponding condition code is 1 and if the associated bit in 
+the instruction
+directs the hardware to check that condition code.  If any of the three
+AND gates have an output 1, the OR gate has an output 1, indicating that the
+sequential instruction flow should be broken, and the PC should be loaded with
+the address evaluated during the EVALUATE ADDRESS phase of the instruction
+cycle.  
+
+In the case of the conditional branch instruction at x4027, the answer
+is yes, and the PC is loaded with x4101, replacing x4028, which had been
+loaded into the PC during the FETCH phase of the BR instruction.
+
+\FloatBarrier
+
+%Figure 5.11
+\begin{figure}
+\centerline{\includegraphics{pat67509_0511.eps}}
+\caption{Data path relevant to the execution of BRz x0D9}
+\end{figure}
+
+\FloatBarrier
+
+\paragraph{Another example.} If all three bits [11:9] are 1, then all 
+three condition codes are
+examined. In this case, since the last result stored into a register
+had to be either negative, zero, or positive (there are no other
+choices!), one of the three condition codes must be in state 1.
+Since all three are examined, the PC is loaded with the address
+obtained in the EVALUATE ADDRESS phase. We call this an
+{\em un}conditional branch since the instruction flow is changed
+unconditionally, that is, independent of the data that is processed.
+
+For example, if the following instruction,
+located at x507B, is executed, the PC is loaded with x5001.
+
+\begin{equation*}
+\mbox{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\hline
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{|c}{1}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c|}{1}\\
+\hline
+\multicolumn{4}{c}{BR} &\multicolumn{1}{c}{n} &
+\multicolumn{1}{c}{z} &\multicolumn{1}{c}{p} &
+\multicolumn{9}{c}{x185}\\
+\end{tabular}}
+\end{equation*}
+
+\questionmark[-16pt]
+
+Question: What happens if all three bits [11:9] in the BR instruction are~0?
+
+\subsection{Two methods of Loop Control}
+
+We saw in Section~4.4 in our multiplication program that we repeatedly 
+executed a sequence of
+instructions until the contents of a register was 0.  We call that sequence
+a {\em loop body}, and each time the loop body is executed one {\em iteration}
+of the loop body.  The BR instruction at the end of the sequence controls the
+number of times the loop body is executed.  There are two common 
+ways to control the number of iterations.  
+
+\paragraph{Loop Control with a Counter}
+  
+\FloatBarrier
+Suppose we know that the 12 locations x3100 to x310B contain
+integers, and we wish to compute the sum of these 12 integers.
+
+A flowchart for an algorithm to solve the problem is shown in
+Figure~5.12.
+
+%Figure 5.12
+\begin{figure}
+\centerline{\includegraphics{pat67509_0512.eps}}
+\caption{An algorithm for adding integers using a counter for loop control}
+\label{fig:12adds}
+\end{figure}
+
+First, as in all algorithms, we must {\em initialize our variables}.
+That is,\index{variables!initializing}
+we must set up the initial values of the variables that the computer
+will use in executing the program that solves the problem. There
+are three such variables: the address of the next integer to be
+added (assigned to R1), the running sum (assigned to R3), and
+the number of integers left to be added (assigned to R2). The
+three variables are initialized as follows: The address of the
+first integer to be added is put in R1. R3, which will keep
+track of the running sum, is initialized to 0. R2, which will
+keep track of the number of integers left to be added, is initialized
+to 12. Then the process of adding begins.
+
+The program repeats the process of loading into R4 one of the 12
+integers, and adding it to R3. Each time we perform the ADD, we
+increment R1 so it will point to (i.e., contain the address of)
+the next number to be added and decrement R2 so we will know how
+many numbers still need to be added. When R2 becomes zero, the Z
+condition code is set, and we can detect that we are done.
+
+\FloatBarrier
+
+The 10-instruction program shown in Figure~5.13 accomplishes the task.
+
+%Figure 5.13
+\begin{figure}
+\hspace*{-8pc}\begin{minipage}{36pc}
+\centerline
+{$\mbox{\renewcommand{\tabcolsep}{4pt}
+\begin{tabular}{@{}cccccccccccccccccr}
+Address & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 & \\
+\cline{2-17}
+\multicolumn{1}{c}{x3000}&\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{c|}{1} &\multicolumn{1}{l}{\tt\bfseries R1<- 3100} \\
+\cline{2-17}
+\multicolumn{1}{c}{x3001}&\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{|c}{1} &
+\multicolumn{1}{|c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &\multicolumn{1}{ l}{\tt\bfseries R3 <- 0 } \\
+\cline{2-17}
+\multicolumn{1}{c}{x3002}&\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{|c}{1} &
+\multicolumn{1}{|c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &\multicolumn{1}{ l}{\tt\bfseries R2 <- 0 } \\
+\cline{2-17}
+\multicolumn{1}{c}{x3003}&\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{|c}{1} &
+\multicolumn{1}{|c}{0} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &\multicolumn{1}{ l}{\tt\bfseries R2 <- 12} \\
+\cline{2-17}
+\multicolumn{1}{c}{x3004}&\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{1} &\multicolumn{1}{l}{\tt\bfseries BRz x300A} \\
+\cline{2-17}
+\multicolumn{1}{c}{x3005}&\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &\multicolumn{1}{l}{\tt\bfseries R4 <- M[R1]} \\
+\cline{2-17}
+\multicolumn{1}{c}{x3006}&\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{|c}{0} &
+\multicolumn{1}{|c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{1} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &\multicolumn{1}{ l}{\tt\bfseries R3 <- R3+R4} \\
+\cline{2-17}
+\multicolumn{1}{c}{x3007}&\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{|c}{1} &
+\multicolumn{1}{|c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{1} &\multicolumn{1}{ l}{\tt\bfseries R1 <- R1+1 } \\
+\cline{2-17}
+\multicolumn{1}{c}{x3008}&\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{|c}{1} &
+\multicolumn{1}{|c}{1} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{c|}{1} &\multicolumn{1}{ l}{\tt\bfseries R2 <- R2-1 } \\
+\cline{2-17}
+\multicolumn{1}{c}{x3009}&\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{1} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &\multicolumn{1}{ c}{1} &
+\multicolumn{1}{c|}{0} &\multicolumn{1}{ l}{\tt\bfseries BRnzp x3004}\\
+\cline{2-17}
+\end{tabular}}
+$}
+\vspace{6pt}
+\caption{A program that implements the algorithm of
+  Figure~5.12\label{fig:12addsprog}}
+\end{minipage}
+\end{figure}
+
+The details of the program execution are as follows: The program
+starts with PC $=$ x3000.  The first instruction (at location x3000)
+initializes R1 with the address x3100.  (The incremented PC is x3001; the
+sign-extended PCoffset is x00FF.)
+
+The instruction at x3001 clears R3.  R3 will keep track of the running
+sum, so it must start with the value 0.  As we said previously,
+this is called {\em initializing} the SUM to zero.
+
+The instructions at x3002 and x3003 initialize R2 to 12, the
+number of integers to be added.  R2 will keep track of how many
+numbers have already been added.  This will be done (by the
+instruction in x3008) by decrementing R2 after each addition
+takes place.
+
+The instruction at x3004 is a conditional branch instruction.  Note
+that bit [10] is a 1.  That means that the Z condition code will be
+examined. If it is set, we know R2 must have just been decremented to
+0.  That means there are no more numbers to be added and we are done.
+If it is clear, we know we still have work to do and we continue with
+another iteration of the loop body.
+
+The instruction at x3005 loads the next integer into R4, and the instruction 
+at x3006 adds it to R3.
+
+The instructions at x3007 and x3008 perform the necessary bookkeeping.
+The instruction at x3007 increments R1, so R1 will point to the next
+location in memory containing an integer to be added.
+The instruction at x3008 decrements R2, which is keeping
+track of the number of integers still to be added, sets the condition codes.
+
+The instruction at x3009 is an unconditional branch, since bits [11:9]
+are all~1. It loads the PC with x3004.  It also does not affect the
+condition codes, so the next instruction to be executed (the conditional 
+branch at x3004) will be based on the instruction executed at x3008.
+
+This is worth saying again.  The conditional branch instruction at
+x3004 follows the instruction at x3009, which does not affect
+condition codes, which in turn follows the instruction at x3008.
+Thus, the conditional branch instruction at x3004 will be based on the
+condition codes set by the instruction at x3008.  The instruction at
+x3008 sets the condition codes based on the value produced by
+decrementing R2.  As long as there are still integers to be added, the
+ADD instruction at x3008 will produce a value greater than zero and
+therefore clear the Z condition code.  The conditional branch
+instruction at x3004 examines the Z condition code.  As long as Z is
+clear, the PC will not be affected, and the next iteration of the loop
+body will begin.  That is, the next instruction cycle
+will start with an instruction fetch from x3005.
+
+The conditional branch instruction causes the execution sequence to
+follow: x3000, x3001, x3002, x3003, x3004, x3005, x3006, x3007, x3008,
+x3009, x3004, x3005, x3006, x3007, x3008, x3009, x3004, x3005, and so
+on .  The loop body consists of the instructions at x3005 to x3009.
+When the value in R2 becomes 0, the PC is loaded with x300A,
+and the program continues at x300A with its next activity.
+
+You may have noticed that we can remove the branch instruction
+at x3004 if we replace the unconditional branch instruction at x3009 with 
+a conditional branch that tests for not 0 (i.e., bits[11:9]=101), and 
+branches to the instruction currently located in x3005.  It is tempting
+to do that since it decreases the loop body by one instruction.  BUT, we
+admonish you not to do that!  The program as shown obeys the rules of
+structured programming that we will discuss in Chapter~6.  The short cut
+does work for this simple example, but it breaks the methodology of 
+structured programming.  You do not want to get in the habit of taking
+such short cuts, since for larger programs it is a clear invitation to
+disaster.  More on this in Chapter~6.
+
+Finally, it is worth noting that we could have written a program to
+add these 12 integers {\bf without} any control instructions.  We
+still would have needed the LEA instruction in x3000 to initialize R1.
+We would not have needed the instruction at x3001 to initialize the
+running sum, nor the instructions at x3002, and x3003 to initialize
+the number of integers left to be added.  We could have loaded the
+contents of x3100 directly into R3, and then repeatedly (by
+incrementing R1, loaded subsequent integers into R4, and adding R4 to
+the running sum in R3 11 more times!  After the
+addition of the twelfth integer, we would go on to the next task, as
+does the example of Figure 5.13 with the branch instruction in x3004.
+
+Unfortunately, instead of a 10-instruction program, we would have 
+a 35-instruction program.  Moreover, if we had wished to add 100
+integers without any control instructions instead of 12, we would have
+had a 299 instruction program instead of 10.  The control instructions
+in the example of Figure 5.13 permit the reuse of sequences of code 
+(the loop body) by breaking the sequential instruction execution flow.
+
+\FloatBarrier
+\paragraph{Loop Control with a Sentinel}
+
+The example above controls the number of times the loop body executes
+by means of a counter.  \lightbulb[-10pt] 
+We knew we wanted to execute the loop 12 times, so we
+simply set a counter to 12, and then after each execution of the loop, we
+decremented the counter and checked to see if it was zero. If it was not
+zero, we set the PC to the start of the loop and continued with another
+iteration.\index{loop!counter-controlled}
+
+A second method for controlling the number of executions of a loop is
+to use a {\em sentinel}.  This method is particularly effective if we
+do not know \index{loop!sentinel-controlled} ahead of time how many
+iterations we will want to perform.  Each iteration is usually based
+on processing a value.  We append to our sequence of values to be
+processed a value that we know ahead of time can never occur (i.e.,
+the sentinel).  For example, if we are adding a sequence of numbers, a
+sentinel could be a letter A or a *, that is, something that is not a
+number.  Our loop test is simply a test for the occurrence of the
+sentinel.  When we find it, we know we are done.
+
+Suppose we know the values
+stored in locations x3100 to x310B are all positive.  Then we could
+use any negative number as a sentinel.  Let's say the sentinel stored
+at memory address x310C is $-1$.  The resulting flowchart for this
+solution is shown in Figure 5.14 and the resulting program is shown 
+in Figure 5.15.
+
+%Figure 5.14
+\begin{figure}
+\centerline{\includegraphics{pat67509_0514.eps}}
+\caption{An algorithm for adding integers using a sentinel for loop control.}
+\label{fig:sentinel}
+\vspace{12pt}
+\end{figure}
+
+\FloatBarrier
+
+As before, the instruction at x3000 loads R1 with the address of the
+first value to be added, and the instruction at x3001 initializes R3
+(which keeps track of the sum) to~0.
+
+At x3002, we load the contents of the next memory location into R4.
+If the sentinel is loaded, the N condition code is set.
+
+The conditional branch at x3003 examines the N condition code.  If N=1,
+PC is loaded with x3008 and onto the next task.  If N=0, R4 must contain 
+a valid number to be added.  In this case, the number is added to R3 (x3004), 
+R1 is incremented to point to the next memory location (x3005), R4 is loaded 
+with the contents of the next memory location (x3006), and the PC is loaded
+with x3003 to begin the next iteration (x3007).
+
+%Figure 5.15
+\begin{figure}
+\hspace*{-8pc}\begin{minipage}{36pc}
+\centerline{$\mbox{\renewcommand{\tabcolsep}{4pt}%
+\begin{tabular}{@{}cccccccccccccccccr@{}}
+Address & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 & \\
+\cline{2-17}
+\multicolumn{1}{c}{x3000}&
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{c|}{1} &
+\multicolumn{1}{ l@{}}{\tt\bfseries R1<- x3100} \\
+\cline{2-17}
+\multicolumn{1}{c}{x3001}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &
+\multicolumn{1}{ l@{}}{\tt\bfseries R3 <- 0 } \\
+\cline{2-17}
+\multicolumn{1}{c}{x3002}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &
+\multicolumn{1}{l@{}}{\tt\bfseries R4 <- M[R1]} \\
+\cline{2-17}
+\multicolumn{1}{c}{x3003}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &
+\multicolumn{1}{ l@{}}{\tt\bfseries BRn x3008} \\
+\cline{2-17}
+\multicolumn{1}{c}{x3004}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &
+\multicolumn{1}{ l@{}}{\tt\bfseries R3 <- R3+R4} \\
+\cline{2-17}
+\multicolumn{1}{c}{x3005}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{1} &
+\multicolumn{1}{ l@{}}{\tt\bfseries R1 <- R1+1 } \\
+\cline{2-17}
+\multicolumn{1}{c}{x3006}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &
+\multicolumn{1}{l@{}}{\tt\bfseries R4 <- M[R1]} \\
+\cline{2-17}
+\multicolumn{1}{c}{x3007}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{c|}{1} &
+\multicolumn{1}{ l@{}}{\tt\bfseries BRnzp x3003} \\
+\cline{2-17}
+\end{tabular}}
+$}
+\vspace{6pt}
+\caption{A program that implements the algorithm of Figure
+  5.14\label{fig:}}
+\end{minipage}
+\end{figure}
+
+\FloatBarrier
+\subsection{The JMP Instruction}
+
+The conditional branch instruction, for all its capability, does have
+one unfortunate limitation.  The next instruction executed must be
+within the range of addresses that can be computed by adding the
+incremented PC to the sign-extended offset obtained from bits [8:0] of
+the instruction.  Since bits [8:0] specify a 2's complement integer,
+the next instruction executed after the conditional branch can be at
+most $+256$ or $-255$ locations from the branch instruction itself.
+
+What if we would like to execute next an instruction that is 2,000
+locations from the current instruction.  We cannot fit the value 2,000
+into the 9-bit field; ergo, the conditional branch instruction does
+not work.
+
+The LC-3 ISA does provide an instruction {\bf JMP} (opcode $=$ 1100)
+that can do the job.  
+
+The JMP instruction loads the PC with the contents of the register
+specified by bits [8:6] of the instruction.  If the following JMP instruction
+is located at address x4000, 
+
+\begin{equation*}
+\mbox{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{1}{|c}{1}&\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{1}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&\multicolumn{1}{c|}{0}\\
+\hline
+\multicolumn{4}{c}{JMP} &\multicolumn{3}{c}{  } &
+\multicolumn{3}{c}{BaseR} &\multicolumn{6}{c}{   } \\
+\end{tabular}}
+\end{equation*}
+
+
+\noindent R2 contains the value x6600, and the PC
+contains x4000, then the instruction at x4000 (the JMP instruction)
+will be executed, followed by the instruction located at x6600. Since
+registers contain 16 bits (the full address space of memory), the JMP
+instruction has no limitation on where the next instruction to be
+executed must reside.
+
+\subsection{The TRAP Instruction}
+
+We will discuss the details of how the TRAP instruction works in Chapter~9.
+However, because it will be useful long before that to get data
+into and out of the computer, we discuss here the TRAP instruction.
+The {\bf TRAP} (opcode${}={}$1111) instruction changes the PC to a memory 
+address that is part
+of the operating system so that the operating system will perform some
+task on behalf of the program that is executing.  In the language of
+operating system jargon, we say the TRAP instruction invokes an
+operating system {\em service call}.  Bits [7:0] of the TRAP instruction
+form the {\em trapvector}, an 8-bit code that identifies the service call 
+that the program wishes the operating system to perform on its behalf.  
+Table~A.2 contains the trapvectors for all the service calls that we will 
+use with the LC-3 in this book.
+
+\begin{equation*}
+\mbox{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}
+{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\hline
+\multicolumn{1}{|c}{1}&
+\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&
+\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&
+\multicolumn{8}{|c|}{trapvector}\\
+\hline
+\end{tabular}}
+\end{equation*}
+
+Once the operating system is finished performing the service call, the
+program counter is set to the address of the instruction following the
+TRAP instruction, and the program continues.  In this way, a program
+can, during its execution, request services from the operating system
+and continue processing after each such service is performed.  The
+services we will require for now are
+
+\color{seventyblack}
+\begin{Verbatim}[fontsize=\fontsize{9}{14}]
+* Input a character from the keyboard (trapvector = x23).
+* Output a character to the monitor (trapvector = x21).
+* Halt the program (trapvector = x25).
+\end{Verbatim}
+\normalcolor
+
+\section{Another Example: Counting Occurrences
+of a Character}\label{excharcount}
+
+We will finish our introduction to the ISA of the LC-3 with another
+example program.  Suppose we would like to be able to input a character from
+the keyboard, then count the number of occurrences of that
+character in a file, and finally display that count on the monitor.  
+We will simplify the problem by assuming that the number
+of occurrences of any character that we would be interested in is small
+enough that it can be expressed with a single decimal digit.  That is, 
+there will be at most nine occurrences.  This simplification allows us to 
+not have to worry about complex conversion
+routines between the binary count and the ASCII display on the
+monitor---a subject we will get into in Chapter~10, but not today.
+
+Figure~5.16 is a flowchart of the algorithm that solves this problem.
+Note that each step is expressed both in English and also (in
+parentheses) in terms of an LC-3 implementation.
+
+%Figure 5.16
+\begin{figure}
+\centerline{\includegraphics{pat67509_0516.eps}}
+\caption{An algorithm to count occurrences
+  of a character}
+\label{fig:addalg}
+\end{figure}
+
+\FloatBarrier
+
+The first step is (as always) to initialize all the variables.  This
+means providing starting values (called {\em initial values}) for R0,
+R1, R2, and R3, the four registers the computer will use to execute
+the program that will solve the problem. R2 will keep track of the
+number of occurrences; in Figure 5.16, it is referred to as {\em Count}.  
+It is initialized to zero. R3 will point to the next
+character in the file that is being examined.  We refer to it as a 
+{\em pointer} since it points to (i.e., contains the {\bf address} of)
+the location where
+the next character of the file that we wish to examine resides.  The
+pointer is initialized with the address of the {\bf first} character
+in the file.  R0 will hold the character that is being counted; we
+will input that character from the keyboard and put it in R0.  R1 will
+hold, in turn, each character that we get from the file being
+examined.
+
+We should also note that there is no requirement that the file we are
+examining be close to or far away from the program we are developing.
+For example, it is perfectly reasonable for the program we are
+developing to start at x3000, and the file we are examining to start
+at x9000.  If that were the case, in the initialization process, R3
+would be initialized to x9000.
+
+The next step is to count the number of occurrences of the input
+character. This is done by processing, in turn, each character in the
+file being examined, until the file is exhausted.  Processing each
+character requires one iteration of a loop.  Recall from Section 5.4.3
+that there are two common methods for keeping track of iterations of a
+loop.  We will use the sentinel method, using the ASCII code for EOT
+(End of Transmission) (00000100) as the sentinel. A table of ASCII 
+codes is in Appendix E.
+
+In each iteration of the loop, the contents of R1 are first compared
+to the ASCII code for EOT.  If they are equal, the loop is exited, and
+the program moves on to the final step, displaying on the screen the
+number of occurrences.  If not, there is work to do.  R1 (the current
+character under examination) is compared to R0 (the character input
+from the keyboard).  If they match, R2 is incremented. In either case,
+we move on to getting the next character.  The pointer R3 is incremented, 
+the next character is loaded into R1, and the program returns to the test 
+that checks for the sentinel at the end of the file.
+
+When the end of the file is reached, all the characters have been
+examined, and the count is contained as a binary number in R2.  In
+order to display the count on the monitor, it is first converted to an 
+ASCII code.  Since we have assumed the count is less than 10, we can do 
+this by putting a leading 0011 in front of the
+4-bit binary representation of the count.  Note in Figure~E.2 the 
+relationship between the binary value of
+each decimal digit between 0 and 9 and its corresponding ASCII code.
+Finally, the count is output to the monitor, and the program
+terminates.
+
+Figure 5.17 is a machine language program that implements the
+flowchart of Figure 5.16.
+
+%Figure 5.17
+\begin{figure}
+\vspace{4pt}
+\hspace*{-8pc}\begin{minipage}{36pc}
+\centerline{$\mbox{\renewcommand{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}cccccccccccccccccr@{}}
+Address & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 & \\
+\cline{2-17}
+\multicolumn{1}{c}{x3000}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &
+\multicolumn{1}{ l@{}}{\tt\bfseries R2 <- 0 } \\
+\cline{2-17}
+\multicolumn{1}{c}{x3001}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &
+\multicolumn{1}{ l@{}}{\tt\bfseries R3 <- M[x3012]} \\
+\cline{2-17}
+\multicolumn{1}{c}{x3002}&
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{c|}{1} &
+\multicolumn{1}{ l@{}}{\tt\bfseries TRAP x23} \\
+\cline{2-17}
+\multicolumn{1}{c}{x3003}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &
+\multicolumn{1}{l@{}}{\tt\bfseries R1 <- M[R3]} \\
+\cline{2-17}
+\multicolumn{1}{c}{x3004}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &
+\multicolumn{1}{ l@{}}{\tt\bfseries R4 <- R1-4 } \\
+\cline{2-17}
+\multicolumn{1}{c}{x3005}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &
+\multicolumn{1}{ l@{}}{\tt\bfseries BRz x300E} \\
+\cline{2-17}
+\multicolumn{1}{c}{x3006}&
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{c|}{1} &
+\multicolumn{1}{ l@{}}{\tt\bfseries R1 <- NOT R1 } \\
+\cline{2-17}
+\multicolumn{1}{c}{x3007}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{1} &
+\multicolumn{1}{ l@{}}{\tt\bfseries R1 <- R1 + 1 } \\
+\cline{2-17}
+\multicolumn{1}{c}{x3008}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &
+\multicolumn{1}{ l@{}}{\tt\bfseries R1 <- R1 + R0 } \\
+\cline{2-17}
+\multicolumn{1}{c}{x3009}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{1} &
+\multicolumn{1}{ l@{}}{\tt\bfseries BRnp x300B} \\
+\cline{2-17}
+\multicolumn{1}{c}{x300A}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{1} &
+\multicolumn{1}{ l@{}}{\tt\bfseries R2 <- R2 + 1 } \\
+\cline{2-17}
+\multicolumn{1}{c}{x300B}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{1} &
+\multicolumn{1}{ l@{}}{\tt\bfseries R3 <- R3 + 1 } \\
+\cline{2-17}
+\multicolumn{1}{c}{x300C}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &
+\multicolumn{1}{l@{}}{\tt\bfseries R1 <- M[R3]} \\
+\cline{2-17}
+\multicolumn{1}{c}{x300D}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{c|}{0} &
+\multicolumn{1}{ l@{}}{\tt\bfseries BRnzp x3004} \\
+\cline{2-17}
+\multicolumn{1}{c}{x300E}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &
+\multicolumn{1}{ l@{}}{\tt\bfseries R0 <- M[x3013]} \\
+\cline{2-17}
+\multicolumn{1}{c}{x300F}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{c|}{0} &
+\multicolumn{1}{ l@{}}{\tt\bfseries R0 <- R0 + R2 } \\
+\cline{2-17}
+\multicolumn{1}{c}{x3010}&
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{1} &
+\multicolumn{1}{ l@{}}{\tt\bfseries TRAP x21} \\
+\cline{2-17}
+\multicolumn{1}{c}{x3011}&
+\multicolumn{1}{|c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{1} &
+\multicolumn{1}{ l@{}}{\tt\bfseries TRAP x25} \\
+\cline{2-17}
+\multicolumn{1}{c}{x3012}&
+\multicolumn{16}{|c|}{Starting address of file} \\
+\cline{2-17}
+\multicolumn{1}{c}{x3013}&
+\multicolumn{1}{|c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{1} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{ c}{0} &
+\multicolumn{1}{c|}{0} &
+\multicolumn{1}{ l@{}}{\tt\bfseries ASCII TEMPLATE} \\
+\cline{2-17}
+\end{tabular}}
+$}
+\vspace{6pt}
+\caption{A machine language program that implements the algorithm of
+  Figure 5.16\label{fig:machine_language}}
+\end{minipage}
+\vspace{-12pt}
+\end{figure}
+
+First the initialization steps.  The instruction at x3000 clears R2 by
+ANDing it with x0000. The instruction at x3001 loads the starting address
+of the file to be examined into R3.  Again, we note that this file can be 
+anywhere in memory.  Prior to starting execution at x3000, some sequence 
+of instructions must have stored the
+first address of this file in x3012.  Location x3002 contains the TRAP
+instruction, which requests the operating system to perform a service
+call on behalf of this program.  The function requested, as identified
+by the 8-bit trapvector 00100011 (i.e., x23), is to load into R0 the
+ASCII code of the next character typed on the keyboard.  Table A.2 lists 
+trapvectors for all operating system service calls that can be performed
+on behalf of a user program.  The instruction at x3003 loads
+the character pointed to by R3 into R1.
+
+Then the process of examining characters begins.  We start (x3004) by
+subtracting 4 (the ASCII code for EOT) from R1, and storing it in R4.
+If the result is zero, the end of the file has been reached, and it is
+time to output the count.  The instruction at x3005 conditionally
+branches to x300E, where the process of outputting the count begins.
+
+If R4 is not equal to zero, the character in R1 is legitimate and must
+be examined. The sequence of instructions at locations x3006, x3007,
+and x3008 determine if the contents of R1 and R0 are identical.  Taken
+together, the three instructions compute 
+\begin{equation*}
+R0 - R1
+\end{equation*}
+This produces all zeros only if the bit patterns of R1 and R0 are
+identical.  If the bit patterns are not identical, the conditional
+branch at x3009 branches to x300B, that is, it skips the instruction
+at x300A, which increments the counter (R2).
+
+The instruction at x300B increments R3, so it will point to the next
+character in the file being examined, the instruction at x300C loads
+that character into R1, and the instruction at x300D unconditionally
+takes us back to x3004 to start processing that character.
+
+When the sentinel (EOT) is finally detected, the process of outputting
+the count begins (at x300E).  The instruction at x300E loads 00110000
+into R0, and the instruction at x300F adds the count to R0.  This
+converts the binary representation of the count (in R2) to the ASCII
+representation of the count (in R0).  The instruction at x3010 invokes
+a TRAP to the operating system to output the contents of R0 to the
+monitor.  When that is done and the program resumes execution, the
+instruction at x3011 invokes a TRAP instruction to terminate the
+program.
+
+Question: Can you improve the execution of the above program?  Hint:
+How many times are the instructions at x3006 and x3007 executed.
+What small change will decrease the total number of instructions that have
+to be executed.
+\vspace{-6pt}
+
+\section{The Data Path Revisited}
+
+Before we leave Chapter~5, let us revisit the data path diagram that
+we first encountered in Chapter~3 (Figure~3.33).  Many of the structures
+we have seen earlier in this chapter in Figures 5.4, 5.5,
+5.6, 5.7, 5.8, 5.9, and 5.11.  We reproduce the data path diagram as 
+Figure~5.18.  Note at the outset that there are two kinds of arrows in the
+data path, those with arrowheads filled in, and those with arrowheads
+not filled in.  Filled-in arrowheads designate information that is
+processed.  Unfilled-in arrowheads designate control signals.  Control
+signals emanate from the block labeled ``Control.''  The connections
+from Control to most control signals have been left off Figure 5.18 to
+reduce unnecessary clutter in the diagram.
+
+%Figure 5.18
+\begin{figure}
+\hspace*{-8pc}\begin{minipage}{36pc}
+\centerline{\includegraphics{pat67509_0518.eps}}
+\caption{The data path of the LC-3}
+\label{fig:lc2datapath2}
+\end{minipage}
+\end{figure}
+
+\subsection{Basic Components of the Data Path}
+
+\vspace{-2pt}
+
+\subsubsection{The Global Bus}
+
+The most obvious item on the data path diagram is the heavy black structure 
+with arrowheads at both ends.  This represents the data path's global bus.  
+The LC-3 global bus consists of 16 wires and associated electronics.  
+It allows one structure to transfer up to 16 bits of information to another
+structure by making the necessary electronic connections on the bus.
+Exactly one value can be transferred on the bus at one time.  Note
+that each structure that supplies values to the bus has a triangle
+just behind its input arrow to the bus.  This triangle (called 
+a {\em tri-state device}) allows the computer's control logic to enable
+exactly one supplier to provide information to the bus at any one
+time.  The structure wishing to obtain the value being supplied can do
+so by asserting its LD.x (load enable) signal (recall our discussion
+of gated latches in Section~3.4.2).  Not all computers have a single
+global bus.  The pros and cons of a single global bus is yet another
+topic that will have to wait for later in your education.
+
+\subsubsection{Memory}
+
+One of the most important parts of any computer is the memory that
+contains both instructions and data. Memory is accessed by loading the
+memory address register (MAR) with the address of the location to be
+accessed.  To perform a load, control signals then read the
+contents of that memory location, and the result of that read is delivered 
+by the memory to the
+memory data register (MDR).  On the other hand, to perform a store, the data 
+to be stored is loaded into the MDR.  Then the control signals assert a write
+enable (WE) signal in order to store the value contained 
+in MDR into the memory location specified by MAR.
+
+\subsubsection{The ALU and the Register File}
+
+The ALU is the processing element.  It has two inputs, source 1 from a
+register and source 2 from either a register or the sign-extended
+immediate value provided by the instruction.  The registers (R0
+through R7) can provide two values, source~1, which is controlled by
+the 3-bit register number SR1, and source 2, which is controlled by
+the 3-bit register number SR2.  SR1 and SR2 are fields in the LC-3
+operate instructions.  The selection of a second register operand or a
+sign-extended immediate operand is determined by bit [5] of the LC-3
+instruction.  Note the mux that provides source 2 to the ALU.  The
+select line of that mux is bit [5] of the LC-3 operate instruction.
+
+The results of an ALU operation are (a) a result that is stored in one of
+the registers, and (b) the three single-bit condition codes.  Note that
+the ALU can supply 16 bits to the bus, and that value can then be
+written into the register specified by the 3-bit register number DR.
+Also, note that the 16 bits supplied to the bus are also input to
+logic that determines whether that 16-bit value is negative, zero,
+or positive. The three one-bit condition code registers N, Z, and P are 
+set accordingly.
+
+\subsubsection{The PC and the PCMUX}
+
+At the start of each instruction cycle, the PC supplies to the MAR over the
+global bus the address of the instruction to be fetched.  In addition, the  
+PC, in turn, is supplied via the three-to-one PCMUX.  During~the FETCH phase 
+of the instruction cycle, the PC is incremented and written into the~PC.  
+That is shown as the rightmost input to the PCMUX.
+
+If the current instruction is a control instruction, then the relevant
+source of the PCMUX depends on which control instruction is currently
+being processed.  If the current instruction is a conditional branch
+and the branch is taken, then the PC is loaded with the incremented PC
+$+$ PCoffset (the 16-bit value obtained by sign-extending IR[8:0]).
+Note that this addition takes place in the special adder and not in
+the ALU.  The output of the adder is the middle input to PCMUX.  The
+third input to PCMUX is obtained from the global bus.  Its use will
+become clear after we discuss other control instructions in Chapters~9.
+
+\subsubsection{The MARMUX}
+
+As you know, memory is accessed by supplying the address to the MAR.
+The MARMUX controls which of two sources will supply the MAR with the
+appropriate address during the execution of a load, a store, or a TRAP
+instruction.  The right input to the MARMUX is obtained by adding
+either the incremented PC or a base register to zero or a literal value
+supplied by the IR.  Whether the PC or a base register and what
+literal value depends on which opcode is being processed.  The control
+signal ADDR1MUX specifies the PC or base register.  The control signal
+ADDR2MUX specifies which of four values is to be added.  The left input
+to MARMUX provides the zero-extended trapvector, which is needed to
+invoke service calls, and will be discussed in detail in Chapter~9.
+
+\FloatBarrier
+\subsection{The Instruction Cycle Specific to the LC-3}
+
+We complete our tour of the LC-3 data path by following
+the flow through an instruction cycle. Suppose the content of the PC
+is x3456 and the content of location x3456 is 
+
+\begin{equation*}
+\mbox{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}
+{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\hline
+\multicolumn{1}{|c}{\rule{0pt}{10pt}0\rule{0pt}{10pt}}&
+\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&
+\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&
+\multicolumn{1}{c|}{0}\\
+\hline
+\multicolumn{4}{c}{LDR} &
+\multicolumn{3}{c}{R3} &
+\multicolumn{3}{c}{R2} &
+\multicolumn{6}{c}{4} \\
+\end{tabular}}
+\end{equation*}
+
+
+\noindent
+Suppose the LC-3 has just completed processing the instruction at
+x3455, which happened to be an ADD instruction.
+
+\subsubsection{FETCH}
+
+As you know, the instruction cycle starts with the FETCH phase.  That
+is, the instruction is obtained by accessing memory with the address
+contained in the~PC. In the first cycle, the contents of the PC are
+loaded via the global bus into the MAR, and the PC is incremented and
+loaded into the PC.  At the end of this cycle, the PC contains x3457.
+In the next cycle (if memory can provide information in one cycle),
+the memory is read, and the instruction 0110011010000100 is loaded
+into the MDR.  In the next cycle, the contents of the MDR are loaded
+into the instruction register (IR), completing the FETCH phase.
+
+\subsubsection{DECODE}
+
+In the next cycle, the contents of the IR are decoded, resulting in
+the control logic providing the correct control signals (unfilled
+arrowheads) to control the processing of the rest of this instruction.
+The opcode is 0110, identifying the LDR instruction.  This means that
+the Base$+$offset addressing mode is to be used to determine the
+address of data to be loaded into the destination register R3.
+
+\subsubsection{EVALUATE ADDRESS}
+
+In the next cycle, the contents of R2 (the base register) and the
+sign-extended bits [5:0] of the IR are added and supplied via the
+MARMUX to the MAR.  The SR1 field specifies 010, the register to be
+read to obtain the base address.  ADDR1MUX selects SR1OUT, and
+ADDR2MUX selects the second from the right source.
+
+\subsubsection{OPERAND FETCH}
+
+In the next cycle (or more than one, if memory access takes more than
+one cycle), the data at that address is loaded into the MDR.
+
+\subsubsection{EXECUTE}
+
+The LDR instruction does not require an EXECUTE phase, so this phase takes zero cycles.
+
+\subsubsection{STORE RESULT}
+
+In the last cycle, the contents of the MDR are gated onto the global bus, 
+from which they are loaded into R3, and supplied to the condition code logic 
+in order to set the NZP condition codes.
+
+\vspace{-12pt}
+\begin{exercises}
+
+\item[5.1] Given instructions ADD, JMP, LEA, and NOT, identify whether
+  the instructions are operate instructions, data movement
+  instructions, or control instructions.  For each instruction, list
+  the addressing modes that can be used with the instruction.
+
+\item[5.2] A memory's addressibility is 64 bits. What does that tell
+  you about the size of the MAR and MDR?
+
+\item[5.3] There are two common ways to terminate a loop. One way uses
+  a counter to keep track of the number of iterations. The other way
+  uses an element called a \_\_\_\_. What is the distinguishing
+  characteristic of this element?
+
+\item[5.4] Say we have a memory consisting of 256 locations, and each
+  location contains 16 bits.
+\begin{enumerate}
+\item[a.] How many bits are required for the address?
+\item[b.] If we use the PC-relative addressing mode, and want to allow
+  control transfer between instructions 20 locations away, how many
+  bits of a branch instruction are needed to specify the PC-relative
+  offset?
+\item[c.] If a control instruction is in location 3, what is the
+  PC-relative offset of address 10. Assume that the control transfer
+  instructions work the same way as in the LC-3.
+\end{enumerate}
+\item[5.5]
+\begin{enumerate}[a.]
+\item[a.] What is an addressing mode?
+\item[b.] Name three places an instruction's operands might be located.
+\item[c.] List the five addressing modes of the LC-3, and for each one
+  state where the operand is located (from part b).
+\item[d.] What addressing mode is used by the ADD instruction shown in  Section~5.1.2?
+\end{enumerate}
+
+\pagebreak
+
+\bgroup
+\advance\itemsep by 0pt plus 1pt
+
+\item[5.6] Recall the machine busy example from Section 2.7.1.
+  Assuming the BUSYNESS bit vector is stored in R2, we can use the
+  LC-3 instruction 0101 011 010 1 00001 (AND R3, R2, \#1) to determine
+  whether machine 0 is busy or not. If the result of this instruction
+  is 0, then machine 0 is busy.
+\begin{enumerate}[a.]
+\item[a.] Write an LC-3 instruction that determines whether machine 2\break
+  is busy.
+
+\item[b.] Write an LC-3 instruction that determines whether both
+  machines 2 and 3 are busy.
+
+\item[c.] Write an LC-3 instruction that indicates none of the machines
+  are busy.
+
+\item[d.] Can you write an LC-3 instruction that determines whether
+  machine 6 is busy?  Is there a problem here?
+\end{enumerate}
+
+\item[5.7] What is the largest positive number we can represent
+  literally (i.e., as an immediate value) within an LC-3 ADD
+  instruction?
+
+\item[5.8] We want to increase the number of registers that we can
+  specify in the LC-3 ADD instruction to 32. Do you see any problem
+  with that?\break Explain.
+
+\item[5.9] We would like to have an instruction that does nothing.
+  Many ISAs actually have an opcode devoted to doing nothing.  It is
+  usually called NOP, for NO OPERATION.  The instruction is fetched,
+  decoded, and executed.  The execution phase is to do nothing! Which
+  of the following three instructions could be used for NOP and have
+  the program still work correctly?
+\begin{enumerate}[a.]
+\item[a.] 0001 001 001 1 00000
+\item[b.] 0000 111 000000001
+\item[c.] 0000 000 000000000
+\end{enumerate}
+What does the ADD instruction do that the others do not do?
+
+\item[5.10] What is the difference between the following LC-3
+  instructions A and B? How are they similar? How are they different?
+\begin{equation*}
+\begin{tabular}{@{}l@{}}
+A: 0000111101010101\\
+B: 0100111101010101
+\end{tabular}
+\end{equation*}
+
+\item[5.11] We wish to execute a single LC-3 instruction that will
+  subtract the decimal number 20 from register 1 and put the result
+  into register 2. Can we do it? If yes, do it. If not, explain why
+  not.
+
+\item[5.12] After executing the following LC-3 instruction: ADD R2,
+  R0, R1, we notice that R0[15] equals R1[15], but is different from
+  R2[15]. We are told that R0 and R1 contain UNSIGNED integers (that
+  is, nonnegative integers between 0 and 65,535). Under what
+  conditions can we trust the result in R2?
+
+\egroup
+
+\pagebreak
+
+\item[5.13]
+\begin{enumerate}[a.]
+\item[a.]  How might one use a single LC-3 instruction to move the
+  value in R2 into R3?
+
+\item[b.]  The LC-3 has no subtract instruction. How could one perform
+  the following operation using only three LC-3 instructions:
+\begin{equation*}
+R1 \leftarrow R2-R3
+\end{equation*}
+
+\item[c.]  Using only one LC-3 instruction and without changing the
+  contents of any register, how might one set the condition codes
+  based on the value that resides in R1?
+
+\item[d.]  Is there a sequence of LC-3 instructions that will cause
+  the condition codes at the end of the sequence to be ${\rm N}=1$,
+  ${\rm Z}=1$, and ${\rm P}=0$?  Explain.
+
+\item[e.]
+Write an LC-3 instruction that clears the contents of R2.
+\end{enumerate}
+
+\item[5.14] The LC-3 does not have an opcode for the logical function
+  OR. That is, there is no instruction in the LC-3 ISA that performs
+  the OR operation. However, we can write a sequence of instructions
+  to implement the OR operation. The four instruction sequence below
+  performs the OR of the contents of register 1 and register 2 and
+  puts the result in register 3. Fill in the two missing instructions
+  so that the four instruction sequence will do the job.
+
+\color{seventyblack}
+\begin{Verbatim}[fontsize=\fontsize{9}{14}\selectfont]
+(1): 1001 100 001 111111
+(2):
+(3): 0101 110 100 000 101
+(4):
+\end{Verbatim}
+\normalcolor
+
+\item[5.15] State the contents of R1, R2, R3, and R4 after the program
+  starting at location x3100 halts.
+\begin{center}
+{\fontsize{9}{13pt}\selectfont
+{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}{@{}cc@{}}
+\hline
+{Address}\rule{0pt}{10.12pt}
+& {Data} \\
+\hline
+           0011 0001 0000 0000 &  1110 001 000100000\rule{0pt}{10.1pt} \\[3pt]
+           0011 0001 0000 0001 &  0010 010 000100000 \\[3pt]
+           0011 0001 0000 0010 &  1010 011 000100000 \\[3pt]
+           0011 0001 0000 0011 &  0110 100 010 000001 \\[3pt]
+           0011 0001 0000 0100 &  1111 0000 0010 0101 \\[3pt]
+             :   &  : \\[3pt]
+             :   &  : \\[3pt]
+           0011 0001 0010 0010 &  0100 0101 0110 0110 \\[3pt]
+           0011 0001 0010 0011 &  0100 0101 0110 0111 \\[3pt]
+             :   &  : \\[3pt]
+             :   &  : \\[3pt]
+           0100 0101 0110 0111 &  1010 1011 1100 1101 \\[3pt]
+           0100 0101 0110 1000 &  1111 1110 1101 0011 \\[2.5pt]\hline
+\end{tabular}}}
+\end{center}
+\vspace{-12pt}
+
+\pagebreak
+
+\item[5.16] Which LC-3 addressing mode makes the most sense to use
+  under the following conditions. (There may be more than one correct
+  answer to each of these; therefore, justify your answers with some
+  explanation.)
+\begin{enumerate}[a.]
+\item[a.] You want to load one value from an address which is less
+  than $\pm2^8$ locations away.
+\item[b.] You want to load one value from an address which is more
+  than $2^8$ locations away.
+\item[c.] You want to load an array of sequential addresses.
+\end{enumerate}
+
+\item[5.17] How many times does the LC-3 make a read or write request
+  to memory during the processing of the LD instruction? How many
+  times during the~processing of the LDI instruction? How many times
+  during the processing of the LEA instruction? Processing includes
+  all phases of the instruction cycle.
+
+\item[5.18] The program counter contains the address of an LDR
+  instruction. In order for the LC-3 to process that instruction, how
+  many memory accesses must be made? Repeat this task for STI and
+  TRAP.
+
+\item[5.19] The LC-3 Instruction Register (IR) is made up of 16 bits,
+  of which the least significant nine bits [8:0] represent the
+  PC-relative offset for the LD instruction. If we change the ISA so
+  that bits [6:0] represent the PC-relative offset, what is the new
+  range of addresses we can load data from using the LD instruction?
+
+\item[5.20] If we made the LC-3 ISA such that we allow the LD
+  instruction to load data only $\pm32$ locations away from the
+  incremented PC value, how many bits would be required for the
+  PC-relative offset in the LD instruction?
+
+\item[5.21] What is the maximum number of TRAP service routines that
+  the LC-3 ISA can support? Explain.
+
+\item[5.22] The PC contains x3010. The following memory locations
+  contain values as shown:
+\medskip
+\color{seventyblack}
+\begin{Verbatim}[fontsize=\fontsize{9}{14}\selectfont]
+          x3050:            x70A4
+          x70A2:            x70A3
+          x70A3:            xFFFF
+          x70A4:            x123B
+\end{Verbatim}
+\medskip
+\normalcolor
+The following three LC-3 instructions are then executed, causing a
+value to be loaded into R6. What is that value?
+\color{seventyblack}
+\medskip
+\begin{Verbatim}[fontsize=\fontsize{9}{14}\selectfont]
+          x3010             1110 0110 0011 1111
+          x3011             0110 1000 1100 0000
+          x3012             0110 1101 0000 0000
+\end{Verbatim}
+\medskip
+\normalcolor
+We could replace the three-instruction sequence with a single
+instruction. What is it?
+
+\enlargethispage{-\baselineskip}
+
+\pagebreak
+
+\item[5.23] Suppose the following LC-3 program is loaded into memory
+  starting at location x30FF:
+\color{seventyblack}
+\begin{Verbatim}[fontsize=\fontsize{9}{14}\selectfont]
+          x30FF    1110 0010 0000 0001
+          x3100    0110 0100 0100 0010
+          x3101    1111 0000 0010 0101
+          x3102    0001 0100 0100 0001
+          x3103    0001 0100 1000 0010
+\end{Verbatim}
+\normalcolor
+If the program is executed, what is the value in R2 at the end of
+execution?
+
+\item[5.24] An LDR instruction, located at x3200, uses R4 as its base
+  register. The value currently in R4 is x4011. What is the largest
+  address that this instruction can load from? Suppose we redefine the
+  LDR offset to be zero-extended, rather than sign-extended. Then what
+  would be the largest address that this instruction could load from?
+  With the new definition, what would be the smallest address that
+  this instruction could\break load from?
+
+\item[5.25] Write an LC-3 program that compares two numbers in R2 and
+  R3 and puts the larger number in R1. If the numbers are equal, then
+  R1 is set equal to 0.
+
+\item[5.26] Your task is to consider the successor to the LC-3. We 
+  will add ten additional opcodes to the ISA, and expand the register 
+  set from 8 to 16. We will change the memory to byte-addressible, 
+  with total address space of 64K bytes. Instructions will remain 16 
+  bits wide. Also, we will encode all instructions, both old and new, 
+  with the same fields as the original 15 instructions, although we 
+  may need to change the size of some of the fields.
+\begin{enumerate}[a.]
+\item[a.]  Is there any problem completing the detailed specification 
+  of the successor to the LC-3, as described above? Explain.
+
+\item[b.]  How many bits do we need in the PC to be able to address 
+  all of memory? 
+
+\item[c.]  If we want 128 different operating system routines to be
+  able to be accessed with a trap instruction and we form the address
+  of each of these routines by shifting the trap vector to the left by
+  5 bits, what is the minimum amount of memory required by the trap
+  service routines?
+
+\item[d.]  If, in the new version of the LC-3, we reduced the number
+  of registers from eight to four and kept the number of opcodes at 16, what is the largest immediate value we could represent in an ADD
+  instruction on this new machine?
+\end{enumerate}
+
+\item[5.27] Before the seven instructions are executed in the example
+  of Section 5.3.5, R2 contains the value xAAAA. How many different
+  values are contained in R2 during the execution of the seven
+  instructions?  What are~they?
+
+\item[5.28] It is the case that we REALLY don't need to have load
+  indirect (1010) and store indirect (1011) instructions. We can
+  accomplish the same results using other instruction sequences
+  instead of using these instructions. Replace the store indirect
+  (1011) instruction in the code below with whatever instructions are
+  necessary to perform the same\break function.
+\color{seventyblack}
+\begin{Verbatim}[fontsize=\fontsize{9}{14}\selectfont]
+          x3000    0010 0000 0000 0010
+          x3001    1011 0000 0000 0010
+          x3002    1111 0000 0010 0101
+          x3003    0000 0000 0100 1000
+          x3004    1111 0011 1111 1111
+\end{Verbatim}
+\normalcolor
+
+\item[5.29] The LC-3 ISA contains the instruction LDR DR, BaseR,
+  offset. After the~instruction is decoded, the following operations
+  (called microinstructions) are carried out to complete the
+  processing of the LDR~instruction:
+
+\bigskip
+
+\hspace*{-8pc}\begin{minipage}{36pc}
+\fontsize{9}{10}\selectfont
+\centerline{\begin{tabular}{@{}l}
+\texttt{MAR $\leftarrow$ BaseR $+$ SEXT(Offset6)  ; set up the memory address}\\
+\texttt{MDR $\leftarrow$ Memory[MAR]            ; read mem at BaseR $+$ offset}\\
+\texttt{DR\phantom{R}  $\leftarrow$ MDR                    ; load DR}
+\end{tabular}}
+\end{minipage}
+
+\bigskip
+
+\noindent Suppose that the architect of the LC-3 wanted to include
+an instruction \texttt{MOVE DR,} \texttt{SR} that would copy the memory
+location with address given by \texttt{SR} and store it into the memory
+location whose address is in \texttt{DR}.
+\begin{enumerate}[a.]
+\item[a.]  The \texttt{MOVE} instruction is not really necessary since it
+  can be accomplished with a sequence of existing LC-3 instructions.
+  What sequence of existing LC-3 instructions implements (also called
+  ``emulates'') \texttt{MOVE R0,R1}?
+
+\item[b.]  If the \texttt{MOVE} instruction were added to the LC-3 ISA,
+  what sequence of microinstructions, following the decode operation,
+  would emulate \texttt{MOVE DR,SR}?
+\end{enumerate}
+
+\enlargethispage{-2\baselineskip}
+
+\item[5.30] The following table shows a part of the LC-3's memory:
+\begin{center}
+{\fontsize{9}{13pt}\selectfont
+{\renewcommand{\tabcolsep}{12pt}
+\begin{tabular}{@{}cc@{}} \hline
+{Address}\rule{0pt}{10.12pt} & {Data} \\ \hline
+           0011 0001 0000 0000 & 1001 001 001 111111\rule{0pt}{10.1pt} \\[3pt]
+           0011 0001 0000 0001 & 0001 010 000 000 001 \\[3pt]
+           0011 0001 0000 0010 & 1001 010 010 111111 \\[3pt]
+           0011 0001 0000 0011 & 0000 010 111111100 \\[2.5pt]\hline
+\end{tabular}}}
+\vspace{3pt}
+\end{center}
+
+\noindent State what is known about R1 and R0 if the conditional
+branch redirects control to location x3100.
+
+\newpage
+
+\item[5.31] The figure below shows a snapshot of the 8 registers of 
+  the LC-3 before and after the instruction at location x1000 is 
+  executed. Fill in the bits of the instruction at location x1000.
+{\fontsize{9}{11}\selectfont\begin{align*}
+&\begin{matrix}
+\qquad\text{BEFORE}\\
+\noalign{\vspace{.5pc}}
+\begin{array}{@{}c|c|@{}}
+\cline{2-2}\rule{0pc}{1pc}
+{\rm R0} & {\rm x0000}\\
+\cline{2-2}\rule{0pc}{1pc}
+{\rm R1} & {\rm x1111}\\
+\cline{2-2}\rule{0pc}{1pc}
+{\rm R2} & {\rm x2222}\\
+\cline{2-2}\rule{0pc}{1pc}
+{\rm R3} & {\rm x3333}\\
+\cline{2-2}\rule{0pc}{1pc}
+{\rm R4} & {\rm x4444}\\
+\cline{2-2}\rule{0pc}{1pc}
+{\rm R5} & {\rm x5555}\\
+\cline{2-2}\rule{0pc}{1pc}
+{\rm R6} & {\rm x6666}\\
+\cline{2-2}\rule{0pc}{1pc}
+{\rm R7} & {\rm x7777}\\
+\cline{2-2}\end{array}\end{matrix}\qquad\begin{matrix}
+\qquad\text{AFTER}\\
+\noalign{\vspace{.5pc}}
+\begin{array}{@{}l|l|@{}}
+\cline{2-2}\rule{0pc}{1pc}
+{\rm R0} &{\rm x0000}\\
+\cline{2-2}\rule{0pc}{1pc}
+{\rm R1} & {\rm x1111}\\
+\cline{2-2}\rule{0pc}{1pc}
+{\rm R2} & {\rm x2222}\\
+\cline{2-2}\rule{0pc}{1pc}
+{\rm R3} & {\rm x3333}\\
+\cline{2-2}\rule{0pc}{1pc}
+{\rm R4} & {\rm x4444}\\
+\cline{2-2}\rule{0pc}{1pc}
+{\rm R5} & {\rm xFFF8}\\
+\cline{2-2}\rule{0pc}{1pc}
+{\rm R6} & {\rm x6666}\\
+\cline{2-2}\rule{0pc}{1pc}
+{\rm R7} & {\rm x7777}\\
+\cline{2-2}\end{array}\end{matrix}\\
+\noalign{\vspace{.8pc}}
+&0\hbox{x}1000: \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|}
+\hline
+0 & 0 & 0 & 1 &&&&&&&&&&&& \\
+\hline
+\end{tabular}
+\end{align*}}
+
+\enlargethispage{-2\baselineskip}
+
+\item[5.32] If the condition codes have values ${\rm N}=0$, ${\rm
+  Z}=0$, ${\rm P}=1$ at the beginning of the execution of the
+  following sequence of LC-3 instructions, what will their values 
+  be at the end of the execution of the following sequence of LC-3 
+  instructions?
+
+{\color{seventyblack}
+\begin{Verbatim}[fontsize=\fontsize{9}{14}\selectfont]
+          x3050    0000 0010 0000 0010
+          x3051    0101 0000 0010 0000
+          x3052    0000 1110 0000 0010
+          x3053    0101 0000 0010 0000
+          x3054    0001 0000 0011 1111
+\end{Verbatim}
+
+}
+
+\item[5.33] If the value stored in R0 is 5 at the end of the execution
+  of the following instructions, what can be inferred about R5?
+
+{\color{seventyblack}
+\begin{Verbatim}[fontsize=\fontsize{9}{13}\selectfont]
+          x2FFF    0101 0000 0010 0000
+          x3000    0101 1111 1110 0000
+          x3001    0001 1101 1110 0001
+          x3002    0101 1001 0100 0110
+          x3003    0000 0100 0000 0001
+          x3004    0001 0000 0010 0001
+          x3005    0001 1101 1000 0110
+          x3006    0001 1111 1110 0001
+          x3007    0001 0011 1111 1000
+          x3008    0000 1001 1111 1001
+          x3009    0101 1111 1110 0000
+\end{Verbatim}
+
+}
+
+\item[5.34] Using the overall data path in Figure 5.18, identify the
+  elements that implement the NOT instruction of Figure 5.4.
+
+\item[5.35] Using the overall data path in Figure 5.18, identify the
+  elements that implement the ADD instruction of Figure 5.5.
+
+\item[5.36] Using the overall data path in Figure 5.18, identify the
+  elements that implement the LD instruction of Figure 5.6.
+\normalcolor
+\color{black}
+
+\item[5.37] Using the overall data path in Figure 5.18, identify the
+  elements that implement the LDI instruction of Figure 5.7.
+
+\item[5.38] Using the overall data path in Figure 5.18, identify the
+  elements that implement the LDR instruction of Figure 5.8.
+
+\item[5.39] Using the overall data path in Figure 5.18, identify the
+  elements that implement the LEA instruction of Figure 5.9.
+
+\item[5.40] The logic diagram below shows part of the control
+  structure of the LC-3 machine. What is the purpose of the signal
+  labeled A?
+
+\begin{figure}[!h]
+\centerline{\includegraphics{pat67509_un0501.eps}}
+\end{figure}
+
+\enlargethispage{-2\baselineskip}
+
+\item[5.41] A part of the implementation of the LC-3 architecture is
+  shown on the top of the next page.
+\begin{enumerate}
+\item[a.] What information does Y provide?
+\item[b.] The signal X is the control signal that gates the gated D
+  latch. Is there an error in the logic that produces X?
+\end{enumerate}
+
+\newpage
+
+\begin{figure}[!h]
+\centerline{\includegraphics{pat67509_0542.eps}}
+\end{figure}
+
+\item[5.42] The LC-3 macho-company had decided to use opcode 1101 to
+  implement a new instruction. They need you help to pick the most
+  useful one from the following:
+  \begin{enumerate}[a.]
+  \item[a.] MOVE Ri, Rj; The contents of Rj are copied into Ri.
+  \item[b.] NAND Ri, Rj, Rk; Ri is the bit-wise NAND of Rj, Rk
+  \item[c.] SHFL Ri, Rj, \#2; The contents of Rj are shifted left 2 bits
+  and stored into Ri.
+  \item[d.] MUL Ri, Rj, Rk; Ri is the product of 2's complement integers\break
+    in Rj, Rk.
+  \end{enumerate}
+  \noindent
+  Justify your answer.
+
+\newpage
+
+\item[5.43]ADD When a computer executes an instruction, the state of the
+computer is changed as a result of that execution.  Is there any difference
+in the state of the LC-3 computer as a result of executing instruction 1
+below vs executing instruction 2 below? Explain. We can assume the state of the
+LC-3 computer before execution is the same in both cases.
+\begin{alltt}
+instruction 1: 0001 000 000 1 00000  register 0 <-- register 0 + \#0 
+
+instruction 2: 0000 111 000000000  branch to PC' + \#0 if any of N,Z,orP is set 
+\end{alltt}
+
+\item[5.44]ADD A program wishes to load a value from memory into register 1,
+and on the basis of the value loaded, execute code starting at x3040 if the
+value loaded is positive, execute code starting at x3080 if the value loaded
+is negative, or execute code starting at location x3003 if the value loaded
+is zero. The first instruction of this program (load a value into register R1) is shown in x3000.
+
+\vspace{0.3in}
+\noindent {\bf Part a} Write the instructions for locations x3001 and x3002.
+
+\begin{center}
+\begin{tabular}{ll}
+     
+     \raisebox{1.8ex}[0pt]{x3000:} &  \setlength{\unitlength}{1in}
+\begin{picture}(3,0.325)
+\framebox(3,0.325){0010 001 011111111}
+\end{picture}
+\\
+     \raisebox{1.8ex}[0pt]{x3001:} &
+\setlength{\unitlength}{1in}
+\begin{picture}(3,0.325)
+\framebox(3,0.325){\underline{}}
+\end{picture}
+ \\
+     \raisebox{1.8ex}[0pt]{x3002:} & 
+\setlength{\unitlength}{1in}
+\begin{picture}(3,0.325)
+\framebox(3,0.325){\underline{}}
+\end{picture}
+\\
+\end{tabular}
+
+\end{center}
+
+\vspace{0.5in}
+
+\noindent {\bf Part b} The program segment below starts execution at x3000.  When
+the program halts, what is contained in register 0?
+
+\begin{alltt}
+               x3000: 0101 000 000 1 00000   ;register 0 <-- 0 
+               x3001: 0001 000 000 1 00001   ;register 0 <-- register 0 + 1 
+               x3002: 0000 001 111111110     ;branch p -2 
+               x3003: 1111 0000 0010 0101    ;TRAP x25 
+
+
+\end{alltt}
+
+\vspace{0.25in}
+\noindent {\bf Part c} Two of the outputs of a 3 to 8 decoder are used as inputs
+to an AND gate as shown below.
+\vspace{0.1in}
+\begin{figure}[h]
+\centering
+\includegraphics[width=7cm]{546.eps}
+\end{figure}
+\vspace{0.1in}
+
+\newpage
+\item[5.45]ADD In class we showed the first few states of the
+finite state machine that is required for processing instructions of a computer
+program written for LC-3.  In the first state, the computer does two things,
+represented as:
+\begin{verbatim}
+                MAR <-- PC
+                PC <-- PC+1
+\end{verbatim}
+
+\noindent
+Why does the microarchictecture put the contents of the PC into the MAR?
+\noindent 
+Why does the microarchitecture increment the PC? \\
+
+\vspace{0.1in}
+\item[5.46]ADD R0 contains the ASCII code of a capital letter
+in the English alphabet.  If the instruction\\
+\begin{alltt}
+
+        0001000000000001\\
+\end{alltt}
+
+\noindent
+is executed, we wish to end up with the lower case version of that letter
+in R0.  What must be true of the values in the other registers before
+this instruction executes for this to happen?
+
+\newpage 
+\item[5.47]ADD Recall the $2^{2}$ by 16-bit memory from problem 6 of
+problem set 3.  It is reproduced below.  Recall that each of the four muxes
+on the diagram have 4-bit input sources and a 4-bit output, and that each
+4-bit source is the output of a single 4-bit memory cell.
+
+\hspace{1.0in}
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.5]{548_memory.eps}
+\end{figure}
+
+\noindent {\bf Part a}: Unfortunately, the memory was wired by a student and 
+he got the inputs to some of the muxes mixed up.  That is,
+instead of the 4 bits from a memory cell going to the correct 4-bit input of
+the mux, the 4 bits all went to one of the other 4-bit sources of that mux.
+The result was, as you can imagine, a mess. To figure out the mix-up in the wiring, the following sequence of memory
+accesses was performed:
+\noindent 
+To figure out the mix-up in the wiring, the following sequence of memory
+accesses was performed:
+\begin{center}
+\setlength{\extrarowheight}{7.0pt}
+\begin{tabular}[t]{c|c|c}
+Read/Write & MDR & MAR \\
+\hline
+Write & x134B & 01 \\
+\hline
+Write & xFCA2 & 10 \\
+\hline
+Write & xBEEF & 11 \\
+\hline
+Write & x072A & 00 \\
+\hline
+Read & xF34F & 10 \\
+\hline
+Read & x1CAB & 01 \\
+\hline
+Read & x0E2A & 00 \\
+\end{tabular}
+\end{center}
+
+\vspace{0.15in}
+\noindent {\bf Note:} On a write, MDR is loaded before the access.
+On a read, MDR is loaded as a result of the access.
+\noindent
+Your job is to identify the mix-up in the wiring.  Show which memory cells
+were wired to which mux inputs by filling in their corresponding addresses in
+the blanks provided.  Note that one address has already been supplied for you.
+
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.4]{548_muxes.eps}
+\end{figure}
+
+\vspace{.2in}
+
+\noindent
+{\bf Part b}: After rewiring the muxes correctly and initializing all memory
+cells to {\bf xF}, the following sequence of accesses was performed.  Note that
+some of the information about each access has been left out.\\
+
+\noindent
+Your job: Fill in the blanks.
+
+\setlength{\extrarowheight}{10.0pt}
+\large
+\begin{tabular}[t]{c|c|c}
+Read/Write & MDR & MAR \\
+\hline
+Write & x72 \line(1,0){10}\line(1,0){10}& 0 \line(1,0){10} \\
+\hline
+Write & x8FAF & 11 \\
+\hline
+Read & x72A3 & \line(1,0){10}0 \\
+\hline
+Read & xFFFF & 1\line(1,0){10} \\
+\hline
+Write & x732D & \line(1,0){10}1 \\
+\hline
+Read & xFFFF & 0\line(1,0){10} \\
+\hline
+Write & x\line(1,0){10}7\line(1,0){10}\line(1,0){10} & 0\line(1,0){10} \\
+\hline
+Read & x37A3 & \line(1,0){10}1 \\
+\hline
+Read & x\line(1,0){10}\line(1,0){10}\line(1,0){10}D & \line(1,0){10}1 \\
+\end{tabular}
+
+\vspace{0.3in}
+\normalsize
+\noindent 
+Show the contents of the memory cells by putting the hex digit that is
+stored in each after all the accesses have been performed.
+\\
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.4]{548_cell.eps}
+\end{figure}
+
+\item[5.48]ADD After these two instructions execute:
+
+\vspace{.1in}
+\begin{Large}
+\begin{tabular}{l l}
+x3030& 0001 000 001 0 00 010 \\
+x3031& 0000 011 000000111 \\
+\end{tabular}
+\end{Large}
+
+\vspace{.1in}
+
+\noindent
+the next instruction to execute will be the instruction at x3039 if what condition is met? 
+
+\item[5.49]ADD  We wish to know if R0 is being used as the Base Register
+for computing the address in an LDR instruction.  Since the instruction is
+in memory, we can load it into R4.  And, since the Base Register is identified
+in bits 8:6 of the instruction, we can Load R5 with 0000000111000000, and then
+execute AND R6,R5,R4.  We would know that R0 is the base register if what condition is met? 
+
+\item[5.50]STAR Three instructions all construct an address by
+sign-extending the low 9 bits of the instruction and adding it to
+the incremented PC. \\
+
+\begin{center}
+\includegraphics[height=3.0cm]{550_op.eps}
+\end{center}
+
+\vspace{.1in}
+\noindent
+The xxxxxxxxx represents the 9-bit offset that is sign-extended.
+
+\vspace{.1in}
+\noindent
+Where does the LC-3 microarchitecture put the result of adding
+the 9-bit sign-extended offset to the incremented PC?
+
+\vspace{.1in}
+Conditional Branch: 
+LEA: 
+LD: 
+
+\FloatBarrier
+
+\item[5.51]STAR An aggressive young engineer decides to build and sell the LC-3, but is told that if he wants to succeed, he really needs a SUBTRACT instruction.
+Given the unused opcode 1101, he decides to specify the SUBTRACT instruction as follows:
+
+\begin{figure}[h]
+\centering
+\includegraphics{551_subinst.eps}
+\end{figure}
+
+\noindent
+The instruction is defined as:   DR $\leftarrow$ SR2 - SR1, and the condition codes are set. \textbf{Assume DR, SR1, and SR2 are all different registers}. \\
+
+\noindent
+To accomplish this, the engineer needs to add three states to the state machine
+and a mux and register A to the data path.  The modified state machine is shown below and the modified data path is shown on the next page.  The mux is
+controlled by a new control signal SR2SEL which selects one of its two
+sources. \\
+
+SR2SEL/1:    SR2OUT, REGISTER\_A\\
+
+\noindent
+Your job: \\
+
+\noindent
+For the state machine shown below, fill in the empty boxes with the control signals that
+are needed in order to implement the SUBTRACT instruction. \\
+
+\noindent
+For the data path, fill in the value in register A.\\
+
+\begin{figure}[h]
+\centering
+\includegraphics{551_modstate.eps}
+\end{figure}
+
+\newpage 
+
+\begin{figure}[h]
+\centering
+\includegraphics{551_data_path.eps}
+\end{figure}
+
+\FloatBarrier 
+
+\item[5.52]ADD Here is a list of the 16 opcodes. Circle the ones that 
+write to a general purpose register (R0 to R7) at some point during the instruction cycle.
+
+\begin{alltt}
+           ADD      AND      BR      JMP      JSR      LD      LEA      LDI
+
+           LDR      NOT      RTI     ST       STI      STR     TRAP     reserved
+\end{alltt}
+
+\vspace{0.1in}
+
+\item[5.53]ADD The 8 general purpose registers of the LC-3 (R0 to R7) make up the
+Register File. To write a value to a register, the LC-3 control unit must supply 16 bits of data (BUS[15:0]), a destination register (DR[2:0]), and a write enable signal (LD.REG) to load a register.  The Combinational Logic Block below shows inputs BUS[15:0], DR[2:0], and LD.REG and outputs DinR0[15:0], DinR1[15:0], DinR2[15:0], ... DinR7[15:0], LD.R0, LD.R1, LD.R2, ... LD.R7.\\
+
+\noindent Your job: Add wires, logic gates, and standard logic blocks as necessary to complete the Combinational Logic Block.  Note: If you use a standard logic block, it is not necessary to show the individual gates.  However, it is necessary to identify the logic block specifically (e.g., ``16-to-1 mux''), along with labels for each relevant input or output, according to its function.\\
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.75]{553_logic.eps}
+\end{figure}
+
+\FloatBarrier
+
+\item[5.54]ADD All instructions load the MDR during the fetch phase of the instruction cycle to fetch the instruction from memory on its way to the IR.  After decode has completed, some instructions load the MDR again, using the source 0 input to the mux labeled A on the data path. Other instructions load the MDR, using the source 1 input to mux A.  Only one of the 15 LC-3 instructions loads the MDR after decode, using both source 0 and source 1 at different times during the processing of that instruction.  What is the opcode of that instruction?
+
+\item[5.55]STAR An LC-3 program starts execution at x3000. During the execution of the
+program, a snapshot of all 8 registers were taken at six different times as
+shown below: before
+the program executes, after execution of instruction 1, after execution of
+instruction 2, after execution of instruction 3, after execution of instruction
+4, after execution of instruction 5, and after execution of instruction 6. 
+
+\vspace{0.2in}
+
+\begin{table}[h*]
+\setlength{\tabcolsep}{0.6\tabcolsep}
+
+\setlength{\extrarowheight}{0.08in}
+
+\begin{tabular}{|c|c|c|c|c|c|c|c|} \hline
+{\bf Registers} & {\bf Initial} & {\bf After 1st} & {\bf After 2nd} & {\bf After 3rd} & {\bf After 4th} &
+{\bf After 5th} & {\bf After 6th} \\
+          & {\bf Value}   & {\bf Instruction} & {\bf Instruction}  & {\bf Instruction} &
+       {\bf Instruction} &
+       {\bf Instruction} & {\bf Instruction} \\
+\hline
+{\bf R0} & x4006 & x4050 & x4050 & x4050 & x4050 & x4050 & x4050\\
+\hline                                                                       
+{\bf R1} & x5009 & x5009 & x5009 & x5009 & x5009 & x5009 & x5009\\
+\hline                                                                       
+{\bf R2} & x4008 & x4008 & x4008 & x4008 & x4008 & x4008 & xC055\\
+\hline                                                                       
+{\bf R3} & x4002 &       &       & x8005 & x8005 & x8005 & x8005\\
+\hline                                                                       
+{\bf R4} & x4003 & x4003 & x4003 & x4003 &       &       & x4003\\
+\hline                                                                       
+{\bf R5} & x400D & x400D &       &       & x400D & x400D & x400D\\
+\hline                                                                       
+{\bf R6} & x400C & x400C & x400C & x400C & x400C & x400C & x400C\\
+\hline                                                                       
+{\bf R7} & x6001 & x6001 & x6001 & x6001 &       &       & x400E\\
+\hline
+\end{tabular}
+%\end{minipage}
+%\end{figure}
+\end{table}
+\vspace{0.2in}
+
+\noindent Also, during the execution of the program, the PC trace, the MAR
+trace, and the MDR trace were also recorded as shown below.
+Note that a PC trace records the addresses of the instructions executed in sequence by the program.
+\vspace{0.2in}
+
+\begin{center}
+\begin{tabular}{lcr} 
+
+\begin{tabular}{|c|} \hline
+{\bf PC Trace} \\
+\hline
+ \\
+\hline                                                                       
+ \\
+\hline                                                                       
+ \\
+\hline                                                                       
+x400D \\
+\hline                                                                       
+ \\
+\hline                                                                       
+x400E \\
+\hline                                                                       
+\end{tabular} & \hspace{0.8in} &
+
+
+
+\begin{tabular}{|c|c|} \hline
+{\bf MAR Trace} & {\bf MDR Trace} \\
+\hline
+ & xA009 \\
+\hline                                                                       
+ & \\
+\hline                                                                       
+x3025 & \\
+\hline                                                                       
+ & x1703 \\
+\hline                                                                       
+ & \\
+\hline                                                                       
+ & x4040 \\
+\hline                                                                       
+ & \\
+\hline                                                                       
+x400E & x1403\\
+\hline                                                                       
+\end{tabular}
+
+\end{tabular}
+\end{center}
+
+\vspace{0.2in}
+
+
+\noindent {\bf Your job:} Fill in the missing entries in the 3 tables above.  
+
+\item[5.56]ADD This problem tests your knowledge of the instruction cycle for processing
+the NOT instruction.  You are asked to show the values of several control
+signals in every clock cycle of the sequence that is used to process the
+NOT instruction.\\
+
+\noindent
+The instruction cycle starts with state 18 as shown in the table below.\\
+
+\noindent
+Your job: Identify each state in the sequence, and show the values of
+the control signals listed during each state in the sequence. Use the
+convention specified below. For a particular state, if the value of a
+control signal does not matter, fill it with an X. You may not have to
+use all the rows. \\
+
+
+
+\noindent
+Note: Assume a memory access takes one clock cycle. \\
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+Cycle & State & LD.PC & LD.MAR & LD.MDR & LD.REG & LD.CC & GateALU &
+GatePC & ALUK & PCMUX\\[0.1in] \hline
+ 1    & 18           &       &        &         &        &       &&&&
+\\[0.1in] \hline
+ 2    &              &       &        &         &        &       &&&&
+\\[0.1in] \hline
+ 3    &              &       &        &         &        &       &&&&
+\\[0.1in] \hline
+ 4    &              &       &        &         &        &       &&&&
+\\[0.1in] \hline
+ 5    &              &       &        &         &        &       &&&&
+\\[0.1in] \hline
+ 6    &              &       &        &         &        &       &&&&
+\\[0.1in] \hline
+ 7    &              &       &        &         &        &       &&&&
+\\[0.1in] \hline
+ 8    &              &       &        &         &        &       &&&&
+\\[0.1in] \hline
+ 9    &              &       &        &         &        &       &&&&
+\\[0.1in] \hline
+10    &              &       &        &         &        &       &&&&
+\\[0.1in] \hline
+\end{tabular}
+\end{table}
+
+\vspace{0.5in}
+
+\begin{figure}[h!]
+%\small
+\begin{verbatim}                                                         
+LD.PC    0: load not enabled                    GateALU  0: do not pass signal  
+         1: load enabled                                 1: pass signal         
+                                                                                
+LD.MAR   0: load not enabled                    GatePC   0: do not pass signal  
+         1: load enabled                                 1: pass signal         
+                                                                                
+LD.MDR   0: load not enabled                    ALUK     00: ADD                
+         1: load enabled                                 01: AND                
+                                                         10: NOT                
+LD.REG   0: load not enabled                             11: Pass input A       
+         1: load enabled                                                        
+                                                PCMUX    00: PC+1               
+LD.CC    0: load not enabled                             01: BUS                
+         1: load enabled                                 10: from adder                               
+
+\end{verbatim}
+\end{figure}
+
+\FloatBarrier
+
+\item[5.57]ADD \begin{figure}[h]
+\centering
+\includegraphics[width=7in]{557_datapath.eps}
+\end{figure}
+
+
+\noindent 1. What opcodes use IR[11:9] as inputs to SR1?  
+
+\vspace{.1in}
+
+\noindent 2. Where does the control signal of this mux come from?  Be specific! 
+
+\vspace{.1in}
+
+\noindent 3. What opcodes use this input to the MARMUX? 
+
+\vspace{.1in}
+
+\FloatBarrier
+
+\item[5.58]ADD Let's use the unused opcode to implement a new instruction, as
+shown below: \\
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=3in]{558_newop.eps}
+\end{figure}
+
+\noindent
+To accomplish this, we will need a small addition to the data path, shown below
+in boldface: \\
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=4.9in]{558_datapath.eps}
+\end{figure}
+
+\noindent
+The following five additional states are needed to control the data path
+to carry out the work of this instruction. \\
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=5.4in]{558_state.eps}
+\end{figure}
+
+\begin{centering}
+\noindent {\bf Note:} State B loads the negative of the contents of MDR into TEMP. \\
+\end{centering}
+
+\newpage
+\noindent
+{\bf Part a}: 
+Complete the table below by identifying the values of the control signals
+needed to carry out the work of each state. \\ 
+
+\begin{table}[h]
+\centering
+\begin{tabular}{r|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}                              
+
+ & \rotatebox{90}{LD.PC}
+ & \rotatebox{90}{LD.MAR}
+ & \rotatebox{90}{LD.MDR}
+ & \rotatebox{90}{LD.CC}
+ & \rotatebox{90}{LD.TEMP}
+ & \rotatebox{90}{GatePC}
+ & \rotatebox{90}{GateMDR}
+ & \rotatebox{90}{GateALU}
+ & \multicolumn{2}{c|}{\rotatebox{90}{SR1MUX[1:0]}}
+ & \rotatebox{90}{ALUMUX}
+ & \multicolumn{2}{c|}{\rotatebox{90}{ALUK[1:0]}}
+ & \rotatebox{90}{MIO.EN}
+ & \rotatebox{90}{R.W}
+\\ \cline{2-16}
+
+\raisebox{0.20in}{}\raisebox{-0.10in}{} State 13 &  &  &&&&& & & \ \ & \ \ & & \ \ & \ \ && \\ \cline{2-16}
+\raisebox{0.20in}{}\raisebox{-0.10in}{} State A  &  &  &&&&& & & \ \ & \ \ & & \ \ & \ \ && \\ \cline{2-16}
+\raisebox{0.20in}{}\raisebox{-0.10in}{} State B  &  &  &&&&& & & \ \ & \ \ & & \ \ & \ \ && \\ \cline{2-16}
+\raisebox{0.20in}{}\raisebox{-0.10in}{} State C  &  &  &&&&& & & \ \ & \ \ & & \ \ & \ \ && \\ \cline{2-16}
+\raisebox{0.20in}{}\raisebox{-0.10in}{} State D  &  &  &&&&& & & \ \ & \ \ & & \ \ & \ \ && \\ \cline{2-16}
+\end{tabular}
+\end{table}
+
+\begin{figure}[h!]
+\begin{small}
+\begin{verbatim}
+LD.PC       0: load not enabled              SR1MUX      00: Source IR[11:9]
+            1: load enabled                              01: Source IR[8:6]
+                                                         10: Source R6
+LD.MAR      0: load not enabled              
+            1: load enabled                  ALUMUX      0: Choose SR1
+                                                         1: Choose TEMP
+LD.MDR      0: load not enabled              
+            1: load enabled                  ALUK        00: ADD
+                                                         01: AND 
+LD.CC       0: load not enabled                          10: NOT
+            1: load enabled                              11: Pass input A
+                                             
+LD.TEMP     0: load not enabled              MIO.EN      0: MIO not enabled
+            1: load enabled                              1: MIO enabled
+                                             
+GatePC      0: do not pass signal            R.W         0: Read
+            1: pass signal                               1: Write
+                                             
+GateMDR     0: do not pass signal            
+            1: pass signal                   
+                                             
+GateALU     0: do not pass signal            
+            1: pass signal                   
+\end{verbatim}
+\end{small}
+\end{figure}
+
+\noindent
+{\bf Part b}:
+What does the new instruction do? \\
+
+\FloatBarrier
+
+\item[5.59]ADD very LC-3 instruction takes 8 cycles to be fetched and decoded, if we assume every memory access takes 5 cycles.  The total number of cycles an LC-3 instruction takes to be completely processed, however, depends on what has to be done for that
+instruction. \\
+
+\noindent
+Assuming every memory access takes 5 cycles, and assuming the LC-3 processes
+one instruction at a time, from beginning to end, how many clock cycles does
+each instruction take? For each instruction, how many cycles are required to process it? \\
+
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+ Instruction & Number of cycles \\ \hline \hline
+ ADD & \\
+ AND & \\
+ LD & \\
+ LEA & \\
+ LDI & \\
+ NOT & \\
+ BRnzp & \\
+ TRAP & \\ \hline
+\end{tabular}
+\end{center}
+
+\item[5.60]ADD 
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.75]{560_datapath.eps}
+\end{figure}
+\\
+
+\noindent Note that several of the lines (i.e., signals) in the
+LC-3 data path have been drawn in boldface.  Each line is designated by a
+boldface number 1,2,or 3.  Not all instructions use all three lines. That is, some
+instructions would not function correctly if the line (i.e., signal) were
+removed.
+
+List the opcodes that utilize line 1 during their processing of an instruction.\\
+List the opcodes that utilize line 2 during their processing of an instruction.\\
+List the opcodes that require LD.CC=1 on line 3 during their processing of an instruction.\\
+
+Note the logic (in boldface) added to the data path. The output of that logic is labeled X.  What does X=1 indicate if ALUK is ADD?
+
+\FloatBarrier
+
+\item[5.61]STAR During the execution of an LC3 program, the processor datapath was monitored for four instructions in
+the program that were processed consecutively. The table below shows all clock cycles during which 
+the bus was utilized. It shows the clock cycle number, the value on the bus and the state 
+(from the state machine diagram) for some of these clock cycles. Processing of the first instruction 
+starts at clock cycle T. Each memory access in this LC3 machine takes five clock cycles.\\
+
+\noindent
+\textbf{Your job}: Fill in the missing entries in the table below. You only need to fill in the cells not marked with `x'. \\
+
+\noindent
+\textbf{Note}: There are five clock cycles for which you need to provide the control signals. Not all LC3 
+control signals are shown in the table. However, all control signals that are required for those five 
+clock cycles have been included. \\
+
+\noindent
+\textbf{Note}: For the DRMUX signal, write `11.9', `R7', or `SP'; for the R.W signal, write a `R' or a `W'; for the PCMUX signal, write `PC+1', `BUS', or `ADDER'; for all other control signals, write down the actual bit. If a control signal is not relevant in a given cycle, mark it with a dash (i.e., -).  \\
+
+%\begin{LARGE}
+\noindent
+\begin{tabular}{|c|c|c|c|@{}c@{}|@{}c@{}|@{}c@{}|@{}c@{}|@{}c@{}|@{}c@{}|@{}c@{}|@{}c@{}|@{}c@{}|p{0.9cm}|@{}c@{}|c|p{1cm}|}
+\hline
+Inst. & Clock & Bus & State & \multicolumn{13}{ c| }{Control Signals} \\ 
+\#    & Cycle &     &       & \multicolumn{13}{ c| }{} \\ 
+\cline{5-17}  
+ & & & & Gate & Gate & Gate & Gate & LD. & LD. & LD. & LD. & LD. & DR & MIO. & R.W & PC \\
+ & & & & PC & MDR & ALU & MARMUX & PC & MDR & MAR & CC & Reg & MUX & EN &  & MUX \\
+\hline
+ & & & & & & & & & & & & & & & & \\
+Inst. 1 & T + 0 & x3010 & & & & & & & & & & & & & & \\
+\cline{2-17}
+ & & & & & & & & & & & & & & & & \\
+& T + 6 &  & & x & x & x & x & x & x & x & x & x & x & x & x & x \\
+\cline{2-17}
+ & & & & & & & & & & & & & & & & \\
+& T + 8 & x00AB & & x & x & x & x & x & x & x & x & x & x & x & x & x \\
+\cline{2-17}
+ & & & & & & & & & & & & & & & & \\
+& T + 9 &  & 28 &  &  &  &  &  &  &  &  &  &  &  &  &  \\
+\cline{2-17}
+ & & & & & & & & & & & & & & & & \\
+& T + 10 &  & 28 &  &  &  &  &  &  &  &  &  &  &  &  &  \\
+\cline{2-17}
+ & & & & & & & & & & & & & & & & \\
+& T + 11 &  & 28 &  &  &  &  &  &  &  &  &  &  &  &  &  \\
+\cline{2-17}
+ & & & & & & & & & & & & & & & & \\
+& T + 12 & x  & 28 & x & x & x & x & x & x & x & x & x & x & x & x & x \\
+\cline{2-17}
+ & & & & & & & & & & & & & & & & \\
+& T + 13 & x & 28 & x & x & x & x & x & x & x & x & x & x & x & x & x \\
+\cline{2-17}
+ & & & & & & & & & & & & & & & & \\
+& T + 14 &  &  & x & x & x & x & x & x & x & x & x & x & x & x & x \\
+\hline
+ & & & & & & & & & & & & & & & & \\
+Inst. 2 & T + 15 & x1510 & 18 & x & x & x & x & x & x & x & x & x & x & x & x & x \\
+\cline{2-17}
+ & & & & & & & & & & & & & & & & \\
+&  & x2219 &  & x & x & x & x & x & x & x & x & x & x & x & x & x \\
+\cline{2-17}
+ & & & & & & & & & & & & & & & & \\
+&  &  &  & x & x & x & x & x & x & x & x & x & x & x & x & x \\
+\cline{2-17}
+ & & & & & & & & & & & & & & & & \\
+& T + 29 & x8001  &  &  &  &  &  &  &  &  &  &  &  &  &  &  \\
+\hline
+ & & & & & & & & & & & & & & & & \\
+Inst. 3 & T + 30 &  &  & x & x & x & x & x & x & x & x & x & x & x & x & x \\
+\cline{2-17}
+ & & & & & & & & & & & & & & & & \\
+& T+ 36 & x0804  &  & x & x & x & x & x & x & x & x & x & x & x & x & x \\
+\hline
+ & & & & & & & & & & & & & & & & \\
+Inst. 4 &  &  & 18  & x & x & x & x & x & x & x & x & x & x & x & x & x \\
+\cline{2-17}
+ & & & & & & & & & & & & & & & & \\
+& x  & x1200  & x  & x & x & x & x & x & x & x & x & x & x & x & x & x \\
+\cline{2-17}
+ & & & & & & & & & & & & & & & & \\
+& x  & x0000  & x  & x & x & x & x & x & x & x & x & x & x & x & x & x \\
+\hline
+\end{tabular}
+
+
+\end{exercises}
+\end{document}

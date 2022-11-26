@@ -1,0 +1,3791 @@
+\documentclass{patt}
+\usepackage[section]{placeins}
+\usepackage{xr}
+\usepackage{alltt}
+\usepackage{longtable}
+\graphicspath{{../art/ch09/},{../art/designelements/},{../art/designelements/UnNumberedArt/}}
+
+\setcounter{part}{1}
+\setcounter{chapter}{8}
+\setcounter{page}{219}
+
+ \makeatletter
+ \def\@makechapterhead#1{%
+  \begingroup
+  \parindent \z@%
+  \vspace*{-8.5\p@}%
+  \begin{picture}(0,0)
+    \put(432,-577){\includegraphics[width=0.723333in,height=9.52667in]{PattChp.eps}}
+    \put(428,-577){\rule{1\p@}{9.52667in}}
+    \put(381.5,-181){\vbox{%
+        \includegraphics{PattIcon1\ifnum\value{part}=0
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon2\ifnum\value{part}=5
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon3\ifnum\value{part}=5
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon4\ifnum\value{part}=5
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon5\ifnum\value{part}=5
+            a\else b\fi.eps}\vspace{1pc}}}
+  \end{picture}%
+  \settowidth{\chapternumberwidth}{\fontsize{12}{12}\selectfont\industriasolid\trackonefifty{chapter}}%
+  \hfill\parbox{\chapternumberwidth}{%
+    \centering\industriasolid
+    \centerline{\hss\fontsize{12}{12}\selectfont\trackonefifty{chapter}\hss}\par\vspace{1.5pc}
+    \centerline{\sans\fontsize{72}{12}\selectfont\colour\thechapter}}
+  \par
+  \vspace{6.48pc}
+  {\industriasolid\fontsize{30}{32}\selectfont\trackten{#1}\par}%
+  \vspace{1.5pc}%
+  {\colour\rule{36.4pc}{4\p@}}
+  \vspace{4pt}
+  \endgroup}
+\makeatother
+
+\begin{document}
+
+\chapter{I/O}
+\label{chapt:os}
+
+Up to now we have completely ignored the details of input and output,
+that is, how the computer actually gets information from the keyboard (input),
+and how the computer actually delivers information to the monitor (output).  
+Instead we have relied on the TRAP instruction (for example, TRAP x23 for input 
+and TRAP x21 for output) to accomplish these tasks.  The TRAP instruction
+enables us to tell the operating system what we need done by means of a 
+trap vector, and we trust the operating system to do it for us.
+
+The more generic term for our TRAP instruction is {\em system call} because 
+the TRAP instruction is calling on the operating system to do something for 
+us while allowing us to remain completely clueless as to how it gets done.
+Now we are ready to examine how input and output actually work in the LC-3, 
+what happens when the user program makes a system call by invoking the TRAP 
+instruction, and how it all works under the control of the operating system.  
+
+We will start with the actual physical structures that are required to 
+cause input and output to occur.  But before we do that, it is useful to
+say a few words about the operating system and understand a few basic 
+concepts that have not been important so far, but become very important 
+when considering what the operating system needs to do its job.
+
+You may be familiar with Microsoft's various flavors of Windows, 
+Apple's MacOS, and Linux.  These are all examples of operating systems.  
+They all have the same goal: to optimize the use of all the resources of 
+the computer system while making sure that no software does harmful things 
+to any program or data that it has no right to mess with.  To better
+understand their job, we need to understand the notions of privilege and 
+priority and the layout of the memory address space (i.e., the regions of 
+memory and the purpose of each).  
+
+\section{Privilege, Priority, and the Memory Address Space}
+\subsection{Privilege and Priority}
+
+Two very different (we often say orthogonal) concepts associated with computer
+processing are {\em privilege} and {\em priority}.  
+
+\subsubsection{Privilege}
+Privilege is all about the
+right to do something, such as execute a particular instruction or access a
+particular memory location.  Not all computer programs have the right to
+execute all instructions.  For example, if a computer system is shared among
+many users and the ISA contains a HALT instruction, we would not want any
+random program to execute that HALT instruction and stop the computer.  If we
+did, we  would have some pretty disgruntled users on our hands.  Similarly, 
+some memory locations are only available to the operating system.  We would 
+not want some random program to interfere with the data structures or code
+that are part of the operating system, which would in all likelihood cause
+the entire system to crash.  In order to make sure neither of these two 
+things happen, we designate every computer program as either privileged or
+unprivileged.  We often say {\em Supervisor privilege} to indicate privileged.  
+Programs that have Supervisor privilege can execute all instructions and
+can access all of memory.  Unprivileged programs can not.  We say a
+program is executing in {\em Supervisor mode} to indicate privileged, or 
+{\em User mode} to indicate unprivileged.
+
+\subsubsection{Priority}
+Priority is all about the urgency of a program to execute.  Every program is
+assigned a priority, specifying its urgency as compared to all other programs.
+This allows programs of greater urgency to interrupt programs of lesser
+urgency.  For example, programs written by random users may be assigned a
+priority of 0.  The keyboard may be asigned a priority of 4, and the fact
+that the computer is plugged into a source of energy like a wall outlet may
+be assigned a priority of 6.  If that is the case, a random user program
+would be interrupted if someone sitting at a keybord wanted to execute a
+program that caused data to be input into the computer.  And that program
+would be interrupted if someone pulled the power cord out of the wall outlet
+causing the computer to quickly lose its source of energy.  In such an event,
+we would want the computer to execute some operating system program that is
+provided specifically to handle that situation.
+
+\subsubsection{Two orthogonal notions}
+We said privilege and priority are two orthogoanal notions, meaning they have
+nothing to do with each other.  We humans sometimes have a problem with that as
+we think of fire trucks that have the privilege of ignoring traffic lights
+because they have the urgency to reach the fire.  In our daily lives we often
+are given privileges because of our greater sense of urgency.  Not the case
+with computer systems.  
+
+For example, we can have a user program that is tied
+to a physics experiment that needs to interrupt the computer at a specific
+instance of time to record information being generated by the physics 
+experiment.  If the user program does not pre-empt the program running at that
+instant of time, the data generated by the experiment may be lost.  This is
+a user program so it does not have Supervisor privilege.  But it does have a 
+greater urgency, so it does have a higher priority.
+
+Another example, the system administrator who wants to execute diagnostic
+programs that access all memory locations and execute all instructions as part 
+of some standard preventive maintenance.  The diagnostic program needs
+Supervisor privilege to execute all instructions and access all memory 
+locations.  But it has no sense of urgency.  Whether this happens at 1am or 
+2am is irrelevant, compared to the urgency of other programs that need access 
+to the computer system exactly when they need it.  The diagnostic program has 
+privilege but no priority.   
+   
+Finally, an example showing that even in human activity one can have priority
+but not privilege.  Our friend Bob works in the basement of one of those 
+New York City skyscapers.  He is about to go to the Men's Room when his 
+manager tells him to take a message immediately to the Vice President on the 
+88th floor, and bring back a response.  So Bob delays his visit to the 
+Men's Room and takes the elevator to the 88th floor.  The Vice President 
+keeps him waiting, causing Bob to be concerned he might have an accident.  
+Finally, the Vice President gives his response, and Bob pushes the button 
+to summon the elevator to take him back to the basement, in pain because he 
+needs to go to the Men's Room.  While waiting for
+the elevator, another Vice President appears, unlocks the Executive Men's Room
+and enters.  Bob is in pain, but he can not enter the Executive Men's
+Room.  Although he certainly has the priority, he does not have the privilege! 
+
+\subsubsection{the Processor Status Register (PSR)}
+
+Each program executing on the computer is assigned a privilege and a
+priority.  Figure~\ref{fig:psr} shows the Processor Status Register (PSR),
+which contains that assignment.  Each program has associated with it two very
+importnat registers.  The Program Counter (PC) you are very familiar with. 
+The PSR is shown below:
+
+\begin{figure}
+\begin{center}
+\hbox{\begin{tabular}{@{\extracolsep{-2pt}}cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{1}{|c|}{\rule{0pt}{10pt}Pr\rule{0pt}{10pt}}&
+\multicolumn{3}{c}{} & \multicolumn{1}{c|}{}
+& \multicolumn{1}{c}{}
+& \multicolumn{1}{c}{PL n} & \multicolumn{1}{c|}{} &
+\multicolumn{3}{c}{} & \multicolumn{2}{c}{} & \multicolumn{1}{|c}{N} &
+ \multicolumn{1}{|c|}{Z} & \multicolumn{1}{c|}{P}\\
+\hline
+\multicolumn{2}{l}{Priv} & \multicolumn{4}{c}{ } &
+\multicolumn{2}{c}{Priority} & \multicolumn{5}{c}{ } &
+\multicolumn{3}{c}{cond codes}\\
+\end{tabular} \quad\bfseries PSR}
+\end{center}
+\caption{Processsor Status Register (PSR)}
+\label{fig:psr}
+\end{figure}
+
+Bit[15] specifies the privilege, where PSR[15]=0 means Supervisor privilege, 
+and PSR[15]=1 means unprivileged.  Bits[10:8] specifies the priority level (PL)
+of the program.  The highest priority level is 7 (PL7), the lowest is PL0.
+
+The PSR also contains the current values of the condition codes, as shown
+in Figure~\ref{fig:psr}.  We will see in Section 9.4 why it is important
+that the condition codes are included in the PSR.
+
+\subsection{Organization of Memory}
+
+Figure~\ref{fig:memory_layout} shows the layout of the LC-3 memory.
+
+\begin{figure}[h!]
+\centerline{\includegraphics{memory_layout.eps}}
+\caption{Regions of Memory}
+\label{fig:memory_layout}
+\end{figure}
+
+You know that the LC-3 has a 16 bit address space; ergo, memory locations
+from x0000 to xFFFF.  Locations x0000 to x2FFF are privileged memory
+locations.  They contain the various data structures and code of the operating
+system.  They require Supervisor privilege to access.  They are referred to as
+{\em System Space}.
+
+Locations x3000 to xFDFF are unprivileged memory locations.  Supervisor 
+privilege is not required to access these memory locations.  All user programs 
+and data use this region of memory.  The region is often referred to as 
+{\em User Space}.
+
+Addresses xFE00 to xFFFF do not correspond to memory locations at all.  
+That is, the last address of a memory location is xFDFF. Addresses xFE00
+to xFFFF are used to identify registers that take part in input and output
+functions, and some special registers associated with the processor.  
+For example, the PSR is assigned address xFFFC, and the processor's Master 
+Control Register (MCR) is assigned address xFFFE.  The benefit of assigning
+addresses from the memory address space will be discussed in Section 9.2.1.2.
+The set of addresses from xFE00 to xFFFF is usually referred to as the I/O Page
+since most of the addresses are used for identifying registers that take part 
+in input or output functions.  Access to those registers requires 
+Supervisor privilege.
+
+Finally, note that Figure~\ref{fig:memory_layout} shows two stacks, a 
+{\em Supervisor Stack} in system space and a {\em User Stack} in user space.  
+The Supervisor Stack is controlled by the operating system, and requires 
+Supervisor privilege to access.  The User Stack is controlled by the 
+user program and does not require privilege to access.  
+
+Each has a stack pointer, Supervisor Stack Pointer (SSP) and User Stack Pointer
+(USP), to indicate the top of the stack.  Since a program can only execute
+in Supervisor mode or User mode at any one time, only one of the two stacks
+is active at any one time.  Register 6 is generally used as the 
+stack pointer (SP) for the active stack.  Two registers, Saved\_SSP and 
+Saved\_USP are provided to save the SP not in use.  When privilege changes,
+for example, from Supervisor mode to User mode, the SP is stored in 
+Saved\_SSP, and the SP is loaded from Saved\_USP.
+
+\section{Input/Output}
+
+Input and output devices (keyboards, monitors, disks, or kiosks at the
+shopping mall) all handle input or output data using registers that are 
+tailored to the needs of each particular input or output device.  
+Even the simplest I/O devices usually need at least two registers: one to 
+hold the data being transferred between the device and the computer, and one 
+to indicate status information about the device.  An example of status 
+information is whether the device is available or is it still busy processing 
+the most recent I/O task.
+\index{device register} 
+
+\subsection{Some basic characteristics of I/O}
+
+All I/O activity is controlled by instructions in the computer's ISA.  Does
+the ISA need special instructions for dealing with I/O?  Does the I/O device
+execute at the same speed as the computer, and if not what manages the
+difference in speeds?  Is the transfer of information between the
+computer and the I/O device initiated by a program executing in the computer
+or is it initiated by the I/O device?  Answers to these questions form some
+of the basic characteristics of I/O activity.
+
+\subsubsection{Memory-Mapped I/O vs Special I/O Instructions}
+
+An instruction that interacts with an input or output device register
+must identify the particular input or output device register with
+which it is interacting. Two schemes have been used in the past.  Some
+computers use special input and output instructions. Most computers
+prefer to use the same data movement instructions that are used to
+move data in and out of memory.
+
+The very old PDP-8 (from Digital Equipment Corporation, more than 60 years
+ago---1965) is an example of a computer that used special input and
+output instructions. The 12-bit PDP-8 instruction contained a 3-bit
+opcode. If the opcode was 110, an I/O instruction was indicated. The
+remaining nine bits of the PDP-8 instruction identified which I/O
+device register and what operation was to be performed.
+
+Most computer designers prefer not to specify an additional set of
+instructions for dealing with input and output. They use the same data
+movement instructions that are used for loading and storing data
+between memory and the general purpose registers.  For example, a load
+instruction (LD, LDI, or LDR), in which the source address is that of an 
+input device register, is an input instruction.  Similarly, a store 
+instruction (ST, STI, or STR) in which the destination address is that of 
+an output device register is an output instruction.
+
+Since programmers use the same data movement instructions that are
+used for memory, every input device register and every output device
+register must be uniquely identified in the same way that memory
+locations are uniquely identified.  Therefore, each device register is
+assigned an address from the memory address space of the ISA. That is,
+the I/O device registers are {\em mapped} to a set of addresses that
+are allocated to I/O device registers rather than to memory locations.
+Hence the name {\em memory-mapped I/O}.  \index{memory-mapped I/O}
+
+The original PDP-11 ISA had a 16-bit address space.  All addresses
+wherein bits [15:13] $=$ 111 were allocated to I/O device registers.
+That is, of the $2^{16}$ addresses, only 57,344 corresponded to memory
+locations.  The remaining $2^{13}$ were memory-mapped I/O addresses.
+
+The LC-3 uses memory-mapped I/O.  As we discussed in Section~9.1.2, 
+addresses x0000 to xFDFF refer to actual memory locations.  Addresses 
+xFE00 to xFFFF are reserved for input/output device registers.  Table~A.3 
+lists the memory-mapped addresses of the LC-3 device registers that have 
+been assigned so far.  Future uses and future sales of LC-3 microprocessors 
+may require the expansion of device register address assignments as new and 
+exciting applications emerge!
+
+\subsubsection{Asynchronous vs Synchronous}
+
+Most I/O is carried out at speeds very much slower than the speed of
+the processor.  A typist, typing on a keyboard, loads an input device
+register with one ASCII code every time he/she types a character.  A
+computer can read the contents of that device register every time it
+executes a load instruction, where the operand address is the
+memory-mapped address of that input device register.
+
+Many of today's microprocessors execute instructions under the control
+of a clock that operates well in excess of 2 GHz.  Even for a
+microprocessor operating at only 2 GHz, a clock cycle lasts only 0.5
+nanoseconds.  Suppose a processor executed one instruction at a time,
+and it took the processor 10 clock cycles to execute the instruction
+that reads the input device register and stores its contents.  At that
+rate, the processor could read the contents of the input device
+register once every 5 nanoseconds.  Unfortunately, people do not type
+fast enough to keep this processor busy full-time reading characters.
+{\em Question:} How fast would a person have to type to supply input
+characters to the processor at the maximum rate the processor can
+receive them? 
+
+We could mitigate this speed disparity by designing hardware that
+would accept typed characters at some slower fixed rate.  For example,
+we could design a piece of hardware that accepts one character every
+200 million cycles. This would require a typing speed of 100
+words/minute, assuming words on average consisted of 5 letters, which is 
+certainly doable.  Unfortunately, it would also require that the typist 
+work in lockstep with the computer's clock.  That is not acceptable 
+since the typing speed (even of the same typist) varies from moment to moment.
+
+What's the point?  The point is that I/O devices usually operate at
+speeds very different from that of a microprocessor, and not in
+lockstep.  We call this latter characteristic  {\em asynchronous}.
+Most interaction between a processor \index{asynchronous I/O} and I/O
+is asynchronous. To control processing in an asynchronous world
+requires some protocol or {\em handshaking} \index{protocol}
+\index{handshaking} mechanism.  So it is with our keyboard and monitor.
+In the case of the keyboard, we will need a 1-bit status
+register, called a {\em flag,} to indicate if someone has or has not
+typed a character.  In the case of the monitor, we will need a 1-bit
+status register to indicate whether or not the most recent character
+sent to the monitor has been displayed, and so the monitor can be given
+another character to display.
+
+These flags are the simplest form of {\em synchronization}.  A single
+\index{synchronization} flag, called the {\em Ready bit}, is enough to
+synchronize the output of the typist who can type characters at the
+rate of 100 words/minute with the input to a processor that can accept
+these characters at the rate of 200 million characters/second.  Each
+time the typist types a character, the Ready bit is set to 1. Each time the
+computer reads a character, it clears the Ready bit.  By examining the
+Ready bit before reading a character, the computer can tell whether it
+has already read the last character typed.  If the Ready bit is clear,
+no characters have been typed since the last time the computer read a
+character, and so no additional read would take place. When the
+computer detects that the Ready bit is set, it could only have been
+caused by a {\bf new} character being typed, so the computer would
+know to again read a character.
+
+The single Ready bit provides enough handshaking to ensure that the
+asynchronous transfer of information between the typist and the
+microprocessor can be carried out accurately.
+
+If the typist could type at a constant speed, and we did have a piece
+of hardware that would accept typed characters at precise intervals
+(for example, one character every 200 million cycles), then we would
+not need the Ready bit.  The computer would simply know, after 200
+million cycles of doing other stuff, that the typist had typed exactly
+one more character, and the computer would read that character.  In
+this hypothetical situation, the typist would be typing in lockstep
+with the processor, and no additional synchronization would be needed.
+We would say the computer and typist were operating {\em
+  synchronously}.  That is, the input activity was synchronous.
+\index{synchronous I/O}
+
+\subsubsection{Interrupt-driven vs Polling}
+\label{subsubsec:interruptVSpolling}
+
+The processor, which is computing, and the typist, who is typing, are
+two separate entities.  Each is doing its own thing.  Still, they need
+to interact, that is, the data that is typed has to get into the
+computer. The issue of {\em interrupt-driven} versus {\em polling} is
+the issue of who controls the interaction.  Does the processor do its
+own thing until being interrupted by an announcement from the
+keyboard, ``Hey, a key has been struck. The ASCII code is in the input
+device register.  You need to read it.'' This is called {\em
+  interrupt-driven I/O}, where the keyboard controls the interaction.
+Or, does the processor control the interaction, specifically by
+interrogating (usually, again and again) the Ready bit until it (the
+processor) detects that the Ready bit is set.  At that point, the
+processor knows it is time to read the device register.  This second
+type of interaction when the processor is in charge is called {\em polling}, 
+since the Ready bit is polled by the processor, asking if any key has been 
+struck.
+
+Section~\ref{subsubsec:basic.input.routine} describes how polling
+works. Section~\ref{sec:interruptsIO} explains interrupt-driven I/O.
+
+\subsection{Input from the Keyboard}
+\label{subsec:input.from.keyboard}
+
+\subsubsection{Basic Input Registers (KBDR and KBSR)}
+
+We have already noted that in order to handle character input from the
+keyboard, we need two things: a data register that contains the
+character to be input, and a synchronization mechanism to let the
+processor know that input has occurred.  The synchronization mechanism
+is contained in the status register associated with the keyboard.
+
+These two registers are called the {\em keyboard data register} (KBDR)
+and the \index{KBDR} \index{Keyboard Data Register} {\em keyboard
+  status register} (KBSR).  They are assigned addresses from the
+memory \index{KBSR} \index{Keyboard Status Register} address space.
+As shown in Table~A.3, address xFE02 is assigned to the KBDR; address xFE00
+is assigned to the KBSR.
+
+\begin{figure}[h!]
+\centerline{\includegraphics{pat67509_0801.eps}}
+\caption{Keyboard device registers}
+\label{fig:kbdr}
+\end{figure}
+
+Even though a character needs only eight bits and the synchronization
+mechanism needs only one bit, it is easier to assign 16 bits (like all
+memory addresses in the LC-3) to each.  In the case of KBDR, bits
+[7:0] are used for the data, and bits [15:8] contain x00. In the case
+of KBSR, bit [15] contains the synchronization mechanism, that is, the
+Ready bit.  Figure~\ref{fig:kbdr} shows the two device registers
+needed by the keyboard.
+
+\subsubsection{The Basic Input Service Routine}
+\label{subsubsec:basic.input.routine}
+\index{basic input service routine}
+
+KBSR[15] controls the synchronization of the slow keyboard and the
+fast processor.  When a key on the keyboard is struck, the ASCII code
+for that key is loaded into KBDR[7:0] and the electronic circuits
+associated with the keyboard automatically set KBSR[15] to 1.  When
+the LC-3 reads KBDR, the electronic circuits associated with the
+keyboard automatically clear KBSR[15], allowing another key to be
+struck.  If KBSR[15] $=$ 1, the ASCII code corresponding to the last
+key struck has not yet been read, and so the keyboard is disabled; that is,
+no key can be struck until the last key is read.
+
+If input/output is controlled by the processor (i.e., via polling),
+then a program can repeatedly test KBSR[15] until it notes that the
+bit is set. At that point, the processor can load the ASCII code
+contained in KBDR into one of the LC-3 registers.  Since the processor
+only loads the ASCII code if KBSR[15] is 1, there is no danger of
+reading a single typed character multiple times. Furthermore, since
+the keyboard is disabled until the previous code is read, there is no
+danger of the processor missing characters that were typed. In this
+way, KBSR[15] provides the mechanism to guarantee that each key typed
+will be loaded exactly once.
+
+The following input routine loads R0 with the ASCII code that has been
+entered through the keyboard and then moves on to the NEXT\_TASK in
+the program.
+
+\begin{colorverbatim}
+01    START  LDI     R1, A        ; Test for
+02           BRzp    START        ; character input
+03           LDI     R0, B
+04           BRnzp   NEXT_TASK    ; Go to the next task
+05    A      .FILL   xFE00        ; Address of KBSR
+06    B      .FILL   xFE02        ; Address of KBDR
+\end{colorverbatim}
+
+\noindent
+As long as KBSR[15] is 0, no key has been struck since the last time
+the processor read the data register.  Lines 01 and 02 comprise a loop
+that tests bit [15] of KBSR.  Note the use of the LDI instruction,
+which loads R1 with the contents of xFE00, the memory-mapped address
+of KBSR. If the Ready bit, bit [15], is clear, BRzp will branch to
+START and another iteration of the loop.  When someone strikes a key,
+KBDR will be loaded with the ASCII code of that key and the Ready bit
+of KBSR will be set.  This will cause the branch to fall through and
+the instruction at line 03 will be executed.  Again, note the use of the
+LDI instruction, which this time loads R0 with the contents of xFE02,
+the memory-mapped address of KBDR.  The input routine is now done, so
+the program branches unconditionally to its NEXT\_TASK.
+
+
+\subsubsection{Implementation of Memory-Mapped Input}
+
+Figure~\ref{fig:memmap.input} shows the additional data path required
+to implement memory-mapped input.  You are already familiar, from
+Chapter~5, with the data path required to carry out the EXECUTE phase
+of the load instructions.  Essentially three steps are required:
+
+\begin{figure}[h!]
+\centerline{\includegraphics{pat67509_0802.eps}}
+\caption{Memory-mapped input}
+\label{fig:memmap.input}
+\end{figure}
+
+\begin{enumerate}
+\item The MAR is loaded with the address of the memory location to be
+  read.
+\item Memory is read, resulting in MDR being loaded with the contents
+  at the specified memory location.
+\item The destination register (DR) is loaded with the contents of
+  MDR.
+\end{enumerate}
+In the case of memory-mapped input, the same set of steps are carried
+out, {\bf except} instead of MAR being loaded with the address of a
+memory location, MAR is loaded with the address of a device register.
+Instead of the {address control logic} enabling memory to read, the
+address control logic selects the corresponding device register to
+provide input to the MDR.
+
+\FloatBarrier
+\subsection{Output to the Monitor}
+\label{subsec:output.to.monitor}
+
+\subsubsection{Basic Output Registers (DDR and DSR)}
+
+ Output works in a way very similar to input, with DDR and
+DSR replacing the roles of KBDR and KBSR, respectively.  DDR stands
+for Display Data Register, which drives the monitor display.  DSR
+stands for Display Status Register.  In the LC-3, DDR is assigned
+address xFE06.  DSR is assigned address xFE04.
+
+\begin{figure}[h!]
+\centerline{\includegraphics{pat67509_0803.eps}}
+\caption{Monitor device registers}
+\label{fig:crtdr}
+\end{figure}
+
+As is the case with input, even though an output character needs only
+eight bits and the synchronization mechanism needs only one bit, it is
+easier to assign 16 bits (like all memory addresses in the LC-3) to
+each output device register.  In the case of DDR, bits [7:0] are used
+for data, and bits [15:8] contain x00. In the case of DSR, bit [15]
+contains the synchronization mechanism, that is, the Ready bit.
+Figure~\ref{fig:crtdr} shows the two device registers needed by the
+monitor.
+
+\FloatBarrier
+\subsubsection{The Basic Output Service Routine}
+\label{subsubsec:basic.output.routine}
+\index{basic output service routine}
+
+DSR[15] controls the synchronization of the fast processor and the
+slow monitor display.  When the LC-3 transfers an ASCII code to
+DDR[7:0] for outputting, the electronics of the monitor automatically
+clear DSR[15] as the processing of the contents of DDR[7:0] begins.
+\index{DSR} \index{Display Status Register} \index{DDR} \index{Display
+  Data Register} When the monitor finishes processing the character on
+the screen, it (the monitor) automatically sets DSR[15]. This is a
+signal to the processor that it (the processor) can transfer another
+ASCII code to DDR for outputting. As long as DSR[15] is clear, the
+monitor is still processing the previous character, so the monitor is
+disabled as far as additional output from the processor is concerned.
+
+If input/output is controlled by the processor (i.e., via polling),
+a program can repeatedly test DSR[15] until it notes that the bit
+is set, indicating that it is OK to write a character to the screen.
+At that point, the processor can store the ASCII code for the
+character it wishes to write into DDR[7:0], setting up the transfer of
+that character to the monitor's display.
+
+The following routine causes the ASCII code contained in R0 to be
+displayed on the monitor:
+
+\begin{colorverbatim}
+01     START   LDI     R1, A         ; Test to see if
+02             BRzp    START         ; output register is ready
+03             STI     R0, B
+04             BRnzp   NEXT_TASK
+05     A       .FILL   xFE04         ; Address of DSR
+06     B       .FILL   xFE06         ; Address of DDR
+\end{colorverbatim}
+
+\noindent Like the routine for KBDR and KBSR in
+Section~\ref{subsubsec:basic.input.routine}, lines 01 and 02
+repeatedly poll DSR[15] to see if the monitor electronics is finished
+with the last character shipped by the processor.  Note the use of
+LDI and the indirect access to xFE04, the memory-mapped address of
+DSR. As long as DSR[15] is clear, the monitor electronics is still
+processing this character, and BRzp branches to START for another
+iteration of the loop.  When the monitor electronics finishes with the
+last character shipped by the processor, it automatically sets DSR[15]
+to 1, which causes the branch to fall through and the instruction at
+line 03 to be executed.  Note the use of the STI instruction, which
+stores R0 into xFE06, the \hbox{memory-mapped} address of DDR.  The
+write to DDR also clears DSR[15], disabling for the moment DDR from
+further output.  The monitor electronics takes over and writes the
+character to the screen.  Since the output routine is now done, the
+program unconditionally branches (line 04) to its NEXT\_TASK.
+
+\subsubsection{Implementation of Memory-Mapped Output}
+
+Figure~\ref{fig:memmap.output} shows the additional data path required
+to implement memory-mapped output.  As we discussed previously with
+respect to memory-mapped input, the mechanisms for handling the device
+registers provide very little additional complexity to what already
+exists for handling memory accesses.
+
+\begin{figure}[h!]
+\centerline{\includegraphics{pat67509_0804.eps}}
+\caption{Memory-mapped output}
+\label{fig:memmap.output}
+\end{figure}
+
+
+In Chapter~5, you became familiar with the process of carrying out the
+EXECUTE phase of the store instructions.
+
+\begin{enumerate}
+\item The MAR is loaded with the address of the memory location to be
+  written.
+\item The MDR is loaded with the data to be written to memory.
+\item Memory is written, resulting in the contents of MDR being stored
+  in the specified memory location.
+\end{enumerate}
+In the case of memory-mapped output, the same steps are carried out,
+{\bf except} instead of MAR being loaded with the address of a memory
+location, MAR is loaded with the address of a device register.
+Instead of the {address control logic} enabling memory to write, the
+address control logic asserts the load enable signal of DDR.
+
+Memory-mapped output also requires the ability to {\bf read} output
+device registers.  You saw in
+Section~\ref{subsubsec:basic.output.routine} that before the DDR could
+be loaded, the Ready bit had to be in state 1, indicating that the
+previous character had already finished being written to the screen.  The LDI
+and BRzp instructions on lines 01 and 02 perform that test.  To do
+this the LDI reads the output device register DSR, and BRzp tests bit
+[15].  If the MAR is loaded with xFE04 (the memory-mapped address of
+the DSR), the address control logic selects DSR as the input to the
+MDR, where it is subsequently loaded into R1 and the condition codes
+are set.
+
+\FloatBarrier
+\subsubsection{Example: Keyboard Echo}
+\label{subsec:keyboard.echo}
+
+When we type at the keyboard, it is helpful to know exactly what
+characters we have typed. We can get this echo capability easily
+(without any sophisticated electronics) by simply combining the two
+routines we have discussed.  The result: the key typed at the keyboard is
+displayed on the monitor.
+
+\begin{colorverbatim}
+01     START   LDI     R1, KBSR    ; Test for character input
+02             BRzp    START
+03             LDI     R0, KBDR
+04     ECHO    LDI     R1, DSR     ; Test output register ready
+05             BRzp    ECHO
+06             STI     R0, DDR
+07             BRnzp   NEXT_TASK
+08    KBSR    .FILL   xFE00       ; Address of KBSR
+09    KBDR    .FILL   xFE02       ; Address of KBDR
+0A    DSR     .FILL   xFE04       ; Address of DSR
+0B    DDR     .FILL   xFE06       ; Address of DDR
+\end{colorverbatim}
+
+\subsection{A More Sophisticated Input Routine}
+\label{subsec:sophisticated.routine}
+
+In the example of Section~\ref{subsubsec:basic.input.routine}, the
+input routine would be a part of a program being executed by the
+computer.  Presumably, the program requires character input from the
+keyboard.  But how does the person sitting at the keyboard know when
+to type a character?  Sitting there, the person may wonder whether or
+not the program is actually running, or if perhaps the computer is
+busy doing something else.
+
+To let the person sitting at the keyboard know that the program is
+waiting for input from the keyboard, the computer typically prints a
+message on the monitor. Such a message is often referred to as a {\em
+  prompt}. The symbol that is \index{prompt} displayed by your
+operating system (for example, {\bf \%} or {\bf C:}) or by your editor
+(for example, {\bf :}) are examples of prompts.
+
+The program fragment shown in Figure~\ref{fig:sophisticated.routine}
+obtains keyboard input via polling as we have shown in
+Section~\ref{subsubsec:basic.input.routine}. It also includes
+a prompt to let the person sitting at the keyboard know when it is
+time to type a key.  Let's examine this program fragment.
+
+\begin{figure}[h!]
+\begin{Verbatim}[fontsize=\fontsize{9}{11}\selectfont]
+01  START   ST      R1,SaveR1   ; Save registers needed
+02          ST      R2,SaveR2   ; by this routine
+03          ST      R3,SaveR3
+04  ;
+05          LD      R2,Newline
+06  L1      LDI     R3,DSR
+07          BRzp    L1          ; Loop until monitor is ready
+08          STI     R2,DDR      ; Move cursor to new clean line
+09  ;
+0A          LEA     R1,Prompt   ; Starting address of prompt string
+0B  Loop    LDR     R0,R1,#0    ; Write the input prompt
+0C          BRz     Input       ; End of prompt string
+0D  L2      LDI     R3,DSR
+0E          BRzp    L2          ; Loop until monitor is ready
+0F          STI     R0,DDR      ; Write next prompt character
+10          ADD     R1,R1,#1    ; Increment prompt pointer
+11          BRnzp   Loop        ; Get next prompt character
+12  ;
+13  Input   LDI     R3,KBSR
+14          BRzp    Input       ; Poll until a character is typed
+15          LDI     R0,KBDR     ; Load input character into R0
+16  L3      LDI     R3,DSR
+17          BRzp    L3          ; Loop until monitor is ready
+18          STI     R0,DDR      ; Echo input character
+19  ;
+1A  L4      LDI     R3,DSR
+1B          BRzp    L4          ; Loop until monitor is ready
+1C          STI     R2,DDR      ; Move cursor to new clean line
+1D          LD      R1,SaveR1   ; Restore registers
+1E          LD      R2,SaveR2   ; to original values
+1F          LD      R3,SaveR3
+20          BRnzp   NEXT_TASK   ; Do the program's next task
+21  ;
+22  SaveR1  .BLKW   1           ; Memory for registers saved
+23  SaveR2  .BLKW   1
+24  SaveR3  .BLKW   1
+25  DSR     .FILL   xFE04
+26  DDR     .FILL   xFE06
+27  KBSR    .FILL   xFE00
+28  KBDR    .FILL   xFE02
+29  Newline .FILL   x000A       ; ASCII code for newline
+2A  Prompt  .STRINGZ ``Input a character>''
+\end{Verbatim}
+\caption{The more sophisticated input routine}
+\label{fig:sophisticated.routine}
+\end{figure}
+
+You are already familiar with lines 13 through 19 and lines 25 through
+28, which correspond to the code in Section~\ref{subsec:keyboard.echo}
+for inputting a character via the keyboard and echoing it on the
+monitor. 
+
+You are also familiar with the need to save and restore registers if those
+registers are needed by instructions in the input routine.  Lines 01 through 
+03 save R1, R2, and R3, lines 1D through 1F restore R1, R2, and R3, and 
+lines 22 through 24 set aside memory locations for those register values.
+
+This leaves lines 05 through 08, 0A through 11, 1A through 1C, 29 and
+2A.  These lines serve to alert the person sitting at the keyboard
+that it is time to type a character.
+
+Lines 05 through 08 write the ASCII code x0A to the monitor.  This is
+the ASCII code for a {\em new line}.  Most ASCII codes correspond to
+characters that are visible on the screen.  A few, like x0A, are
+control characters.  They cause an action to occur. Specifically, the
+ASCII code x0A causes the cursor to move to the far left of the next
+line on the screen.  Thus the name {\em Newline}.  Before attempting
+to write x0A, however, as is always the case, DSR[15] is tested (line
+6) to see if DDR can accept a character.  If DSR[15] is clear, the
+monitor is busy, and the loop (lines 06 and 07) is repeated.  When
+DSR[15] is 1, the conditional branch (line 7) is not taken, and (line 8)
+x0A is written to DDR for outputting.
+
+Lines 0A through 11 cause the prompt
+\verb|Input a character>|
+to be written to the screen.  The prompt is specified by the
+  .STRINGZ pseudo-op on line 2A and is stored in 19 memory
+locations---18 ASCII codes, one per memory location, corresponding to
+the 18 characters in the prompt, and the terminating sentinel x0000.
+
+Line 0C iteratively tests to see if the end of the string has been
+reached (by detecting x0000), and if not, once DDR is free, line 0F
+writes the next character in the input prompt into DDR.  When x0000 is
+detected, the entire input prompt has been written to the screen and 
+the program branches to the code that handles the actual keyboard input 
+(starting at line 13).
+
+After the person at the keyboard types a character and it has been
+echoed (lines 13 to 19), the program writes one more new line (lines
+1A through 1C) before branching to its NEXT\_TASK.
+
+\FloatBarrier
+\subsection{Implementation of Memory-Mapped I/O, Revisited}
+
+We showed in Figures~\ref{fig:memmap.input}
+and~\ref{fig:memmap.output} partial implementations of the data path
+to handle (separately) memory-mapped input and memory-mapped output.
+We have also learned that in order to support interrupt-driven I/O,
+the two status registers must be writeable as well as readable.
+
+Figure~\ref{fig:memmap.io} (also shown as Figure~C.3 of Appendix~C)
+shows the data path necessary to support the full range of features we
+have discussed for the I/O device registers.  The Address Control
+Logic block controls the input or output operation.  Note that there
+are three inputs to this block.  MIO.EN indicates whether a data
+movement from/to memory or I/O is to take place this clock cycle.  
+MAR contains the address of the memory location or the memory-mapped
+address of an I/O device register.  R.W indicates whether a load or a
+store is to take place.  Depending on the values of these three
+inputs, the Address Control Logic does nothing (MIO.EN $=$ 0), or
+provides the control signals to direct the transfer of data between
+the MDR and the memory or between the MDR and one of the I/O registers.
+
+\begin{figure}[h!]
+\centerline{\includegraphics{pat67509_0809.eps}}
+\caption{Relevant data path implementation of memory-mapped I/0}
+\label{fig:memmap.io}
+\end{figure}
+
+If R.W indicates a load, the transfer is from memory or I/O device to
+the MDR.  The Address Control Logic block provides the select lines to
+INMUX to source the appropriate I/O device register or memory
+(depending on MAR) and also enables the memory if MAR contains the
+address of a memory location.
+
+If R.W indicates a store, the contents of the MDR are written either
+to memory or to one of the device registers.  The Address Control
+Logic either enables a write to memory or it asserts the load enable
+line of the device register specified by the contents of the MAR.
+
+\FloatBarrier
+\section{Operating System Service Routines (LC-3 Trap Routines)}
+
+\subsection{Introduction}
+
+Recall Figure~\ref{fig:sophisticated.routine} of the previous section.
+In order for the program to successfully obtain input from the
+keyboard, it was necessary for the programmer to know several things:
+
+\begin{enumerate}
+\item The hardware data registers for both the monitor and the keyboard: the
+monitor so a prompt could be displayed, and the keyboard so the program
+would know where to get the input character.
+
+\item The hardware status registers for both the monitor and the keyboard: the
+monitor so the program would know when it was OK to display the next
+character in the input prompt, and the keyboard so the program would
+know when someone had struck a key.
+
+\item The asynchronous nature of keyboard input relative to the executing program.
+\end{enumerate}
+
+This is beyond the knowledge of most application programmers.  In
+fact, in the real world, if application programmers (or user
+programmers, as they are sometimes called) had to understand I/O at
+this level, there would be much less I/O and far fewer programmers in
+the business.
+
+There is another problem with allowing user programs to perform I/O
+activity by directly accessing KBDR and KBSR.  I/O activity involves
+the use of device registers that are shared by many programs.  This
+means that if a user programmer were allowed to access the hardware
+registers, and he/she messed up, it could create havoc for other user
+programs.  Thus, in general it is ill-advised to give user programmers access 
+to these registers.  That is why the the addresses of hardware registers are 
+part of the privileged memory address space, 
+and accessible only to programs that have Supervisor privilege.
+
+The simpler solution as well as the safer solution to the problem of
+user programs requiring I/O involves the TRAP instruction and the
+operating system, which of course has Supervisor privilege.
+
+We were first introduced to the TRAP instruction in Chapter~4 as a way to
+get the operating system to halt the computer.  In Chapter~5 we saw that
+a user program could use the TRAP instruction to get the operating system 
+to do I/O tasks for it (the user program).  In fact a great benefit of the TRAP
+instruction, which we have already pointed out, is that it allows the user 
+programmer to not have to know the gory details of I/O discussed earlier 
+in this chapter.  In addition, it protects user programs from the 
+consequences of other inept user programmers.
+
+Figure~\ref{fig:os_call} shows a user program that, upon reaching
+location x4000, needs an I/O task performed.  The user program uses the 
+TRAP instruction to
+request the operating system to perform the task on behalf of the
+user program.  The operating system takes control of the computer,
+handles the request specified by the TRAP instruction, and then
+returns control back to the user program at location x4001.  As we said
+at the start of this chapter, we usually
+refer to the request made by the user program as a {\em system call}
+or a {\em service call}.\index{service call}\index{system call}
+
+\begin{figure}[h!]
+\centerline{\includegraphics{pat67509_0901.eps}}
+\caption{Invoking an OS service routine using the TRAP instruction}
+\label{fig:os_call}
+\end{figure}
+
+\FloatBarrier
+\subsection{The trap mechanism}
+
+The trap mechanism involves several elements:
+\begin{enumerate}
+\item {\bf A set of service routines} executed on behalf of user
+  programs by the operating system.  These are part of the operating
+  system and start at arbitrary addresses in System space. The LC-3 was
+  designed so that up to 256 service routines can be specified.
+  Table~A.2 in Appendix A contains the LC-3's current complete list of
+  operating system service routines.
+
+\item {\bf A table of the starting addresses} of these 256 service
+  routines.  This table is stored in memory locations x0000 to x00FF.
+  The table is referred to by various names by various companies.  One
+  company calls this table the System Control Block.
+  Another\index{System Control Block}\index{Trap Vector Table} company
+  calls it the Trap Vector Table.  Figure~\ref{fig:trap_vector_table}
+  shows the Trap Vector Table of the LC-3, with
+  specific starting addresses highlighted.  Among the starting
+  addresses are the one for the character output service routine
+  (memory location x0420), which is stored in memory location x0021, 
+  the one for the keyboard input service routine (location x04A0), 
+  stored in location x0023, and the one for the machine halt service 
+  routine (location x0520), stored in location x0025.
+
+\begin{figure}[h!]
+\centerline{\includegraphics{pat67509_0902.eps}}
+\caption{The Trap Vector Table}
+\label{fig:trap_vector_table}
+\end{figure}
+
+\item {\bf The TRAP instruction.} When a user program wishes to have
+  the operating system execute a specific service routine on behalf of
+  the user program, and then return control to the user program, the
+  user program uses the TRAP instruction (as we have been doing since
+  chapter 4).
+
+\item {\bf A linkage} back to the user program.  The service routine
+  must have a mechanism for returning control to the user program.
+\end{enumerate}
+
+\FloatBarrier
+\subsection{The TRAP Instruction}
+\index{TRAP instruction}
+
+The TRAP instruction causes the service routine to execute by (1) changing
+the PC to the starting address of the relevant service routine on the basis 
+of its trap vector, and (2) providing a way to get back to the program that 
+executed the TRAP instruction. The ``way back'' is referred to as 
+a {\em linkage}.
+
+As you know, the {\bf TRAP} instruction is made up of two parts: the TRAP 
+opcode 1111 and the trap vector (bits [7:0]), which  identifies the service 
+routine the user program wants the operating system to execute on its behalf.  
+Bits [11:8] must be zero.  
+
+In the following example, the trap vector is x23.
+\begin{center}
+\begin{tabular}{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{1}{|c}{\raisebox{-1pt}{1}}&\multicolumn{1}{c}{\raisebox{-1pt}{1}}&
+\multicolumn{1}{c}{\raisebox{-1pt}{1}}&\multicolumn{1}{c}{\raisebox{-1pt}{1}}&
+\multicolumn{1}{|c}{\raisebox{-1pt}{0}}&\multicolumn{1}{c}{\raisebox{-1pt}{0}}&
+\multicolumn{1}{c}{\raisebox{-1pt}{0}}&\multicolumn{1}{c}{\raisebox{-1pt}{0}}&
+\multicolumn{1}{|c}{\raisebox{-1pt}{0}}&\multicolumn{1}{c}{\raisebox{-1pt}{0}}&
+\multicolumn{1}{c}{\raisebox{-1pt}{1}}&\multicolumn{1}{c}{\raisebox{-1pt}{0}}&
+\multicolumn{1}{c}{\raisebox{-1pt}{0}}&\multicolumn{1}{c}{\raisebox{-1pt}{0}}&
+\multicolumn{1}{c}{\raisebox{-1pt}{1}}&\multicolumn{1}{c|}{\raisebox{-1pt}{1}}\\
+\hline
+\multicolumn{4}{c}{TRAP} &\multicolumn{4}{c}{  } &
+\multicolumn{8}{c}{trap vector}\\
+\end{tabular}
+\end{center}
+
+The EXECUTE phase of the TRAP instruction's instruction cycle does
+three things:
+\begin{enumerate} 
+\item The PSR and PC are both pushed onto the system stack.  Since the PC was 
+  incremented during the FETCH phase of the TRAP instruction's instruction 
+  cycle, the return linkage is automatically saved in the PC.  When control
+  returns to the user program, the PC will automatically be pointing to the
+  instruction following the TRAP instruction.
+
+
+  Note that the program requesting the trap service routine
+  can be running either in Supervisor mode or in User mode.  If in User mode, 
+  R6, the stack pointer, is pointing to the user stack.  Before the PSR and PC 
+  can be pushed onto the system stack, the current contents of R6 must be 
+  stored in Saved\_USP, and the contents of Saved\_SSP loaded into R6.
+
+\item PSR[15] is set to 0, since the service routine is going to require 
+  Supervisor privilege to execute.  PSR[10:8] are left unchanged since the 
+  priority of the TRAP routine is the same as the priority of the program 
+  that requested it.
+
+\item The 8-bit trap vector is zero-extended to 16 bits to form an
+  address which corresponds to a location in the Trap Vector Table.  
+  For the trap vector x23, that address is x0023.  Memory location x0023
+  contains x04A0, the starting address of the TRAP x23 service routine. 
+  The PC is loaded with x04A0, completing the instruction cycle.
+\end{enumerate}
+
+Since the PC contains x04A0, processing continues at memory
+address x04A0.
+
+Location x04A0 is the starting address of the operating system service
+routine to input a character from the keyboard.  We say the trap
+vector ``points'' to the starting address of the TRAP routine.  Thus,
+TRAP x23 causes the operating system to start executing the keyboard
+input service routine.
+
+\subsection{The RTI Instruction: to return control to the calling program}
+
+The only thing left to show is a mechanism for returning control to the 
+calling program, once the trap service routine has finished execution.
+
+This is accomplished by the Return from Trap or Interrupt (RTI) instruction:
+
+\begin{center}
+\begin{tabular}{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\hline
+\multicolumn{1}{|c}{\raisebox{-1pt}{1}}&\multicolumn{1}{c}{\raisebox{-1pt}{0}}&
+\multicolumn{1}{c}{\raisebox{-1pt}{0}}&\multicolumn{1}{c}{\raisebox{-1pt}{0}}&
+\multicolumn{1}{|c}{\raisebox{-1pt}{0}}&\multicolumn{1}{c}{\raisebox{-1pt}{0}}&
+\multicolumn{1}{c}{\raisebox{-1pt}{0}}&\multicolumn{1}{ c}{\raisebox{-1pt}{0}}&
+\multicolumn{1}{c}{\raisebox{-1pt}{0}}&\multicolumn{1}{c}{\raisebox{-1pt}{0}}&
+\multicolumn{1}{ c}{\raisebox{-1pt}{0}}&\multicolumn{1}{c}{\raisebox{-1pt}{0}}&
+\multicolumn{1}{c}{\raisebox{-1pt}{0}}&\multicolumn{1}{c}{\raisebox{-1pt}{0}}&
+\multicolumn{1}{c}{\raisebox{-1pt}{0}}&\multicolumn{1}{c|}{\raisebox{-1pt}{0}}\\
+\hline
+\multicolumn{4}{c}{RTI} &\multicolumn{3}{c}{ } &
+\multicolumn{3}{c}{ } &\multicolumn{6}{c}{ }\\
+\end{tabular}
+\end{center}
+
+The RTI instruction (opcode = {\bf 1000}, with no operands) pops the the top 
+two values on the system stack into the 
+PC and PSR.  Since the PC contains the address following the address of the 
+TRAP instruction, control returns to the user program at the correct address.
+
+Finally, once the PSR has been popped off the system stack, PSR[15] must be
+examined to see whether the processor was running in User mode or Supervisor
+mode when the TRAP instruction was executed.  If in User mode, the stack 
+pointers need to be adjusted to reflect that now back in User mode, the 
+relevant stack in use is the User Stack.  This is done by loading the
+Saved\-SSP with the current contents of R6, and loading R6 with the contents
+of Saved\_USP.
+
+Figure~\ref{fig:trap} shows the LC-3 using the TRAP instruction and
+the RTI instruction to implement the example of
+Figure~\ref{fig:os_call}.  The flow of control goes from (A) within a
+user program that needs a character input from the keyboard, to (B)
+the operating system service routine that performs that task on behalf
+of the user program, back to the user program (C) that presumably uses
+the information contained in the input character.
+
+\begin{figure}[h!]
+\centerline{\includegraphics{pat67509_0903.eps}}
+\caption{Flow of control from a user program to an OS service routine and back}
+\label{fig:trap}
+\end{figure}
+
+\subsection{A Summary of the trap service routine process}
+
+As we know, the computer continually executes its instruction cycle
+(FETCH, DECODE, etc.) on sequentially located instructions until the flow of 
+control is changed by changing the contents of the PC during the EXECUTE 
+phase of the current instruction.  In that way, the next FETCH will be at 
+a redirected address.
+
+The TRAP instruction with trap vector x23 in our user program does exactly
+that.  Execution of TRAP x23 causes the PSR and incremented PC to be pushed 
+onto the system stack and the contents of memory location x0023 
+(which, in this case, contains x04A0) to be loaded into the PC.
+The dashed line on Figure~\ref{fig:trap} show the use of the
+trap vector x23 to obtain the starting address of the trap service routine
+from the Trap Vector Table.
+
+The next instruction cycle starts with the FETCH of the contents of
+x04A0, which is the first instruction of the relevant operating system service
+routine.  The trap service routine executes to completion, ending with the 
+RTI instruction, which loads the PC and PSR with the top two elements on the
+system stack, i.e., the PSR and incremented PC that were pushed during 
+execution of the TRAP instruction.  Since the PC was incremented prior to being
+pushed onto the system stack, it contains the address of the 
+instruction following the TRAP instruction in the calling program, and
+the user program resumes execution by fetching the instruction following the
+TRAP instruction.
+
+The following program is provided to illustrate the use of
+the TRAP instruction.  It can also be used to amuse the average four-year-old!
+
+\begin{example}
+
+  Write a game program to do the following: A person is sitting at a
+  keyboard. Each time the person types a capital letter, the program
+  outputs the lowercase version of that letter.  If the person types a
+  7, the program terminates.
+
+The following LC-3 assembly language program will do the
+job.
+
+\begin{minipage}{\textwidth}
+\begin{colorverbatim}
+01           .ORIG x3000
+02           LD    R2,TERM  ; Load -7
+03           LD    R3,ASCII ; Load ASCII difference
+04    AGAIN  TRAP  x23      ; Request keyboard input
+05           ADD   R1,R2,R0 ; Test for terminating
+06           BRz   EXIT     ; character
+07           ADD   R0,R0,R3 ; Change to lowercase
+08           TRAP  x21      ; Output to the monitor
+09           BRnzp AGAIN    ; ... and do it again!
+0A    TERM   .FILL xFFC9    ; FFC9 is negative of ASCII 7
+0B    ASCII  .FILL x0020
+0C    EXIT   TRAP  x25      ; Halt
+0D           .END
+\end{colorverbatim}
+\end{minipage}
+
+The program executes as follows: The program first loads constants
+xFFC9 and x0020 into R2 and R3.  The constant xFFC9, which is the
+negative of the ASCII code for 7, is used to test the character
+typed at the keyboard to see if the four-year-old wants to
+continue playing. The constant x0020 is the zero-extended
+difference between the ASCII code for a capital letter and the
+ASCII code for that same letter's lowercase representation.  For
+example, the ASCII code for {\bf A} is x41; the ASCII code for
+{\bf a} is x61.  The ASCII codes for {\bf Z} and {\bf z} are x5A
+and x7A, respectively.
+
+Then TRAP x23 is executed, which invokes the keyboard input service
+routine.  When the service routine is finished, control returns to the
+application program (at line 05), and R0 contains the ASCII code of
+the character typed.  The ADD and BRz instructions test for the
+terminating character 7.  If the character typed is not a 7, the ASCII
+uppercase/lowercase difference (x0020) is added to the input ASCII
+code, storing the result in R0.  Then a TRAP to the monitor output
+service routine is called.  This causes the lowercase representation
+of the same letter to be displayed on the monitor.  When control
+returns to the application program (this time at line 09), an
+unconditional BR to AGAIN is executed, and another request for
+keyboard input appears.
+\end{example}
+
+The correct operation of the program in this example assumes that the
+person sitting at the keyboard only types capital letters and the
+value 7.  What if the person types a \$?  A better solution to
+Example~9.1 would be a program that tests the character typed to be
+sure it really is a capital letter from among the 26 capital letters
+in the alphabet or the single digit 7, and if it is not, takes corrective 
+action.
+
+\questionmark {\em Question:} Augment this program to add the test for
+bad data. That is, write a program that will type the lowercase
+representation of any capital letter typed and will terminate if
+anything other than a capital letter is typed. See Exercise~9.6.
+
+\subsection{Trap Routines for Handling I/O}
+
+ With the constructs just provided, the input routine described in
+Figure~\ref{fig:sophisticated.routine} can be slightly modified to be
+the input service routine shown in Figure~\ref{fig:char.input}. Two
+changes are needed: (1) We add the appropriate .ORIG and .END
+pseudo-ops.  .ORIG specifies the starting address of the input service
+routine---the address found at location x0023 in the Trap Vector
+Table.  And (2) we terminate the input service routine with the RTI
+instruction rather than the BR NEXT\_TASK, as is
+done on line 20 in Figure~\ref{fig:sophisticated.routine}. We use RTI
+because the service routine is invoked by TRAP x23. It is not part
+of the user program, as was the case in
+Figure~\ref{fig:sophisticated.routine}.
+
+
+\begin{figure}[h!]
+\begin{minipage}{36pc}
+\begin{Verbatim}[fontsize=\fontsize{9}{10}\selectfont]
+01     ;  Service Routine for Keyboard Input
+02     ;
+03             .ORIG   x04A0
+04     START   ST      R1,SaveR1       ; Save the values in the registers
+05             ST      R2,SaveR2       ; that are used so that they
+06             ST      R3,SaveR3       ; can be restored before RET
+07     ;
+08             LD      R2,Newline
+09     L1      LDI     R3,DSR          ; Check DDR --  is it free?
+0A             BRzp    L1
+0B             STI     R2,DDR          ; Move cursor to new clean line
+0C     ;
+0D             LEA     R1,Prompt       ; Prompt is starting address
+0E                                     ; of prompt string
+1F     Loop    LDR     R0,R1,#0        ; Get next prompt character
+10             BRz     Input           ; Check for end of prompt string
+11     L2      LDI     R3,DSR
+12             BRzp    L2
+13             STI     R0,DDR          ; Write next character of
+14                                     ; prompt string
+15             ADD     R1,R1,#1        ; Increment prompt pointer
+16             BRnzp   Loop
+17     ;
+18     Input   LDI     R3,KBSR         ; Has a character been typed?
+19             BRzp    Input
+1A             LDI     R0,KBDR         ; Load it into R0
+1B     L3      LDI     R3,DSR
+1C             BRzp    L3
+1D             STI     R0,DDR          ; Echo input character
+1E                                     ; to the monitor
+1F     ;
+20     L4      LDI     R3,DSR
+21             BRzp    L4
+22             STI     R2,DDR          ; Move cursor to new clean line
+23             LD      R1,SaveR1       ; Service routine done, restore
+24             LD      R2,SaveR2       ; original values in registers.
+25             LD      R3,SaveR3
+26             RTI                     ; Return from Trap
+27     ;
+28     SaveR1  .BLKW   1
+29     SaveR2  .BLKW   1
+2A     SaveR3  .BLKW   1
+2B     DSR     .FILL   xFE04
+2C     DDR     .FILL   xFE06
+2D     KBSR    .FILL   xFE00
+2E     KBDR    .FILL   xFE02
+2F     Newline .FILL   x000A           ; ASCII code for newline
+30     Prompt  .STRINGZ "Input a character>"
+31             .END
+\end{Verbatim}
+\caption{Character input service routine}
+\label{fig:char.input}
+\end{minipage}
+\end{figure}
+
+The output routine of Section~\ref{subsubsec:basic.output.routine} can
+be modified in a similar way, as shown in
+Figure~\ref{fig:char.output}.  The results are input
+(Figure~\ref{fig:char.input}) and output
+(Figure~\ref{fig:char.output}) service routines that can be invoked
+simply and safely by the TRAP instruction with the appropriate trap
+vector. In the case of input, upon completion of TRAP x23, R0 contains
+the ASCII code of the keyboard character typed.  In the case of
+output, the initiating program must load R0 with the ASCII code of the
+character it wishes displayed on the monitor and then invoke TRAP x21.
+
+\begin{figure}[h!]
+\begin{Verbatim}[fontsize=\fontsize{9}{10}\selectfont]
+01             .ORIG   x0420         ; System call starting address
+02              ST     R1, SaveR1    ; R1 will be used to poll the DSR
+03                                   ; hardware
+04    ; Write the character
+05    TryWrite  LDI    R1, DSR       ; Get status
+06              BRzp   TryWrite      ; Bit 15 on says display is ready
+07    WriteIt   STI    R0, DDR       ; Write character
+08
+09    ; return from trap
+0A    Return    LD     R1, SaveR1    ; Restore registers
+0B              RTI                  ; Return from trap 
+0C    DSR       .FILL  xFE04         ; Address of display status register
+0D    DDR       .FILL  xFE06         ; Address of display data register
+0E    SaveR1    .BLKW  1
+0F              .END
+\end{Verbatim}
+\caption{Character output service routine}
+\label{fig:char.output}
+\end{figure}
+
+\FloatBarrier
+\subsection{A Trap Routine for Halting the Computer}
+
+Recall from Section~4.5 that the RUN latch is ANDed with the crystal
+oscillator to produce the clock that controls the operation of the
+computer.  We noted that if that 1-bit latch was cleared, the output
+of the AND gate would be 0, stopping the clock.
+
+Years ago, most ISAs had a HALT instruction for stopping the clock.
+Given how infrequently that instruction is executed, it seems wasteful
+to devote an opcode to it. In many modern computers, the RUN latch is
+cleared by a TRAP routine.  In the LC-3, the RUN latch is bit [15] of
+the Master Control Register (MCR), which is memory-mapped to location
+xFFFE.  Figure~\ref{fig:halt.routine} shows the trap service routine
+for halting the processor, i.e., for stopping the clock.
+
+\begin{figure}[h!]
+\begin{lstlisting}[style=infigure]
+01                   .ORIG   x0520     ; Where this routine resides
+02                  ST      R1, SaveR1 ; R1: a temp for MC register
+03                  ST      R0, SaveR0 ; R0 is used as working space
+04
+05  ; print message that machine is halting
+06
+07                  LD      R0, ASCIINewLine
+08                  TRAP    x21
+09                  LEA     R0, Message
+0A                  TRAP    x22
+0B                  LD      R0, ASCIINewLine
+0C                  TRAP    x21
+0D  ;
+0E  ; clear bit 15 at xFFFE to stop the machine
+0F  ;
+10                  LDI     R1, MCR    ; Load MC register into R1
+11                  LD      R0, MASK   ; R0 = x7FFF
+12                  AND     R0, R1, R0 ; Mask to clear the top bit
+13                  STI     R0, MCR    ; Store R0 into MC register
+14  ;
+15  ; return from HALT routine.
+16  ; (how can this routine return if the machine is halted above?)
+17  ;
+18                  LD      R1, SaveR1 ; Restore registers
+19                  LD      R0, SaveR0
+1A                  RTI               
+1B  ;
+1C  ; Some constants
+1D  ;
+1E  ASCIINewLine    .FILL   x000A
+1F  SaveR0          .BLKW   1
+20  SaveR1          .BLKW   1
+21  Message         .STRINGZ   "Halting the machine."
+22  MCR             .FILL   xFFFE      ; Address of MCR
+23  MASK            .FILL   x7FFF      ; Mask to clear the top bit
+24                  .END
+\end{lstlisting}
+\caption{HALT service routine for the LC-3}
+\label{fig:halt.routine}
+\end{figure}
+
+
+First (lines 02 and 03), registers R1, and R0 are saved.  R1
+and R0 are saved because they are needed by the service routine.  
+Then (lines 07 through 0C), the banner {\em
+Halting the machine} is displayed on the monitor.  Finally (lines 10
+through 13), the RUN latch (MCR[15]) is cleared by ANDing the MCR
+with\questionmark[-2.3pc] 0111111111111111.  That is, MCR[14:0]
+remains unchanged, but MCR[15] is cleared. {\em Question}: What
+instruction (or trap service routine) can be used to start the clock?
+Hint: This is a trick question!  :-)
+
+\FloatBarrier
+\subsection{The Trap routine for character input (one last time)}
+
+Let's look again at the keyboard input service routine of
+Figure~\ref{fig:char.input}.  In particular, let's look at the
+three-line sequence that occurs at symbolic addresses L1, L2, L3, and
+L4:
+
+\begin{colorverbatim}
+                 LABEL   LDI     R3,DSR
+                         BRzp    LABEL
+                         STI     Reg,DDR
+\end{colorverbatim}
+Can the JSR/RET mechanism enable us to replace these four occurrences
+of the same sequence with a single subroutine?  {\em Answer:} Yes,
+{\bf almost.}
+
+Figure~\ref{fig:char.input.revisited}, our ``improved'' keyboard input
+service routine, contains
+
+\begin{colorverbatim}
+                         JSR     WriteChar
+\end{colorverbatim}
+at lines 04, 0A, 10, and 13, and the four-instruction subroutine
+
+\begin{colorverbatim}
+           WriteChar     LDI     R3,DSR
+                         BRzp    WriteChar
+                         STI     R2,DDR
+                         RET
+\end{colorverbatim}
+at lines 1A through 1D. Note the RET instruction (aka JMP R7)
+that is needed to terminate the subroutine.
+
+\begin{figure}[h!]
+\begin{Verbatim}[fontsize=\fontsize{8}{9}\selectfont]
+01                .ORIG   x04A0
+02   START        JSR     SaveReg
+03                LD      R2,Newline
+04                JSR     WriteChar
+05                LEA     R1,PROMPT
+06   ;
+07   ;
+08   Loop         LDR     R2,R1,#0    ; Get next prompt char
+09                BRz     Input
+0A                JSR     WriteChar
+0B                ADD     R1,R1,#1
+0C                BRnzp   Loop
+0D   ;
+0E   Input        JSR     ReadChar
+0F                ADD     R2,R0,#0    ; Move char to R2 for writing
+10                JSR     WriteChar   ; Echo to monitor
+11   ;
+12                LD      R2, Newline
+13                JSR     WriteChar
+14                JSR     RestoreReg
+15                RTI                 ; RTI terminates the trap routine
+16   ;                                  
+17   Newline      .FILL   x000A
+18   PROMPT       .STRINGZ  "Input a character>"
+19   ;
+1A   WriteChar    LDI     R3,DSR
+1B                BRzp    WriteChar
+1C                STI     R2,DDR
+1D                RET                 ; JMP R7 terminates subroutine
+1E   DSR          .FILL   xFE04
+1F   DDR          .FILL   xFE06
+20    ;
+21   ReadChar     LDI     R3,KBSR
+22                BRzp    ReadChar
+23                LDI     R0,KBDR
+24                RET
+25   KBSR         .FILL   xFE00
+26   KBDR         .FILL   xFE02
+27    ;
+28    SaveReg       ST      R1,SaveR1
+29                  ST      R2,SaveR2
+2A                  ST      R3,SaveR3
+2B                  ST      R4,SaveR4
+2C                  ST      R5,SaveR5
+2D                  ST      R6,SaveR6
+2E                  RET
+2F    ;
+30    RestoreReg    LD      R1,SaveR1
+31                  LD      R2,SaveR2
+32                  LD      R3,SaveR3
+33                  LD      R4,SaveR4
+34                  LD      R5,SaveR5
+35                  LD      R6,SaveR6
+36                  RET
+37    SaveR1        .FILL   x0000
+38    SaveR2        .FILL   x0000
+39    SaveR3        .FILL   x0000
+3A    SaveR4        .FILL   x0000
+3B    SaveR5        .FILL   x0000
+3C    SaveR6        .FILL   x0000
+3D                  .END
+\end{Verbatim}
+\caption{The LC-3 trap service routine for character input (our final answer!)}
+\label{fig:char.input.revisited}
+\end{figure}
+
+Note the hedging: {\em almost}. In the original sequences starting at
+L2 and L3, the STI instruction forwards the contents of R0 (not R2) to
+the DDR.  We can fix that easily enough, as follows: In line 08 of
+Figure~\ref{fig:char.input.revisited}, we use
+
+\begin{colorverbatim}
+                         LDR     R2,R1,#0
+\end{colorverbatim}
+instead of
+\begin{colorverbatim}
+                         LDR     R0,R1,#0
+\end{colorverbatim}
+This causes each character in the prompt to be loaded into R2.  The
+subroutine Writechar forwards each character from R2 to the DDR.
+
+In line 0F of Figure~\ref{fig:char.input.revisited}, we insert the
+instruction
+
+\begin{colorverbatim}
+                         ADD     R2,R0,#0
+\end{colorverbatim}
+in order to move the keyboard input (which is in R0) into R2.  The
+subroutine Writechar forwards it from R2 to the DDR.  Note that R0
+still contains the keyboard input.  Furthermore, since no subsequent
+instruction in the service routine loads R0, R0 still contains the
+keyboard input after control returns to the user program.
+
+In line 12 of Figure~\ref{fig:char.input.revisited}, we insert the
+instruction
+
+\begin{colorverbatim}
+                         LD     R2,Newline
+\end{colorverbatim}
+in order to move the ``newline'' character into R2.  The subroutine
+Writechar forwards it from R2 to the DDR.
+
+Figure~\ref{fig:char.input.revisited} is the actual LC-3 trap service
+routine provided for keyboard input.
+
+\FloatBarrier
+\subsection{PUTS: Writing a Character String to the Monitor}
+
+Before we leave the example of Figure \ref{fig:char.input.revisited},
+note the code on lines 08 through 0C. This fragment of the service
+routine is used to write the sequence of characters {\em Input a
+character} to the monitor.  A sequence of characters is often
+\index{strings} referred to as a {\em string of characters} or a {\em
+character string}.  This fragment is also present in
+Figure~\ref{fig:halt.routine}, with the result that {\em Halting the
+machine} is written to the monitor.  In fact, it is so often the case
+that a user program needs to write a string of characters to the
+monitor that this function is given its own trap service routine in the
+\hbox{LC-3} operating system.  Thus, if a user program requires a
+character string to be written to the monitor, it need only provide
+(in R0) the starting address of the character string, and then invoke
+TRAP x22.  In LC-3 assembly language this TRAP is called {\em PUTS}.
+
+PUTS (or TRAP x22) causes control to be passed to the operating
+system, and the trap routine shown in Figure~\ref{fig:puts.routine} is
+executed.  Note that PUTS is the code of lines 08 through 0C of
+Figure~\ref{fig:char.input.revisited}, with a few minor adjustments.
+
+\begin{figure}[h!]
+\begin{minipage}{36pc}
+\begin{Verbatim}[fontsize=\fontsize{9}{10}\selectfont]
+01     ; This service routine writes a NULL-terminated string to the console.
+02     ; It services the PUTS service call (TRAP x22).
+03     ; Inputs: R0 is a pointer to the string to print.
+04     ;
+05                  .ORIG   x0460           
+06                  ST      R0, SaveR0      ; Save registers that 
+07                  ST      R1, SaveR1      ; are needed by this
+08                  ST      R3, SaveR3      ; trap service routine
+09     ;
+0A     ; Loop through each character in the array
+0B     ;
+0C     Loop         LDR     R1, R0, #0      ; Retrieve the character(s)
+0D                  BRz     Return          ; If it is 0, done
+0E     L2           LDI     R3,DSR
+0F                  BRzp    L2
+10                  STI     R1, DDR         ; Write the character
+11                  ADD     R0, R0, #1      ; Increment pointer
+12                  BRnzp   Loop            ; Do it all over again
+13     ;
+14     ; Return from the request for service call
+15     Return       LD      R3, SaveR3
+16                  LD      R1, SaveR1
+17                  LD      R0, SaveR0
+18                  RTI
+19     ;
+1A     ; Register locations
+1B     DSR          .FILL   xFE04
+1C     DDR          .FILL   xFE06
+1D     SaveR0       .FILL   x0000
+1E     SaveR1       .FILL   x0000
+1F     SaveR3       .FILL   x0000
+20                  .END
+\end{Verbatim}
+\caption{The LC-3 PUTS service routine}
+\label{fig:puts.routine}
+\end{minipage}
+\end{figure}
+
+\FloatBarrier 
+\section{Interrupts and Interrupt-Driven I/O}
+\label{sec:interruptsIO}
+\index{interrupt-driven I/O}
+
+In Section~\ref{subsubsec:interruptVSpolling}, we noted that
+interaction between the processor and an I/O device can be controlled
+by the processor (i.e., polling) or it can be controlled by the I/O
+device (i.e., interrupt driven). In Sections
+\ref{subsec:input.from.keyboard}, \ref{subsec:output.to.monitor}, and
+\ref{subsec:sophisticated.routine}, we have studied several examples
+of polling. In each case, the processor tested the Ready bit of the
+status register again and again, and when the Ready bit was finally 1, the
+processor branched to the instruction that did the input or output
+operation.
+
+We are now ready to study the case where the interaction is controlled
+by the I/O device.
+
+\subsection{What Is Interrupt-Driven I/O?}
+
+The essence of interrupt-driven I/O is the notion that an I/O device
+that may or may not have anything to do with the program that is
+running can (1) force the running program to stop, (2) have the processor
+execute a program that carries
+out the needs of the I/O device, and then (3) have the stopped
+program resume execution as if nothing had happened.  These three
+stages of the instruction execution flow are shown in
+Figure~\ref{fig:flow_interrupt_IO}.
+
+\begin{figure}[h!]
+\setlength{\topsep}{0pt}
+\setlength{\partopsep}{0pt}
+\setlength{\parskip}{0pt}
+\begin{Verbatim}[fontsize=\fontsize{9}{13}\selectfont]
+                             .
+                             .
+                             .
+          Program A is executing instruction n
+          Program A is executing instruction n+1
+          Program A is executing instruction n+2
+\end{Verbatim}
+\setlength{\topsep}{0pt}
+\setlength{\partopsep}{0pt}
+\setlength{\parskip}{0pt}
+\begin{Verbatim}[fontsize=\fontsize{9}{11}\selectfont,formatcom=\colour]
+        1: Interrupt signal is detected
+        1: Program A is put into suspended animation
+	1: PC is loaded with the starting address of Program B
+        2: Program B starts satisying I/O device's needs 
+        2: Program B continues satisfying I/O device's needs
+        2: Program B continues satisfying I/O device's needs
+        2: Program B finishes satisfying I/O device's needs
+        3: Program A is brought back to life
+\end{Verbatim}
+\setlength{\topsep}{0pt}
+\setlength{\partopsep}{0pt}
+\setlength{\parskip}{0pt}
+\begin{Verbatim}[fontsize=\fontsize{9}{11}\selectfont]
+          Program A is executing instruction n+3
+          Program A is executing instruction n+4
+                             .
+                             .
+                             .
+\end{Verbatim}
+\caption{Instruction execution flow for interrupt-driven I/O}
+\label{fig:flow_interrupt_IO}
+\end{figure}
+
+As far as Program A is concerned, the work carried out and the results
+computed are no different from what would have been the case if the
+interrupt had never happened; that is, as if the instruction execution
+flow had been the following:
+
+\begin{Verbatim}[fontsize=\fontsize{9}{10}\selectfont,formatcom=\color{seventyblack}]
+                             .
+                             .
+                             .
+             Program A is executing instruction n
+             Program A is executing instruction n+1
+             Program A is executing instruction n+2
+             Program A is executing instruction n+3
+             Program A is executing instruction n+4
+                             .
+                             .
+                             .
+\end{Verbatim}
+
+\FloatBarrier
+\subsection{Why Have Interrupt-Driven I/O?}
+
+As is undoubtedly clear, polling requires the processor to waste a lot
+of time spinning its wheels, re-executing again and again the LDI and
+BR instructions until the Ready bit is set.  With interrupt-driven
+I/O, none of that testing and branching has to go on.
+Interrupt-driven I/O allows the processor to spend its time doing what
+is hopefully useful work, executing some other program perhaps, until
+it is notified that some I/O device needs attention.
+
+\begingroup
+\makeatletter
+\renewenvironment{example}{%
+  \refstepcounter{example}%
+  \begin{colourframed}%
+    \def\@mathmargin{\z@}
+    \let\enumargs\exenumargs
+    \vspace*{-2\p@}%
+    \rlap{\hspace*{29pc}\hbox{\hspace*{-\fboxsep}%
+      \setlength{\fboxsep}{\z@}%
+      {\colorbox{SPOThundred}{\vbox to 13\p@{%
+          \vss\hbox to 7pc{\hss
+          \color{white}\sansbold\fontsize{10}{12}\selectfont
+          Example~\theexample\hss}\vss}}}}}%
+  \normalfont\fontsize{9.5}{11}\selectfont
+  \rightskip7.5pc\advance\rightskip by \fboxsep
+  \leftskip3\p@
+  \parindent1.5pc\@afterheading\@afterindentfalse
+  \vspace*{-14.5\p@}}%
+{\par\unskip\removelastskip\offinterlineskip\vspace{4\p@}\end{colourframed}}
+\makeatother
+\begin{example}
+Suppose we are asked to write a program that takes a sequence of 100
+characters typed on a keyboard and processes the information contained
+in those 100 characters.  Assume the characters are typed at the rate
+of 80 words/minute, which corresponds to one character every 0.125
+seconds.  Assume the processing of the 100-character sequence takes
+12.49999 seconds, and that our program is to perform this process on
+1,000 consecutive sequences.  How long will it take our program to
+complete the task?  (Why did we pick 12.49999? To make the numbers
+come out nice, of course.)  :-)
+
+We could obtain each character input by polling, as in
+Section~\ref{subsec:input.from.keyboard}.  If we did, we would waste a
+lot of time waiting for the ``next'' character to be typed.  It would
+take $100\cdot 0.125$ or 12.5 seconds to get a 100-character sequence.
+
+On the other hand, if we use interrupt-driven I/O, the processor does
+not waste any time re-executing the LDI and BR instructions while
+waiting for a character to be typed.  Rather, the processor can be
+busy working on the previous 100-character sequence that was typed,
+{\bf except} for those very small fractions of time when it is
+interrupted by the I/O device to read the next character typed.  Let's
+say that to read the next character typed requires executing a
+10-instruction program that takes on the average 0.00000001 seconds to
+execute each instruction. That means 0.0000001 seconds for each
+character typed, or 0.00001 seconds for the entire 100-character
+sequence.  That is, with interrupt-driven I/O, since the processor is
+only needed when characters are actually being read, the time required
+for each 100-character sequence is 0.00001 seconds, instead of
+12.50000 seconds.  The remaining 12.49999 of every 12.50000 seconds,
+the processor is available to do useful work. For example, it can
+process the previous 100-character sequence.
+
+The bottom line: With polling, the time to complete the entire task
+for each sequence is 24.9999 seconds, 12.5 seconds to obtain the 100
+characters + 12.49999 seconds to process them.  With interrupt-driven
+I/O, the time to complete the entire task for each sequence after the
+first is 12.5 seconds, 0.00001 seconds to obtain the characters +
+12.49999 seconds to process them.  For 1,000 sequences, that is the
+difference between 7 hours and 3 ${\scriptstyle\frac{1}{2}}$ hours.
+\end{example}
+\endgroup
+
+\subsection{Two parts to the process}
+
+There are two parts to interrupt-driven I/O: 
+
+\begin{enumerate}
+\item the mechanism that enables an I/O device to interrupt the processor, and 
+\item the mechanism that handles the interrupt request.
+\end{enumerate}
+
+\subsection{Part I: Causing the interrupt to occur}
+
+\noindent
+Several things must be true for an I/O device to
+actually interrupt the program that is running:
+
+\begin{enumerate}
+\item The I/O device {\bf must want} service.
+\item The device {\bf must have the right} to request the service.
+\item The device request {\bf must be more urgent} than what the processor
+  is currently doing.
+\end{enumerate}
+If all three elements are present, the processor stops executing the
+program that is running and takes care of the interrupt.
+
+\subsubsection{The Interrupt Signal from the Device}
+
+For an I/O device to generate an interrupt request, the device must want
+service, and it must have the right to request that service.
+
+\paragraph{The device must want service}  We have discussed that already in the 
+study of polling.  It is the Ready bit of the KBSR or the DSR.  That is, 
+if the I/O device is the keyboard, it wants service if someone has typed a
+character.  If the I/O device is the monitor, it wants service (i.e.,
+the next character to output) if the associated electronic circuits
+have successfully completed the display of the last character.  In
+both cases, the I/O device wants service when the corresponding Ready
+bit is set.
+
+\paragraph{The device must have the right to request that service}  This is 
+the interrupt enable bit, which can be set or cleared by the processor
+(usually by the operating system), depending on whether or not the processor 
+wants to give the I/O device the right to request service.  In most
+I/O devices, this interrupt enable (IE) bit is part of the device
+status register.  In the KBSR and DSR shown in
+Figure~\ref{fig:interrupt.enable.bits}, the IE bit is bit [14].
+\index{interrupt enable} The {\bf interrupt request signal from the I/O
+device} is the logical AND of the IE bit and the Ready bit, as is also
+shown in Figure~\ref{fig:interrupt.enable.bits}.
+
+\begin{figure}[h!]
+\centerline{\includegraphics{pat67509_0807.eps}}
+\caption{Interrupt enable bits and their use}
+\label{fig:interrupt.enable.bits}
+\end{figure}
+
+
+If the interrupt enable bit (bit [14]) is clear, it does not matter
+whether the Ready bit is set; the I/O device will not be able to
+interrupt the processor because it (the I/O device) has not been given
+the right to interrupt the processor.  In that case, the program will 
+have to poll the I/O device to determine if it is ready.
+
+If bit [14] is set, then interrupt-driven I/O is enabled.  In that
+case, as soon as someone types a key (or as soon as the monitor has
+finished processing the last character), bit [15] is set.  In this case,
+the device wants service and it has been given the right to request service.
+The AND gate is asserted, causing an interrupt request to be generated from 
+the I/O device.
+
+\FloatBarrier
+\subsubsection{The urgency of the request}
+
+The third element in the list of things that must be true for an I/O
+device to actually interrupt the processor is that the request must be
+more urgent than the program that is currently executing.  Recall from
+Section 9.1.1.2 that each program runs at a specified level of urgency called
+its priority level.  To interrupt the running program, the device must have a
+higher priority than the program that is currently running.  Actually, 
+there may be many devices that want to interrupt the processor at a specific 
+time.  To succeed, the device must have a higher priority level than all other 
+demands for use of the processor.  
+
+Almost all computers have a set of priority levels that programs can
+run at.  As we have already noted, the LC-3 has eight priority levels, 
+PL0, .. PL7.  The higher
+the number, the more urgent the program.  The PL of a program is
+usually the same as the PL (i.e., urgency) of the request to run that
+program. If a program is running at one PL, and a higher-level PL
+request wants the computer, the lower-priority program
+suspends processing until the higher-PL program executes and satisfies
+its more urgent request.  For example, a computer's payroll program
+may run overnight, and at PL0.  It has all night to finish---not
+terribly urgent.  A program that corrects for a nuclear plant current
+surge may run at PL6.  We are perfectly happy to let the payroll wait
+while the nuclear power correction keeps us from being blown to bits.
+
+For our I/O device to successfully stop the processor and start an
+interrupt-driven I/O request, the priority of the request must be
+higher than the priority of the program it wishes to interrupt.  For
+example, we would not normally want to allow a keyboard interrupt from
+a professor checking e-mail to interrupt the nuclear power correction
+program.
+
+\subsubsection{The INT signal}
+
+To stop the processor from continuing execution of its currently running
+program and service an interrupt request, the INT signal must be 
+asserted.  Figure~\ref{fig:generation.interrupt.signal} shows what is
+required to assert the INT signal.
+Figure~\ref{fig:generation.interrupt.signal}
+shows the status registers of several devices operating at various
+priority levels (PL).  Any device that has bits [14] and [15] both set
+asserts its interrupt request signal.  The interrupt request signals
+are input to a priority encoder, a combinational logic structure that
+selects the highest priority request from all those asserted.  If the
+PL of that request is higher than the PL of the currently executing
+program, the INT signal is asserted.
+
+\begin{figure}[h!]
+\centerline{\includegraphics{pat67509_0808.eps}}
+\caption{Generation of the INT signal}
+\label{fig:generation.interrupt.signal}
+\end{figure}
+
+\FloatBarrier
+\subsubsection{The Test for INT} 
+
+Finally, the test to enable the processor to stop and handle the interrupt.  
+Recall
+from Chapter~4 that the instruction cycle continually sequences through the 
+phases of the instruction cycle (FETCH, DECODE, EVALUATE ADDRESS, FETCH 
+OPERAND, EXECUTE, and STORE RESULT). Each instruction changes the state of
+the computer, and that change is completed at the end of the instruction
+cycle for that intruction.  That is, in the last clock cycle before the 
+computer returns to the FETCH phase for the next instruction, the computer 
+is put in the state caused by the complete execution of the current intruction.  
+
+Interrupts can happen at any time.  They are asynchronous to the synchronous 
+finite state machine controlling the computer.  For example, the interrupt 
+signal could occur when the instruction cycle is in its FETCH OPERAND
+phase.  If we stopped the currently executing program when the instruction
+cycle was in its FETCH OPERAND phase, we would have to keep track of what
+part of the current instruction has executed and what part of the current
+instruction still has work to do.  It makes much more sense to ignore 
+interrupt signals except when we are at an instruction boundary; that is, 
+the current instruction has completed, and the next instruction has not yet 
+started.  Doing that means we do not have to worry about partially executed 
+instructions, since the state of the computer is the state created by the 
+completion of the current instruction, period!
+
+The additional logic to test for the interrupt signal is to augment
+the last state of the instruction cycle for each instruction with a test.
+Instead of {\bf always} going from the last state of one instruction cycle
+to the first state of
+the FETCH phase of the next instruction, the next state depends on the INT 
+signal.  If INT is not asserted, then it is business as usual, with the 
+control unit returning to the FETCH phase to start processing the next 
+instruction.  If INT is asserted, then the next state is the first state 
+of Part II, handling the interrupt request.
+
+\subsection{Part II: Handling the interrupt request}
+
+Handling the interrupt request goes through three
+stages, as shown in Figure~\ref{fig:flow_interrupt_IO}:
+
+\begin{enumerate}
+\item[1.] Initiate the interrupt (three lines numbered 1 in Figure~\ref{fig:flow_interrupt_IO}.
+\item[2.] Service the interrupt (four lines numbered 2 in Figure~\ref{fig:flow_interrupt_IO}.
+\item[3.] Return from the interrupt (one line numbered 3 in Figure~\ref{fig:flow_interrupt_IO}.
+\end{enumerate}
+
+We will discuss each.
+
+\subsubsection{Initiate the Interrupt} 
+
+Since the INT signal was asserted, the processor does not return to
+the first state of the FETCH phase of the next instruction cycle, but
+rather begins a sequence of actions to initiate the 
+interrupt.  The processor must do two things, (1) save the state of the
+interrupted program so it can pick up where it left off after the
+requirements of the interrupt have been completed, and (2) load the state of 
+the higher priority interrupting program so it can start satisfying its request.
+ 
+\paragraph{Save the State of the Interrupted Program}
+
+The state of a program is a snapshot of the contents of all the
+program's resources.  It includes the contents of the
+memory locations that are part of the program and the contents of all
+the general purpose registers. It also includes the PC and PSR.
+
+Recall from Figure~9.1 in Section 9.1.1.4 that a program's PSR specifies 
+the privilege level and priority level of that program.
+PSR[15] indicates whether the program is running in privileged
+(Supervisor) or unprivileged (User) mode.  PSR[10:8] specifies the 
+program's priority level (PL), from PL0 (lowest) to PL7 (highest). 
+Also, PSR[2:0] is used to store the condition codes.
+PSR[2] is the N bit, PSR[1] is the Z bit, and PSR[0] is the P bit.
+
+The first step in initiating the interrupt is to save enough of the
+state of the program that is running so it can continue where it left
+off after the I/O device request has been satisfied. That means, in
+the case of the LC-3, saving the PC and the PSR. The PC must be saved
+since it knows which instruction should be executed next when the
+interrupted program resumes execution. The condition codes (the N, Z,
+and P flags) must be saved since they may be needed by a subsequent
+conditional branch instruction after the program resumes execution.
+The priority level of the interrupted program must be saved because it
+specifies the urgency of the interrupted program with respect to all
+other programs. When the interrupted program resumes execution, it is
+important to know what priority level programs can interrupt it 
+and which ones can not. Finally, the privilege level of the program
+must be saved since it specifies what processor
+resources the interrupted program can and can not access.
+
+Although many computers save the contents of the general purpose
+registers, we will not since we will assume that the service routine 
+will always save the contents of any general purpose register that
+it needs before using it, and then restore it before returning to the 
+interrupted program.  The only state information the LC-3 saves are
+the PC and PSR.
+
+The LC-3 saves this state information on the 
+Supervisor Stack in the same way the PC and PSR are saved when a TRAP
+instruction is executed.  That is, before the interrupt service routine starts, 
+if the interrupted program is in User mode, the User Stack Pointer (USP) is
+stored in Saved\_USP, and R6 is loaded with the Supervisor Stack Pointer (SSP)
+from Saved\_SSP.  Then the PSR and PC of
+the interrupted program are pushed onto the Supervisor Stack, where
+they remain unmolested while the service routine executes.
+
+\paragraph{Load the State of the Interrupt Service Routine}
+Once the state of the interrupted program has been safely saved on the
+Supervisor Stack, the second step is to load the PC and PSR of the
+interrupt service routine. Interrupt service routines are similar to
+the trap service routines we have already discussed.  They are program
+fragments stored in System Space.  They service interrupt requests.
+
+Most processors use the mechanism of \textit{vectored interrupts}. You
+are familiar with this notion from your study of the trap vector
+contained in the TRAP instruction. In the case of interrupts, the
+8-bit vector is provided by the device that is requesting the
+processor be interrupted. That is, the I/O device transmits to the
+processor an 8-bit interrupt vector along with its interrupt request
+signal and its priority level. The interrupt vector corresponding to
+the highest priority interrupt request is the one supplied to the
+processor. It is designated INTV. 
+
+If the interrupt is taken, the
+processor expands the 8-bit interrupt vector (INTV) to form a 16-bit
+address, which is an entry into the Interrupt Vector Table.  You know 
+that the Trap Vector Table consists of memory locations x0000 to x00FF, 
+each containing the starting address of a trap service
+routine. The Interrupt Vector Table consists of memory locations x0100
+to x01FF, each containing the starting address of an interrupt service
+routine. The processor loads the PC with the contents of the location in
+the Interrupt Vector Table corresponding to the address formed by expanding 
+the interrupt vector INTV.
+
+For example, the LC-3 keyboard could interrupt the processor every
+time a key is pressed by someone sitting at the keyboard. The
+keyboard interrupt vector would indicate the location in the interrupt
+vector table that contains the starting address of the keyboard interupt
+service routine.
+
+The PSR is loaded as follows: Since no instructions in the service
+routine have yet executed, PSR[2:0] contains no meaningful information.
+We arbitratily initially load it with 010.
+Since the interrupt service routine runs in privileged mode, PSR[15]
+is set to 0.  PSR[10:8] is set to the priority level associated with
+the interrupt request.
+
+This completes the initiation phase and the interrupt service routine
+is ready to execute.
+
+\subsubsection{Service the Interrupt}
+
+Since the PC contains the starting address of the interrupt
+service routine, the service routine will execute, and the
+requirements of the I/O device will be serviced.
+
+\subsubsection{Return from the Interrupt}
+
+The last instruction in every interrupt service routine is RTI, return
+from trap or interrupt.  When the processor finally accesses the RTI
+instruction, all the requirements of the I/O device have been taken
+care of.
+
+Like the return from a trap routine discussed in Section~9.3.4, 
+execution of the {\bf RTI} instruction (opcode $=$ 1000) for an interrupt
+service routine consists
+simply of popping the PC and the PSR from the Supervisor Stack (where
+they have been resting peacefully) and restoring them to their
+rightful places in the processor. The condition codes are now restored
+to what they were when the program was interrupted, in case they are
+needed by a subsequent BR instruction in the interrupted program.  PSR[15] and
+PSR[10:8] now reflect the privilege level and priority level of the
+about-to-be-resumed program.  If the privilege level of the interrupted
+program is unprivileged, the stack pointers must be adjusted, i.e., the 
+Supervisor Stack Pointer saved, and the User Stack Pointer loaded into R6.
+The PC is restored to the address of the instruction that would have 
+been executed next if the program had not been interrupted.
+
+With all these things as they were before the interrupt occurred, the
+program can resume as if nothing had happened.
+
+\subsection{An Example}
+
+We complete the discussion of interrupt-driven I/O with an example.
+
+Suppose program A is executing when I/O device B, having a PL higher
+than that of A, requests service. During the execution of the service
+routine for I/O device B, a still more urgent device C requests
+service.
+
+Figure~\ref{fig:execution.flow.interrupt.IO} shows the execution flow
+that must take place.
+
+\begin{figure}[h!]
+\centerline{\includegraphics{pat67509_1006.eps}}
+\caption{Execution flow for interrupt-driven I/O}
+\label{fig:execution.flow.interrupt.IO}
+\end{figure}
+
+Program A consists of instructions in locations x3000 to x3010 and was
+in the middle of executing the ADD instruction at x3006, when device B
+sent its interrupt request signal and accompanying interrupt vector
+xF1, causing INT to be asserted.
+
+Note that the interrupt service routine for device B is stored in
+locations x6200 to x6210; x6210 contains the RTI instruction. Note
+that the service routine for B was in the middle of executing the AND
+instruction at x6202, when device C sent its interrupt request signal and
+accompanying interrupt vector xF2. Since the request associated with
+device C is of a higher priority than that of device B, INT is again
+asserted.
+
+Note that the interrupt service routine for device C is stored in
+locations x6300 to x6315; x6315 contains the RTI instruction.
+
+Let us examine the order of execution by the
+processor. Figure~\ref{fig:stack.pc.interrupt.IO} shows several
+snapshots of the contents of the Supervisor Stack and the PC during
+the execution of this example.
+
+\begin{figure}[h!]
+\centerline{\includegraphics{pat67509_1007.eps}}
+\caption{Snapshots of the contents of the Supervisor Stack and the PC during interrupt-driven I/O}
+\label{fig:stack.pc.interrupt.IO}
+\end{figure}
+
+The processor executes as follows: Figure~\ref{fig:stack.pc.interrupt.IO}a
+shows the Supervisor Stack and the PC before program A fetches the 
+instruction at x3006.  Note that the stack pointer is shown as Saved\_SSP,
+not R6.  Since the interrupt has not yet occurred, R6 is pointing to the
+current contents of the User Stack, which are not shown!  The INT signal 
+(caused by an interrupt from device B) is detected at the end of execution 
+of the instruction in
+x3006.  Since the state of program A must be saved on the Supervisor Stack,
+the first step is to start using the Supervisor Stack. This is done by 
+saving R6 in the Saved.UPC register, and loading R6 with the contents of the
+Saved\_SSP register.  The PSR of program A, which includes the condition codes
+produced by the ADD instruction, is pushed on the Supervisor Stack.  Then the
+address x3007, the PC for the next instruction to be executed in program A
+is pushed on the stack.  The interrupt vector associated with device B is
+expanded to 16 bits x01F1, and the contents of x01F1 (x6200) is loaded into
+the PC.  Figure~\ref{fig:stack.pc.interrupt.IO}b shows the stack and PC at
+this point.
+
+The service routine for device B executes until a higher priority interupt
+is detected at the end of execution of the instruction at x6202.  The PSR
+of the service routine for B, which includes the condition codes produced by
+the AND instruction at x6202, and the address x6203 are pushed on the stack.
+The interrupt vector associated with device C is expanded to 16 bits (x01F2),
+and the contents of x01F2 
+(x6300) are loaded into the
+PC. Figure~\ref{fig:stack.pc.interrupt.IO}c shows the Supervisor Stack
+and PC at this point.
+
+Assume the interrupt service routine for device C executes to completion,
+finishing with the RTI instruction in x6315. The Supervisor Stack is
+popped twice, restoring the PC to x6203 and the PSR of the service routine 
+for device B, including the condition codes produced by the AND instruction in
+x6202.  Figure~\ref{fig:stack.pc.interrupt.IO}d shows the stack and PC
+at this point.
+
+The interrupt service routine for device B resumes execution at x6203
+and runs to completion, finishing with the RTI instruction in x6210.
+The Supervisor Stack is popped twice, restoring the PC to x3007 and
+the PSR of program A, including the condition codes produced by the ADD 
+instruction in x3006.  Finally, since program A is in
+User Mode, the contents of R6 are stored in Saved\_SSP and R6 is loaded
+with the contents of
+Saved\_USP. Figure~\ref{fig:stack.pc.interrupt.IO}e shows the
+Supervisor Stack and PC at this point.
+
+Program A resumes execution with the instruction at x3007.
+
+\FloatBarrier
+\subsection{Not just I/O devices}
+
+We have discussed the processing of interrupts in the context of I/O
+devices that have higher priority than the program that is running and
+therefore can stop that program to enable its interrupt service routine
+to execute.  
+
+We must point out that not all interrupts deal with I/O devices.  Any
+event that has a higher priority and is external to the program that is
+running can interrupt the computer.
+It does so by supplying its INT signal, its INTV vector and its priority
+level.  If it is the highest priority event that wishes to interrupt the
+computer, it does so in the same way that I/O devices do as described above.
+
+There are many examples of such events that have nothing to do with I/O 
+devices.  For example, a {\em timer interrupt} interrupts the program that
+is running in order to note the passage of a unit of time.  The {\em machine 
+check} interrupt calls attention to the fact that some part of the computer 
+system is not functioning properly.  The {\em power failure} interrupt notifies
+the computer that for example someone has yanked the power cord out of its
+receptacle.  Unfortunately, we will have to put off dealing with all of these 
+until later in your coursework.
+
+\section{Polling revisted, now that we know about interrupts}
+
+\subsection{The problem}
+
+Recall our discussion of polling: We continually test the Ready bit in the
+relevant status register, and if it is not set, we branch back to again
+test the Ready bit.  For example, suppose we are writing a character string to
+the monitor, and we are using polling to determine when the monitor has
+successfully written the current characer so we can dispatch the next
+character.  We take it for granted that the three instruction sequence  
+LDI (to load the ready bit of the DSR), BRzp (to test it and fall through 
+if the device is ready), and STI (to store the next character in the DDR) 
+acts as an atomic unit.  But what if we interrupts enabled 
+at the same time.  That is, if an interrupt occurred {\bf within} that 
+LDI, BRzp, 
+STI sequence (say, just before the STI instruction), it could easily 
+be the case that the LDI instruction indicated 
+the DDR was ready, the BRzp instruction did not branch back, but by the time 
+the interrupt service routine completed so the STI could write to the DDR,
+the DDR may no longer be ready.  The computer would execute the STI but the
+write would not happen.
+
+A simple, but somewhat contrived example :-), will illustrate the problem.  
+Suppose you are executing a "for" loop ten times, where each time the loop 
+body prints to the monitor a particualr character.  Polling is used to
+determine that the monitor is ready before writing the next character to the 
+DDR.
+Since the loop body executes ten times, this should result in the character 
+printed on the monitor ten times.  Suppose you also have keyboard interrupts 
+enabled, and the keyboard service routine echoes the character typed.  
+
+Suppose the loop body executes as follows: LDI loads the ready bit, BRzp 
+falls through since the monitor is ready, and STI stores the character 
+in DDR.  In the middle of this sequence, before the STI can execute, someone 
+types a key.  The keyboard interrupt occurs, the character typed is echoed, 
+i.e., written to the DDR, and the keyboard interrupt service routine completes.
+
+The interrupted loop body then takes over and "knows" the monitor is ready so 
+it executes the STI.  ...except the monitor is not ready because it has not 
+completed the write of the keyboard service routine!  The STI of the loop 
+body writes but since DDR is not ready, the write does not occur.  The final
+result: only nine characers get written, not ten.
+
+The problem becomes more serious if the string written is in code, and the
+missing write prevents the code from being decyphered.
+
+A simple way to handle this would be to disable all interrupts while
+polling was going on.  But consider the consequences.  
+Suppose the polling was required for a long time. If we disable 
+interrupts while polling is going on, interrupts would be disabled for
+that very long time, unacceptable in an environment where one is concerned
+about the time between a higher priority interrupt occurring and it
+getting service.
+
+\subsection{The solution}
+
+A better solution is shown in Figure~\ref{fig:Lumetta}.
+
+The sequence we want to make non-interruptable is shown on lines 0F to 11.
+We accomplish this by first loading R1 with the PSR in line 09 and R2 
+with the PSR having interrupts disabled in line 0A.  PSR[14] is 
+the interrupt enable 
+bit for all interrupts associated with this program.  Note that PSR is 
+memory mapped to xFFFC.  We enable interupts by storing R1 in PSR (line 0D),
+followed immediately by disabling interrupts by storing R2 in PSR (line 0E).
+With interrupts disabled we execute the three instruction sequence LDI,
+BRzp, and LDI (lines 0F, 10, and 11) if the status register indicates that
+the device is ready.  If the device is not ready, BRzp (line 10) takes the
+computer back to line 0D where interrupts are again enabled.
+
+In this way, interrupts are disabled again and again, but each time only  
+long enough to execute the three instruction sequence LDI, BRzp, STI
+(in lines 0F, 10, 0D), 
+afterwhich interrupts are enabled again.  The result: an interrupt would
+have to wait for the three instruction sequence LDI, BRzp, STI to execute, 
+rather than for the entire polling process to complete.  
+
+\begin{figure}[h]
+\begin{Verbatim}[fontsize=\fontsize{9}{11}\selectfont]
+01	    .ORIG x0420          
+02          ADD   R6,R6,#-1
+03          STR   R1,R6,#0
+04          ADD   R6,R6,#-1
+05          STR   R2,R6,#0
+06          ADD   R6,R6,#-1
+07          STR   R3,R6,#0    ; Save R1,R2,R3 on the stack 
+08 ;         
+09          LDI   R1, PSR 
+0A          LD    R2,INTMASK
+0B          AND   R2,R1,R2    ; R1=original PSR, R2=PSR with interrupts disabled
+0C 
+0D  POLL    STI   R1,PSR    ; enable interrupts (if they were enabled to begin
+0E          STI   R2,PSR    ; disable interrupts
+0F          LDI   R3,DSR    
+10          BRzp  POLL      ; Poll the DSR
+11          STI   R0,DDR   ; Store the character into the DDR
+12          STI   R1,PSR   ; Restore original PSR
+13
+14          LDR   R3,R6,#0
+15          ADD   R6,R6,#1
+16          LDR   R2,R6,#0
+17          ADD   R6,R6,#1         
+18          LDR   R1,R6,#0      
+19          ADD   R6,R6,#1  ; Restore R3,R2,and R1 from the stack
+1A  
+1B          RTI          
+1C          
+1D INTMASK .FILL   xBFFF
+1E PSR     .FILL   xFFFC
+1F DSR     .FILL   xFE04
+20 DDR     .FILL   xFE06
+21 
+22         .END
+\end{Verbatim}
+\FloatBarrier
+\caption{Polling AND allowing interrupts}
+\label{fig:Lumetta}
+\end{figure}
+
+\newpage
+\clearpage
+
+\begin{exercises}
+
+\item[9.1]
+\begin{enumerate}[a.]
+\item[a.] What is a device register?
+\item[b.] What is a device data register?
+\item[c.] What is a device status register?
+\end{enumerate}
+
+\item[9.2] Why is a Ready bit not needed if synchronous I/O is used?
+
+\item[9.3] In Section~9.2.1.3, the statement is made that a typist would
+  have trouble supplying keyboard input to a 300-MHz processor at the
+  maximum rate (one character every 33 nanoseconds) that the processor
+  can accept it.  Assume an average word (including spaces between
+  words) consists of six characters. How many words/minute would the
+  typist have to type in order to exceed the processor's ability to
+  handle the input?
+
+\item[9.4] Are the following interactions usually synchronous or
+  asynchronous?
+
+\begin{enumerate}[a.]
+\item[a.] Between a remote control and a television set
+\item[b.] Between the mailcarrier and you, via a mailbox
+\item[c.] Between a mouse and your PC
+\end{enumerate}
+
+Under what conditions would each of them be synchronous?  Under what
+conditions would each of them be asynchronous?
+
+\item[9.5] What is the purpose of bit [15] in the KBSR?
+
+\item[9.6] What problem could occur if a program does not check the
+  Ready bit of the KBSR before reading the KBDR?
+
+\item[9.7] Which of the following combinations describe the system
+  described in Section~9.2.2.2?
+
+\begin{enumerate}[a.]
+\item[a.] Memory mapped and interrupt driven
+\item[b.] Memory mapped and polling
+\item[c.] Special opcode for I/O and interrupt driven
+\item[d.] Special opcode for I/O and polling
+\end{enumerate}
+
+\item[9.8] Write a program that checks the initial value in memory
+  location x4000 to see if it is a valid ASCII code and if it is a
+  valid ASCII code, prints the character. If the value in x4000 is not
+  a valid ASCII code, the program prints nothing.
+
+\item[9.9] What problem is likely to occur if the keyboard hardware
+  does not check the KBSR before writing to the KBDR?
+
+\item[9.10] What problem could occur if the display hardware does not
+  check the DSR before writing to the DDR?
+
+\item[9.11] Which is more efficient, interrupt-driven I/O or polling?
+  Explain.
+
+\item[9.12] Adam H. decided to design a variant of the LC-3 that did
+  not need a keyboard status register.  Instead, he created a
+  readable/writable keyboard data and status register (KBDSR), which
+  contains the same data as the KBDR.  With the KBDSR, a program
+  requiring keyboard input would wait until a nonzero value appeared
+  in the KBDSR. The nonzero value would be the ASCII value of the last
+  key press.  Then the program would write a zero into the KBDSR
+  indicating that it had read the key press.  Modify the basic input
+  service of Section~8.2.2 to implement Adam's scheme.
+
+\item[9.13] Some computer engineering students decided to revise the
+  LC-3 for their senior project. In designing the LC-4, they decided
+  to conserve on device registers by combining the KBSR and the DSR
+  into one status register: the IOSR (the input/output status
+  register). IOSR[15] is the keyboard device Ready bit and IOSR[14] is
+  the display device Ready bit. What are the implications for programs
+  wishing to do I/O? Is this a poor design decision?
+
+
+\item[9.14] An LC-3 Load instruction specifies the address xFE02. How
+  do we know whether to load from the KBDR or from memory location
+  xFE02?
+
+
+\item[9.15] Name some of the advantages of doing I/O through a TRAP routine instead of
+writing the routine yourself each time you would like your program to perform I/O.
+
+\item[9.16]
+\begin{enumerate}[a.]
+\item[a.] How many  trap service routines can be implemented in the LC-3? Why?
+
+\item[b.] Why must a RET instruction be used to return from a TRAP routine?
+Why won't a BR (Unconditional Branch) instruction work instead?
+
+\item[c.] How many accesses to memory are made during the processing of a TRAP
+instruction?  Assume the TRAP is already in the IR.
+\end{enumerate}
+
+\item[9.17] Refer to Figure~\ref{fig:halt.routine}, the HALT service
+routine.
+\begin{enumerate}[a.]
+\item[a.] What starts the clock after the machine is HALTed?
+Hint: How can the HALT service routine return
+after bit [15] of the machine control register is cleared?
+
+\item[b.] Which instruction actually halts the machine?
+
+\item[c.] What is the first instruction executed when the machine is started again?
+
+\item[d.] Where will the RET of the HALT routine return to?
+\end{enumerate}
+
+\item[9.18] Consider the following LC-3 assembly language program:
+\begin{colorverbatim}
+                .ORIG   x3000
+        L1      LEA     R1, L1
+                AND     R2, R2, x0
+                ADD     R2, R2, x2
+                LD      R3, P1
+        L2      LDR     R0, R1, xC
+                OUT
+                ADD     R3, R3, #-1
+                BRz     GLUE
+                ADD     R1, R1, R2
+                BR      L2
+        GLUE    HALT
+        P1      .FILL   xB
+                .STRINGZ "HBoeoakteSmtHaotren!s"
+                .END
+\end{colorverbatim}
+\begin{enumerate}[a.]
+\item[a.] After this program is assembled and loaded, what binary
+  pattern is stored in memory location x3005?
+
+\item[b.] Which instruction (provide a memory address) is executed
+  after instruction x3005 is executed?
+
+\item[c.] Which instruction (provide a memory address) is executed
+  prior to instruction x3006?
+
+\item[d.] What is the output of this program?
+\end{enumerate}
+
+\item[9.19] The following LC-3 program is assembled and then executed. There are
+no assemble time or run-time errors.  What is the output of this
+program? Assume all registers are initialized to 0 before the program executes.
+\begin{colorverbatim}
+                .ORIG    x3000
+                LEA      R0, LABEL
+                STR      R1, R0, #3
+                TRAP     x22
+                TRAP     x25
+        LABEL   .STRINGZ "FUNKY"
+        LABEL2  .STRINGZ "HELLO WORLD"
+                .END
+\end{colorverbatim}
+
+\item[9.6] The correct operation of the program in Example~9.1 assumes
+  that the person sitting at the keyboard only types capital letters
+  and the value 7.  What if the person types a \$? A better program
+  would be one that tests the character typed to be sure it really is
+  a capital letter from among the 26 capital letters in the alphabet,
+  and if it is not, takes corrective action.  Your job: Augment the
+  program of Example~9.1 to add a test for bad data.  That is, write a
+  program that will type the lowercase representation of any capital
+  letter typed and will terminate if anything other than a capital
+  letter is typed.
+
+\item[9.19] Assume that an integer greater than 2 and less than 32,768 is deposited
+in memory location A by another module before the program below is executed.
+\begin{colorverbatim}
+                .ORIG  x3000
+                AND    R4, R4, #0
+                LD     R0, A
+                NOT    R5, R0
+                ADD    R5, R5, #2
+                ADD    R1, R4, #2
+                ;
+       REMOD    JSR    MOD
+                BRz    STORE0
+                ;
+                ADD    R7, R1, R5
+                BRz    STORE1
+                ADD    R1, R1, #1
+                BR     REMOD
+                ;
+       STORE1   ADD    R4, R4, #1
+       STORE0   ST     R4, RESULT
+                TRAP   x25
+                ;
+       MOD      ADD    R2, R0, #0
+                NOT    R3, R1
+                ADD    R3, R3, #1
+       DEC      ADD    R2, R2, R3
+                BRp    DEC
+                RET
+                ;
+       A        .BLKW 1
+       RESULT   .BLKW 1
+                .END
+\end{colorverbatim}
+
+\noindent In 20 words or fewer, what does the above program do?
+
+\item[9.20] Recall the machine busy example. Suppose the bit pattern indicating which
+machines are busy and which are free is stored in memory location x4001.
+Write subroutines that do the following.
+\begin{enumerate}[a.]
+\item[a.] Check if no machines are busy, and return 1 if none are
+  busy.
+\item[b.] Check if all machines are busy, and return 1 if all are
+  busy.
+\item[c.] Check how many machines are busy, and return the number of
+  busy machines.
+\item[d.] Check how many machines are free, and return the number of
+  free machines.
+\item[e.] Check if a certain machine number, passed as an argument in
+  R5, is busy, and return 1 if that machine is busy.
+\item[f.] Return the number of a machine that is not busy.
+\end{enumerate}
+
+\item[9.21] The starting address of the trap routine is stored at the
+  address specified in the TRAP instruction. Why isn't the first
+  instruction of the trap routine stored at that address instead?
+  Assume each trap service routine requires at most 16 instructions.
+  Modify the semantics of the LC-3 TRAP instruction so that the trap
+  vector provides the starting address of the service routine.
+
+\item[9.22] Following is part of a program that was fed to the LC-3
+  assembler. The program is supposed to read a series of input lines
+  from the console into a buffer, search for a particular character,
+  and output the number of times that character occurs in the text.
+  The input text is terminated by an EOT and is guaranteed to be no
+  more than 1,000 characters in length.  After the text has been
+  input, the program reads the character to count.
+
+  The subroutine labeled COUNT that actually does the counting was
+  written by another person and is located at address x3500. When
+  called, the subroutine expects the address of the buffer to be in R5
+  and the address of the character to count to be in R6. The buffer
+  should have a NULL to mark the end of the text. It returns the count
+  in R6.
+
+  The OUTPUT subroutine that converts the binary count to ASCII digits
+  and displays them was also written by another person and is at
+  address x3600. It expects the number to print to be in~R6.
+
+  Here is the code that reads the input and calls COUNT:
+
+\begin{colorverbatim}
+        .ORIG  x3000
+        LEA    R1, BUFFER
+G_TEXT  TRAP   x20          ; Get input text
+        ADD    R2, R0, x-4
+        BRz    G_CHAR
+        STR    R0, R1, #0
+        ADD    R1, R1, #1
+        BRnzp  G_TEXT
+G_CHAR  STR    R2, R1, #0   ; x0000 terminates buffer
+        TRAP   x20          ; Get character to count
+        ST     R0, S_CHAR
+        LEA    R5, BUFFER
+        LEA    R6, S_CHAR
+        LD     R4, CADDR
+        JSRR   R4           ; Count character
+        LD     R4, OADDR
+        JSRR   R4           ; Convert R6 and display
+        TRAP   x25
+CADDR   .FILL  x3500        ; Address of COUNT
+OADDR   .FILL  x3600        ; Address of OUTPUT
+BUFFER  .BLKW  1001
+S_CHAR  .FILL  x0000
+        .END
+\end{colorverbatim}
+There is a problem with this code. What is it, and how might it be
+fixed? (The problem is {\em not} that the code for \verb+COUNT+ and
+\verb+OUTPUT+ is missing.)
+
+\item[9.23] Consider the following LC-3 assembly language program:
+
+\begin{colorverbatim}
+                .ORIG   x3000
+                LEA     R0,DATA
+                AND     R1,R1,#0
+                ADD     R1,R1,#9
+        LOOP1   ADD     R2,R0,#0
+                ADD     R3,R1,#0
+        LOOP2   JSR     SUB1
+                ADD     R4,R4,#0
+                BRzp    LABEL
+                JSR     SUB2
+        LABEL   ADD     R2,R2,#1
+                ADD     R3,R3,#-1
+                BRP     LOOP2
+                ADD     R1,R1,#-1
+                BRp     LOOP1
+                HALT
+        DATA    .BLKW   10 x0000
+        SUB1    LDR     R5,R2,#0
+                NOT     R5,R5
+                ADD     R5,R5,#1
+                LDR     R6,R2,#1
+                ADD     R4,R5,R6
+                RET
+        SUB2    LDR     R4,R2,#0
+                LDR     R5,R2,#1
+                STR     R4,R2,#1
+                STR     R5,R2,#0
+                RET
+                .END
+\end{colorverbatim}
+
+Assuming that the memory locations at DATA get filled in before the
+program executes, what is the relationship between the final values at
+DATA and the initial values at DATA?
+
+\item[9.24] The following program is supposed to print the number 5 on the
+screen. It does not work. Why? Answer in no more than ten words, please.
+
+\begin{colorverbatim}
+                .ORIG   x3000
+                JSR     A
+                OUT
+                BRnzp   DONE
+        A       AND     R0,R0,#0
+                ADD     R0,R0,#5
+                JSR     B
+                RET
+        DONE    HALT
+        ASCII   .FILL   x0030
+        B       LD      R1,ASCII
+                ADD     R0,R0,R1
+                RET
+                .END
+
+\end{colorverbatim}
+
+\item[9.25] Figure~\ref{fig:halt.routine} shows a service routine to
+stop the computer by clearing the RUN latch, bit [15] of the Machine
+Control Register.  The latch is cleared by the instruction in line 14,
+and the computer stops.  What purpose is served by the instructions on
+lines 19 through 1C?
+
+\item[9.26] Suppose we define a new service routine starting at memory location
+x4000. This routine reads in a character and echoes it to the
+screen. Suppose memory location x0072 contains the value x4000. The
+service routine is shown below.
+
+\begin{colorverbatim}
+                .ORIG x4000
+                ST R7, SaveR7
+                GETC
+                OUT
+                LD R7, SaveR7
+                RET
+        SaveR7  .FILL x0000
+\end{colorverbatim}
+
+\begin{enumerate}[a.]
+\item[a.] Identify the instruction that will invoke this routine.
+\item[b.] Will this service routine work? Explain.
+\end{enumerate}
+
+\item[9.27] The two code sequences $a$ and $b$ are assembled
+  separately. There are two errors that will be caught at assemble
+  time or at link time. Identify the bugs and describe why the bug
+  will cause an error, and whether it will be detected at assemble 
+  time or link time.
+
+\begin{enumerate}[a.]
+\item[a.]
+\begin{colorverbatim}
+                .ORIG x3500
+         SQRT   ADD   R0, R0, #0
+                ; code to perform square
+                ; root function and
+                ; return the result in R0
+                RET
+                .END
+\end{colorverbatim}
+
+\item[b.]
+\begin{colorverbatim}
+                .EXTERNAL SQRT
+                .ORIG   x3000
+                LD      R0,VALUE
+                JSR     SQRT
+                ST      R0,DEST
+                HALT
+        VALUE   .FILL   x30000
+        DEST    .FILL   x0025
+                .END
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{colorverbatim}
+\end{enumerate}
+
+\item[9.28] Shown below is a partially constructed program. The
+  program asks the user his/her name and stores the sentence ``Hello,
+  name'' as a string starting from the memory location indicated by
+  the symbol HELLO. The program then outputs that sentence to the
+  screen. The program assumes that the user has finished entering
+  his/her name when he/she presses the Enter key, whose ASCII code is
+  x0A. The name is restricted to be not more than 25 characters.
+
+  Assuming that the user enters Onur followed by a carriage return
+  when prompted to enter his/her name, the output of the program looks
+  exactly like:
+
+\begin{colorverbatim}
+Please enter your name: Onur
+Hello, Onur
+\end{colorverbatim}
+
+Insert instructions at (a)--(d) that will complete the program.
+
+\begin{colorverbatim}
+                .ORIG x3000
+                LEA   R1,HELLO
+      AGAIN     LDR   R2,R1,#0
+                BRz   NEXT
+                ADD   R1,R1,#1
+                BR    AGAIN
+      NEXT      LEA   R0,PROMPT
+                TRAP  x22          ; PUTS
+                ------------ (a)
+      AGAIN2    TRAP  x20          ; GETC
+                TRAP  x21          ; OUT
+                ADD   R2,R0,R3
+                BRz   CONT
+                ------------ (b)
+                ------------ (c)
+                BR    AGAIN2
+      CONT      AND   R2,R2,#0
+                ------------ (d)
+                LEA   R0, HELLO
+                TRAP  x22          ; PUTS
+                TRAP  x25          ; HALT
+      NEGENTER  .FILL xFFF6        ; -x0A
+      PROMPT    .STRINGZ "Please enter your name: "
+      HELLO     .STRINGZ "Hello, "
+                .BLKW #25
+                .END
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{colorverbatim}
+
+\item[9.29] The program below, when complete, should print the following to the monitor:
+\begin{center}
+ABCFGH
+\end{center}
+
+Insert instructions at (a)--(d) that will complete the program.
+\begin{colorverbatim}
+                .ORIG x3000
+                LEA   R1, TESTOUT
+      BACK_1    LDR   R0, R1, #0
+                BRz   NEXT_1
+                TRAP  x21
+                ------------ (a)
+                BRnzp BACK_1
+                ;
+      NEXT_1    LEA   R1, TESTOUT
+      BACK_2    LDR   R0, R1, #0
+                BRz   NEXT_2
+                JSR   SUB_1
+                ADD   R1, R1, #1
+                BRnzp BACK_2
+                ;
+      NEXT_2    ------------ (b)
+                ;
+      SUB_1     ------------ (c)
+
+      K         LDI   R2, DSR
+                ------------ (d)
+
+                STI   R0, DDR
+                RET
+      DSR       .FILL xFE04
+      DDR       .FILL xFE06
+      TESTOUT   .STRINGZ "ABC"
+                .END
+
+
+\end{colorverbatim}
+
+\item[9.30] A local company has decided to build a real LC-3 computer.
+  In order to make the computer work in a network, four
+  interrupt-driven I/O devices are connected. To request service, a
+  device asserts its interrupt request signal (IRQ). This causes a bit
+  to get set in a special LC-3 memory-mapped interrupt control
+  register called INTCTL which is mapped to address xFF00. The INTCTL
+  register is shown below. When a device requests service, the INT
+  signal in the LC-3 data path is asserted.  The LC-3 interrupt
+  service routine determines which device has requested service and
+  calls the appropriate subroutine for that device.  If more than one
+  device asserts its IRQ signal at the same time, only the subroutine
+  for the highest priority device is executed.  During execution of
+  the subroutine, the corresponding bit in INTCTL is cleared.
+
+\begin{figure}[!h]
+\centerline{\includegraphics{pat67509_un0901.eps}}
+\end{figure}
+
+The following labels are used to identify the first instruction of
+each device subroutine:
+\begin{center}
+HARDDISK ETHERNET PRINTER CDROM
+\end{center}
+
+For example, if the highest priority device requesting service is the
+printer, the interrupt service routine will call the printer
+subroutine with the following instruction:
+\begin{center}
+JSR  PRINTER
+\end{center}
+
+Finish the code in the LC-3 interrupt service routine for the
+following priority scheme by filling in the spaces labeled (a)--(k).
+The lower the number, the higher the priority of the device.
+\begin{enumerate}
+\item[{\rm 1.}] Hard disk
+\item[{\rm 2.}] Ethernet card
+\item[{\rm 3.}] Printer
+\item[{\rm 4.}] CD-ROM
+\end{enumerate}
+
+\begin{Verbatim}[fontsize=\fontsize{9}{10}\selectfont,formatcom=\color{seventyblack}]
+                LDI   R1, INTCTL
+      DEV0      LD    R2, ------ (a)
+                AND   R2, R2, R1
+                BRnz  DEV1
+                JSR   ---------- (b)
+                ---------------- (c)
+         ;
+      DEV1      LD    R2, ------ (d)
+                AND   R2, R2,  R1
+                BRnz  DEV2
+                JSR   ---------- (e)
+                ---------------- (f)
+         ;
+      DEV2      LD    R2, ------ (g)
+                AND   R2, R2, R1
+                BRnz  DEV3
+                JSR   ---------- (h)
+                ---------------- (i)
+         ;
+      DEV3      JSR  ----------- (j)
+         ;
+      END       ---------------- (k)
+
+      INTCTL    .FILL   xFF00
+      MASK8     .FILL   x0008
+      MASK4     .FILL   x0004
+      MASK2     .FILL   x0002
+      MASK1     .FILL   x0001
+\end{Verbatim}
+
+\item[9.31] Interrupt-driven I/O:
+\begin{enumerate}[a.]
+\item[a.] What does the following LC-3 program do?
+\begin{colorverbatim}
+            .ORIG     x3000
+            LD        R3, A
+            STI       R3, KBSR
+    AGAIN   LD        R0, B
+            TRAP      x21
+            BRnzp     AGAIN
+    A      .FILL      x4000
+    B      .FILL      x0032
+    KBSR   .FILL      xFE00
+           .END
+
+\end{colorverbatim}
+
+\item[b.] If someone strikes a key, the program will be interrupted and the
+keyboard interrupt service routine will be executed as shown below.
+What does the keyboard interrupt
+  service routine do?
+\begin{colorverbatim}
+            .ORIG     x1000
+            LDI       R0, KBDR
+            TRAP      x21
+            TRAP      x21
+            RTI
+    KBDR    .FILL     xFE02
+            .END
+\end{colorverbatim}
+Note: RTI is an instruction that enables the computer to return to executing 
+the program that was interrupted. It will be studied in Chapter 10. The only 
+thing you need to know about it now is that it loads the PC with the address 
+of the instruction that was about to be fetched when the interrupt occurred.
+\item[c.] Finally, suppose the program of part $a$ started executing, and
+  someone sitting at the keyboard struck a key. What would you see on
+  the screen?
+\item[d.] In part c, how many times is the digit typed shown on the screen? 
+  Why is the correct answer: "I can not say for sure."
+\end{enumerate}
+
+\item[9.32] What does the following LC-3 program do?
+  \begin{colorverbatim}
+            .ORIG   x3000
+            LD      R0,ASCII
+            LD      R1,NEG
+    AGAIN   LDI     R2,DSR
+            BRzp    AGAIN
+            STI     R0,DDR
+            ADD     R0,R0,#1
+            ADD     R2,R0,R1
+            BRnp    AGAIN
+            HALT
+    ASCII   .FILL   x0041
+    NEG     .FILL   xFFB6   ; -x004A
+    DSR     .FILL   xFE04
+    DDR     .FILL   xFE06
+            .END
+  \end{colorverbatim}
+
+\item[9.33] During the initiation of the interrupt service routine, the N, Z,
+  and P condition codes are saved on the stack. Show by means of a
+  simple example how incorrect results would be generated if the
+  condition codes were not saved.
+
+\item[9.34] In the example of Section~9.4.n, what are the contents of locations
+  x01F1 and x01F2? They are part of a larger structure. Provide a name
+  for that structure. ({\it Hint:} See Table~A.3.)
+
+\item[9.35] Expand the example of Section~9.4.n to include an interrupt by a
+  still more urgent device D while the service routine of device C is
+  executing the instruction at x6310. Assume device D's interrupt
+  vector is xF3.  Assume the interrupt service routine is stored in
+  locations x6400 to x6412. Show the contents of the stack and PC at
+  each relevant point in the execution flow.
+
+\item[9.36] Suppose device D in Exercise~9.35 has a lower priority than device C
+  but a higher priority than device B. Rework Exercise~10.12 with this
+  new wrinkle.
+
+\item[9.37] Write an interrupt handler to accept keyboard input as follows: A
+  buffer is allocated to memory locations x4000 through x40FE. The
+  interrupt handler must accept the next character typed and store it
+  in the next ``empty'' location in the buffer. Memory location x40FF
+  is used as a pointer to the next available empty buffer location. If
+  the buffer is full (i.e., if a character has been stored in location
+  x40FE), the interrupt handler must display on the screen:
+  ``Character cannot be accepted; input buffer full.''
+
+\item[9.38] Consider the interrupt handler of Exercise~9.37. The buffer is
+  modified as follows: The buffer is allocated to memory locations
+  x4000 through x40FC. Location x40FF contains, as before, the address
+  of the next available empty location in the buffer. Location x40FE
+  contains the address of the oldest character in the buffer. Location
+  x40FD contains the number of characters in the buffer. Other
+  programs can remove characters from the buffer. Modify the interrupt
+  handler so that, after x40FC is filled, the next location filled is
+  x4000, assuming the character in x4000 has been previously removed.
+  As before, if the buffer is full, the interrupt handler must display
+  on the screen: ``Character cannot be accepted; input buffer full.''
+
+\item[9.39] Consider the modified interrupt handler of Exercise~9.38, used in
+  conjunction with a program that removes characters from the buffer.
+  Can you think of any problem that might prevent the interrupt
+  handler that is adding characters to the buffer and the program that
+  is removing characters from the buffer from working correctly
+  together?
+
+\item[9.40] Suppose the keyboard interrupt vector is x34 and the keyboard
+interrupt service routine starts at location x1000. What can you
+infer about the contents of any memory location from the above
+statement?
+
+\item[9.41] Two students wrote interrupt service routines for an assignment.  Both
+service routines did exactly the same work, but the first student
+accidentally used RET at the end of his routine, while the second
+student correctly used RTI. There are three errors that arose in the
+first student's program due to his mistake.  Describe any two of them.
+
+\item[9.42]STAR Since ASCII codes consist of 8 bits each, we can store two ASCII codes in one
+word of LC-3 memory.  If a user types 2n characters on the keyboard, followed
+by the \textless ENTER\textgreater  key, the subroutine PACK on the next page
+will store the corresponding ASCII codes into n sequential memory locations,
+two per memory location, starting at location A. \\
+
+\noindent
+You may assume that a user never enters an odd number of characters. \\
+
+\noindent
+Your job: Fill in the blanks in the program.\\
+
+If a user types the string \textbf{Please help!} followed by the
+$<$ENTER$>$ key, what does the program do? \\
+
+
+%\begin{center}
+\begin{minipage}[t]{0.5\linewidth}
+\begin{flushleft}
+{
+\begin{alltt}
+          .ORIG x7020
+  PACK    ST R7, SAVER7
+          ST R6, SAVER6
+          ST R4, SAVER4
+          ST R3, SAVER3
+          LEA R6, A      ; R6 is the pointer
+          AND R4, R4, #0
+          ADD R4, R4, #8 ; R4 is our counter
+          AND R3, R3, #0
+          LEA R0, PROMPT
+          TRAP x22
+   POLL   --------------- (a)
+          BRzp POLL
+		  --------------- (b)
+          LD R0, NEG_LF
+          ADD R0, R7, R0
+          --------------- (c)
+          ADD R4, R4, #0
+          BRz NOSHIFT
+  SHIFT   ADD R7, R7, R7
+          ADD R4, R4, #-1
+          BRp SHIFT
+          ADD R3, R7, #0
+          BRnzp POLL
+  NOSHIFT ADD R3, R3, R7
+  		  --------------- (d)
+          ADD R6, R6, #1
+          ADD R4, R4, #8
+          BRnzp POLL
+  DONE    LD R7, SAVER7
+          LD R6, SAVER6
+          LD R4, SAVER4
+          LD R3, SAVER3
+          LEA R0, A     ; Returns a pointer to the characters
+          RET
+  KBSR    .FILL xFE00
+  KBDR    .FILL xFE02
+  NEG_LF  .FILL xFFF6
+  PROMPT  .STINGZ "Please enter a string: "
+  A       .BLKW #5
+  SAVER7  .BLKW #1
+  SAVER6  .BLKW #1
+  SAVER4  .BLKW #1
+  SAVER3  .BLKW #1
+          .END
+\end{alltt}
+}
+\end{flushleft}
+\end{minipage}
+
+\item[9.43]STAR We want to support 8 input keyboards instead of 1.  To do this we need 8 ready bits in KBSR, and 8 separate KBDRs.  We will use the 8 odd-numbered bits in the KBSR as ready bits for the 8 keyboards, as shown below. We will set the other 8 bits in the KBSR to 0.\\
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics[scale=0.5]{943_kbsr.eps}
+\end{center}
+\end{figure}
+
+\noindent
+The 8 memory-mapped keyboard data registers and their corresponding ready bits
+are as follows: \\
+
+\begin{center}
+\begin{tabular}{l l l} 
+FE04: & KBSR   & \\  
+FE06: & KBDR1, & Ready bit is KBSR[1]\\  
+FE08: & KBDR2, & Ready bit is KBSR[3]\\  
+FE0A: & KBDR3, & Ready bit is KBSR[5]\\  
+FE0C: & KBDR4, & Ready bit is KBSR[7]\\  
+FE0E: & KBDR5, & Ready bit is KBSR[9]\\  
+FE10: & KBDR6, & Ready bit is KBSR[11]\\  
+FE12: & KBDR7, & Ready bit is KBSR[13]\\  
+FE14: & KBDR8, & Ready bit is KBSR[15]\\  
+\end{tabular}
+\end{center}
+
+\noindent
+We wish to write a program that polls the keyboards and loads the ASCII code
+typed by the highest priority keyboard into R0.  That is, if someone had
+previously typed a key on keyboard 1, we want to load the ASCII code in KBDR1
+into R0.  If no key was typed on keyboard 1, but a key had been typed on
+keyboard 2, we want to load the ASCII code in KBDR2 into R0.  ...and so on.
+That is, KB1 has higher priority than KB2, which has higher priority than KB3,
+which has higher priority than KB4, etc.  KB8 has the lowest priority. \\
+
+\noindent
+The following program will do the job AFTER you fill in the missing 
+instructions. Your job: fill in the missing instructions.
+
+\begin{verbatim}
+        .ORIG X3000
+        LD    R0, KBDR1
+POLL    LDI   R1, KBSR
+        BRz   POLL
+        AND   R2, R2, #0
+        ADD   R2, R2, #2
+AGAIN   ----------------- (a)
+        BRnp    FOUND
+        ADD     R0, R0, #2
+        ----------------- (b)
+        ----------------- (c)
+        BRnp    AGAIN
+        HALT
+FOUND   ----------------- (d)
+        HALT
+KBSR    .FILL   xFE04
+KBDR1   .FILL   xFE06
+        .END
+\end{verbatim}
+
+\item[9.44]STAR The following program pushes elements onto a stack with JSR PUSH and pops elements off of the stack with JSR POP. \\
+
+\begin{center}
+\begin{minipage}[t]{0.5\linewidth}
+\begin{flushleft}
+{
+\begin{alltt}
+            .ORIG X3000
+            LEA  R6, STACK\_BASE
+
+X           TRAP  x20          ;GETC
+            TRAP  x21          ;OUT
+            ADD  R1, R0, x-0A  ;x0A is ASCII code for line feed, 
+                               ;x-0A is the negative of x0A
+            BRz  Y
+            JSR  PUSH
+            BRnzp  X
+
+Y           LEA  R2, STACK\_BASE
+            NOT  R2, R2
+            ADD  R2, R2, #1
+            ADD  R3, R2, R6
+            BRz  DONE
+            JSR  POP
+            TRAP  x21          ;OUT
+            BRnzp  Y
+
+DONE        TRAP  x25          ;HALT
+STACK       .BLKW  5
+STACK\_BASE .FILL  x0FFF
+
+PUSH        ADD  R6, R6, #-1
+            STR  R0, R6, #0
+            RET
+
+POP         LDR  R0, R6, #0
+            ADD  R6, R6, #1
+            RET
+
+            .END
+
+\end{alltt}
+}
+
+\end{flushleft}
+\end{minipage}
+\end{center}
+
+\noindent
+What will appear on the screen if a user, sitting at a keyboard,
+typed the three keys a, b, c, followed by the \textless Enter\textgreater { }key? \\ 
+
+What will happen if a user, sitting at a keyboard, typed the eight keys a, b, c, d, e, f, g, h, followed by the \textless Enter\textgreater { }key? 
+
+\item[9.45] We wish to add a new TRAP service routine, which will be called
+by the instruction {\tt TRAP~x9A}.  The new trap routine will wait for someone
+to type a lower case letter, then echo on the screen the corresponding capital
+letter. Assume the user will not type anything except a lower case letter.  The
+assembly language code for this trap service routine is shown below: \\
+
+\begin{alltt}
+        .ORIG 		x2055
+        ----------------- (a)
+        ST R1, SaveR1
+        ST R0, SaveR0
+        TRAP x20
+        LD R1, A
+        ----------------- (b)
+        TRAP x21
+        ----------------- (c)
+        LD R1, SaveR1
+        LD R0, SaveR0
+        JMP R7
+SaveR1 .BLKW 1
+SaveR0 .BLKW 1
+A      .FILL ------------ (d)
+____   .BLKW           ;  (e) a missing label 
+
+       .END
+\end{alltt}
+
+
+\noindent In order for {\tt TRAP~x9A} to call this service routine, what
+memory location must contain what value.
+\\
+
+\vspace{.25in}
+
+\noindent Address:
+\hspace{1in
+Value:} 
+
+\vspace{.25in}
+
+\noindent Fill in the missing information in the assembly language program.
+i.e, the three missing instructions, the one missing label, and the operand
+of the {\tt .FILL} pseudo-op.
+
+\item[9.46] A programmer wrote the following program which was assembled and executed. Execution started with PC at x3000. 
+
+\begin{alltt}
+         .ORIG x3000
+
+         LEA R0, Message	
+         TRAP x01
+         TRAP x22	; What is the output here?
+         TRAP x25
+
+Message	.STRINGZ "Cat in the hat."
+
+        .END
+\end{alltt}
+
+\vspace{3mm}
+\noindent Assume that the Trap Vector Table includes the following entries in addition to the ones we have previously used:
+
+\begin{alltt}
+Memory Address    Memory Contents
+    x0000	             x0100
+    x0001	             x0102
+    x0002	             x0107
+    x0003	             x010A
+\end{alltt}
+
+\noindent Assume further that additional trap service routines have been loaded previously in memory as specified below:
+
+\begin{alltt}
+        .ORIG x0100
+
+        LD R7, SaveR7
+        RET
+        ST R7, SaveR7
+        TRAP x02
+        AND R1, R1, #0
+        STR R1, R0, #3
+        RET
+        AND R1, R1, #0
+        STR R1, R0, #5
+        TRAP x00
+        RET
+SaveR7	.BLKW #1
+
+        .END
+\end{alltt}
+
+\noindent What is the result of execution of this program? 
+
+\item[9.47]STAR The state machine shown below will produce an output sequence if it receives an input sequence.  The intial state is S0.
+
+\begin{figure}[h]
+\centering
+\vspace{0.3in}
+\includegraphics[scale=0.5]{947_state.eps}
+\end{figure}
+
+\noindent For example, the input sequence 100 produces the output sequence bac.
+
+\noindent We have written a program that simulates this state machine.  Inputs are requested from the keyboard, and the corresponding outputs are shown on the screen.  For example, for the input sequence shown above, the monitor would display
+\begin{alltt}
+
+INPUT (either 0 or 1): 1
+OUTPUT: b
+INPUT (either 0 or 1): 0
+OUTPUT: a
+INPUT (either 0 or 1): 0
+OUTPUT: c
+\end{alltt}
+
+Complete the program that simulates the state machine, by filling in each blank with {\bf one} missing line of LC-3 assembly language code. You can assume the person at the keyboard can type a 1 or a 0 without error (i.e., you do not have to test for wrong input).
+\newpage
+\begin{alltt}
+        .ORIG 		x3000
+        LEA 		R6, S0
+Loop    ------------------ (a)
+        TRAP		x22
+        TRAP		x20			; inputs a character
+        TRAP 		x21
+		
+        LD		R1, NEGASCII
+        ADD		R0, R0, R1
+        ------------------ (b)
+        LDR		R6, R6,#0
+        LD		R0, NEWLINE
+        TRAP		x21
+        LEA 		R0, OUTPUT
+        TRAP		x22
+        ------------------ (c)
+        TRAP		x21
+        LD		R0, NEWLINE
+        TRAP		x21
+        BRnzp		LOOP
+
+S0      .FILL		S2
+        .FILL		S1
+        .FILL		x0061
+
+S1      .FILL		S0
+        .FILL		S2
+        .FILL		x0062
+S2      .FILL   	______ (d)
+		.FILL 		______ (e)
+		.FILL 		______ (f)
+
+NEGASCII .FILL		xFFD0				; the value -48
+OUTPUT   .STRINGZ       "OUTPUT:"
+INPUT    .STRINGZ       "INPUT (either 0 or 1):"
+NEWLINE  .FILL		x000A
+
+.END
+\end{alltt}
+
+\item[9.48]STAR Up to now, we have only had one output device, the monitor, with xFE04 and xFE06 used to address its two device registers. We now introduce a second output device, a light that requires a single device register, to which we assign the address xFE08.  Storing a 1 in xFE08 turns the light on, storing a 0 in xFE08 turns the light off. \\
+
+\noindent
+An Aggie decided to write a program which would control this light by a keyboard interrupt as follows: Pressing the key 0 would turn the light off.
+Pressing the key 1 would cause the light to flash on and off repeatedly.  Shown
+below is the Aggie's code, and his Keyboard interrupt service routine.
+
+\begin{verbatim}
+The User Program:
+             .ORIG x3000
+0             LEA  R7, LOOP
+1     LOOP    LDI  R0, ENABLE
+2             LD   R1, NEG_OFF
+3             ADD  R0, R0, R1   ; check if switch is on
+4             BRnp BLINK
+      ;
+5             AND R0, R0, #0
+6             STI R0, LIGHT     ; turn light off
+7             RET
+      ;
+8     BLINK   ST  R7, SAVE_R7   ; save linkage
+9             LDI R0, LIGHT   
+A             ADD R0, R0, #1
+B             AND R0, R0, #1    ; toggle LIGHT between 0 and 1
+C             STI R0, LIGHT
+D             JSR DELAY         ; 1 second delay
+E             LD R7, SAVE_R7
+F             RET               ; <-- Breakpoint here
+      ;
+      LIGHT   .FILL xFE08
+      ENABLE  .FILL x4000
+      NEG_OFF .FILL x-30
+      SAVE_R7 .BLKW #1
+              .END
+
+The Keyboard Interrupt Routine:
+              .ORIG   x1500
+0             ADD R6, R6, #-1   ; <-- Breakpoint here
+1             STR R0, R6, #0    ; save R0 on stack
+2             ADD R6, R6, #-1
+3             STR R7, R6, #0    ; save R7 on stack
+      ;
+4             TRAP x20
+5             STI  R0, ENABLE2
+      ;
+6             RTI               ; <-- Breakpoint here
+7     ENABLE2 .FILL x4000
+              .END
+\end{verbatim}
+
+\noindent
+The DELAY subroutine was inserted in his program in order to separate the
+turning on and off of the light by one second in order to make the on-off
+behavior visible to the naked eye.  The DELAY subroutine does not modify any
+registers. \\
+
+\noindent
+Unfortunately, per usual, the Aggie made a mistake in his program, and things
+do not work as he intended.  So, he decided to debug his program (see the next
+page). \\
+
+\noindent
+He set three breakpoints, at x1500, at x1506, and at x300F.  He initialized the
+PC to x3000, the keyboard IE bit to 1, and memory location x0180 to x1500. \\
+
+\noindent
+Then he hit the Run button, which stopped executing when the PC reached x1500.
+He hit the Run button three more times, each time the computer stopping when
+the PC reached a breakpoint.  While the program was running, he pressed a key
+on the keyboard EXACTLY ONCE. \\
+
+\noindent
+The table below shows the data in various registers and memory locations each
+time a breakpoint was encountered. Note: Assume, when an interrupt is
+initiated, the PSR is pushed onto the system stack before the PC.\\
+
+\noindent
+Complete the table. \\
+
+\noindent
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+ & \textbf{Initial} & \textbf{Breakpoint 1} & \textbf{Breakpoint 2} &
+ \textbf{Breakpoint 3} & \textbf{Breakpoint 4} \\
+ \hline \hline
+\textbf{PC} & x3000 & x1500 & x1506 & x1506 & x300F \\ \hline
+\textbf{R0} & x1234 & & x0030 & &\\ \hline
+\textbf{R6} & x3000 & & & &\\ \hline
+\textbf{R7} & x1234 & & & &\\ \hline
+\textbf{M[x2FFC]} & x0000 & & & &\\ \hline
+\textbf{M[x2FFD]} & x0000 & & & &\\ \hline
+\textbf{M[x2FFE]} & x0000 & x300D & & &\\ \hline
+\textbf{M[x2FFF]} & x0000 & x8001 & & &\\ \hline
+\textbf{M[x4000]} & x0031 & & & &\\ \hline
+\textbf{M[xFE00]} & x4000 & & & &\\ \hline
+\end{tabular}
+
+\item[9.49]STAR The following user program (priority 0) is assembled and loaded
+into memory.\\
+
+\begin{verbatim}
+       .ORIG x8000
+       LD R0, Z
+AGAIN  ADD R0, R0, #-1
+       BRnp AGAIN
+       LD R0, W
+       BRp L1
+       LD R0, X
+       TRAP x21
+       BRnzp DONE
+L1     LEA R0, Y
+       TRAP x22
+DONE   HALT
+
+X     .FILL x34
+Y     .STRINGZ "OOOOPS!"
+Z     .FILL x100
+W     .BLKW #1
+      .END
+\end{verbatim}
+
+\noindent
+Before this code executes, two things happen: (a) another program loads a
+value into W, and (b) a breakpoint is set at the address DONE. \\
+
+\noindent
+Then the run switch is hit and the program starts executing. Before the
+computer stops due to the breakpoint, several interrupts occur and their
+corresponding service routines are executed. Finally, the LC-3 stops due to
+the breakpoint. We examine the memory shown, and R6, the supervisor stack
+pointer. \\
+
+\begin{center}
+\begin{tabular}{c|c|}
+\cline{2-2}
+& { }{ }{ }{ }{ }Memory{ }{ }{ }{ }{ }   \\
+  \cline{2-2}
+ x2FF8& x0601 \\ \cline{2-2}
+ x2FF9& x0601 \\ \cline{2-2}
+ x2FFA& x0500 \\ \cline{2-2}
+ x2FFB& x0504 \\ \cline{2-2}
+ x2FFC& x0204 \\ \cline{2-2}
+ x2FFD& x0201 \\ \cline{2-2}
+ x2FFE& x8004 \\ \cline{2-2}
+ x2FFF& x8002 \\ \cline{2-2}
+ x3000& x8010 \\ \cline{2-2}
+ x3001& x8012 \\ \cline{2-2}
+ \end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{c|c|}
+\cline{2-2}
+  \cline{2-2}
+R6 & x3000 \\ \cline{2-2}
+ \end{tabular}
+\end{center}
+
+\noindent
+What does the user program write to the monitor? How do you know that? \\
+
+\item[9.50]STAR Your job in this problem will be to add the missing
+instructions to a program that detects palindromes.  Recall a palindrome is a
+string of characters that are identical when read from left to right or from
+right to left. For example, racecar and 112282211. In this program, we will
+have no spaces and no capital letters in our input string -- just a string of
+lower case letters.\\
+
+The program will make use of both a stack and a queue. The subroutines for
+accessing the stack and queue are shown below.  Recall that elements are
+PUSHed (added) and POPped (removed) from the stack. Elements are ENQUEUEd
+(added) to the back of a queue, and DEQUEUEd (removed) from the front of
+the queue.
+
+\vspace{.2in}
+\begin{figure}[h]
+\begin{minipage}[c]{.6\textwidth}
+\vspace{0pt}
+\begin{alltt}
+                 .ORIG x3050
+         PUSH    ADD R6, R6, #-1
+                 STR R0, R6, #0
+                 RET
+         POP     LDR R0, R6, #0
+                 ADD R6, R6, #1
+                 RET
+         STACK   .BLKW #20
+                 .END
+\end{alltt}
+\end{minipage}\hfill
+\begin{minipage}[c]{.4\textwidth}
+\begin{alltt}
+        .ORIG x3080
+ENQUEUE ADD R5, R5, #1
+        STR R0, R5, #0  
+        RET
+DEQUEUE LDR R0, R4, #0
+        ADD R4, R4, #1
+        RET
+QUEUE   .BLKW #20
+        .END
+\end{alltt}
+\end{minipage}
+\end{figure}
+
+\vspace{.2in}
+\noindent
+The program is carried out in two phases. Phase 1 enables a user to input a
+character string one keyboard character at a time. The character string is
+terminated when the user types the enter key (line feed). In Phase 1, the
+ASCII code of each character input is pushed on a stack, and its negative
+value is inserted at the back of a queue. Inserting an element at the back
+of a queue we call enqueuing. \\
+
+In Phase 2, the characters on the stack and in the queue are examined by
+removing them, one by one from their respective data structures (i.e., stack
+and queue). If the string is a palindrome, the program stores a 1 in memory
+location RESULT. If not, the program stores a zero in memory location RESULT.
+The PUSH and POP routines for the stack as well as the ENQUEUE and DEQUEUE
+routines for the queue are shown below. You may assume the user never inputs
+more than 20 characters.
+
+\begin{center}
+\begin{minipage}[t]{0.5\linewidth}
+\begin{flushleft}
+{
+\begin{alltt}
+        .ORIG X3000
+        LEA   R4, QUEUE
+        LEA   R5, QUEUE
+        ADD   R5, R5, #-1
+        LEA   R6, ENQUEUE        ; Initialize SP
+        LD    R1, ENTER
+        AND   R3, R3, #0     
+        ------------------ (a)
+        TRAP x22
+PHASE1  TRAP x20
+		------------------ (b)
+        BRz PHASE2
+        JSR PUSH
+        ------------------ (c)
+        ------------------ (d)
+        JSR ENQUEUE
+        ADD R3, R3, #1
+        BRnzp PHASE1
+;
+PHASE2  JSR POP
+		------------------ (e)
+        JSR DEQUEUE
+        ADD R1, R0, R1   
+        BRnp FALSE
+        ------------------ (f)
+        ------------------ (g)
+        BRnzp PHASE2
+;
+TRUE    AND R0, R0, #0
+        ADD R0, R0, #1
+        ST R0, RESULT
+        HALT
+FALSE   AND R0, R0, #0
+        ST R0, RESULT
+        HALT
+RESULT  .BLKW #1
+ENTER   .FILL x-0A
+PROMPT  .STRINGZ "Enter an input string: "
+        .END
+\end{alltt}
+}
+\end{flushleft}
+\end{minipage}
+\end{center}
+
+
+\item[9.51]STAR Now that the keyboard interrupt is old stuff for you, it is time to introduce two interrupts for the LC-3: INTA and INTB.  The necessary hardware has been
+added to allow them to happen.  INTA has priority 2 and an interrupt vector of
+x50.  INTB has priority 4 and an interrupt vector of x60. \\
+
+\noindent
+Recall that the priority is specified in bits[10:8] of the PSR.  In fact,
+the full PSR specification is:
+\begin{center}
+\begin{tabular}{rc|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+& \multicolumn{1}{c}{15} & \multicolumn{1}{c}{14} & \multicolumn{1}{c}{13} & \multicolumn{1}{c}{12} & \multicolumn{1}{c}{11} & \multicolumn{1}{c}{10} & \multicolumn{1}{c}{9} & \multicolumn{1}{c}{8} & \multicolumn{1}{c}{7} & \multicolumn{1}{c}{6} & \multicolumn{1}{c}{5} & \multicolumn{1}{c}{4} & \multicolumn{1}{c}{3} & \multicolumn{1}{c}{2} & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{0} \\
+ \cline{2-17}
+PSR: & \multicolumn{1}{|c|}{Pr} & 0 & 0 & 0 & 0 & \multicolumn{3}{ c| }{Priority} & 0 & 0 & 0 & 0 & 0 & N & Z & P \\ 
+\cline{2-17}
+
+\end{tabular}
+%\end{center}
+%                 -----------------------------------------------
+%       PSR:   |Pr| 0 0 0 0 | Priority | 0 0 0 0 0 | N | Z | P |
+%                 -----------------------------------------------
+
+\begin{tabular}{llll}
+& \\
+where & PSR[15] &=& 0 (supervisor mode), 1 (user mode). \\
+      & PSR[14:11] &=& 0000 \\
+      & PSR[10:8] &=& priority, 0 (lowest) to 7 (highest). \\
+      & PSR[7:3] &=& 00000 \\
+      & PSR[2:0] &=& condition codes for N,Z,P\\
+\end{tabular}
+\end{center}
+
+\noindent
+In this problem you are given the user program and the two interrupt service
+routines. The user program starts executing at cycle 1 and runs at priority 0.\\
+
+\begin{tabular}{p{5cm} p{5cm} p{5cm}}
+User program:
+\begin{alltt}
+        .ORIG x3000
+        AND R0,R0,#0
+        ADD R0,R0,#5
+        LD R1,COUNT
+        NOT R0,R0
+        ADD R0,R0,#1
+AGAIN   ADD R2,R0,R1
+        BRz DONE
+        ADD R1,R1,#-1
+        BRnzp AGAIN
+DONE    TRAP x25
+COUNT   .FILL x000F
+        .END
+\end{alltt}
+&
+INTA Service Routine:
+\begin{alltt}
+        .ORIG x1000
+        AND R5,R4,#0
+        ADD R5,R5,#-1
+        LD R3,VAL
+        ADD R3,R3,R5
+        ST R3,VAL
+        RTI
+VAL     .BLKW 1
+        .END
+\end{alltt}
+&
+INTB Service Routine:
+\begin{alltt}
+        .ORIG x2000
+        LDI R4,VAL2
+        NOT R4,R4
+        ADD R4,R4,#1
+        STI R4,VAL2
+        RTI
+VAL2    .FILL xFE08
+        .END
+\end{alltt}
+
+\end{tabular} \\
+\noindent
+Assume both interrupts are enabled.  Assume 22 cycles are needed to initiate an interrupt when you are in user mode; that is, from the time the test is taken until the interrupt service routine starts executing. Assume it takes 21 cycles if you are in privileged (supervisor) mode. You already know from problem 1 the number of cycles
+individual instructions take. \\
+
+\noindent
+In order to support INTA and INTB, the interrupt vector table must have entries.  Show the addresses of these entries and the contents of those memory locations.
+\begin{center}
+\begin{tabular}{|p{3cm}|p{3cm}|}
+\hline
+ Memory address & Content \\ \hline \hline
+ & \\
+ & \\ \hline
+ & \\
+ & \\ \hline
+
+\end{tabular}
+\end{center}
+
+\noindent
+Suppose INTA requests service at cycle 30 and INTB requests service at cycle 68. In which cycle does each \textbf{service routine} start executing? \\
+
+\noindent
+The table below shows the contents of a section of memory (locations
+x2FFA to x3002) before the user program starts executing.  Show the
+contents of these locations and the contents of the Stack Pointer
+in cycle 100. \\
+
+\begin{center}
+\begin{tabular}{c|c|c|}
+\cline{2-3}
+& { }{ }{ }{ }{ }Initial{ }{ }{ }{ }{ } & At the end of  \\
+&         & cycle 100 \\
+  \cline{2-3}
+ x2FFA& x0001 &\\
+ & &\\ \cline{2-3}
+ x2FFB& x0010&\\
+ & &\\ \cline{2-3}
+ x2FFC& x0100&\\
+ & &\\ \cline{2-3}
+ x2FFD& x1000&\\
+ & &\\ \cline{2-3}
+ x2FFE& x1100&\\
+ & &\\ \cline{2-3}
+ x2FFF& x1110&\\
+ & &\\ \cline{2-3}
+ x3000& x5020&\\
+ & &\\ \cline{2-3}
+ x3001& x1025&\\
+ & &\\ \cline{2-3}
+ x3002& x2207&\\
+ & &\\ \cline{2-3}
+Stack& x3000 &\\
+Pointer & &\\ \cline{2-3}
+\end{tabular} 
+\end{center}
+
+\item[9.52]STAR Consider a two player game where the players must think quickly
+each time it is their turn to make a move.  Each player has a total allotted
+amount of time to make all his/her moves.  Two clocks display the remaining
+time for each player.  While a player is thinking of his/her move, his clock
+counts down.  If time runs out, the other player wins.  As soon as a player
+makes his/her move, he hits a button, which serves to stop counting down his
+clock and start counting down the other player's clock. \\
+
+\noindent
+The program on the next page implements this mechanism.  The main program keeps
+track of the time remaining for each player by decrementing the proper counter
+once per second while the player is thinking.  When a player's counter reaches
+zero, a message is printed on the screen declaring the winner.  When a player
+hits the button, an interrupt is taken.  The interrupt service routine takes
+such action as to enable the main program (after returning from the interrupt)
+to start decrementing the other counter. \\
+
+\noindent
+The interrupt vector for the button is x35.  The priority level of the button
+is \#2.  Assume that the operating system has set the Interrupt Enable bit of the button to enable it to interrupt.  Assume the main program runs at priority \#1 and executes in user mode. \\
+
+\noindent
+In order for the interrupt service routine to be executed when
+the button is pushed, what memory location must contain what value? \\
+
+\vspace{.15in}
+\noindent
+Assume a player hits the button while the instruction at line 16
+is being executed.  What two values (in hex) will be pushed on the stack? \\
+
+\vspace{.15in}
+\noindent
+Fill in the missing instructions in the user program. \\
+
+\noindent
+This program has a bug that will only occur if an interrupt is taken at an inappropriate time. Write down the line number of an instruction such that if the button is pressed while that instruction is executing, unintended behavior will result.
+\\
+
+\noindent
+How could we fix this bug?
+
+\begin{alltt}
+; Interrupt Service Routine
+       .ORIG x1550
+       NOT   R0, R0
+       RTI
+       .END
+
+; User Program
+       .ORIG x3000
+       AND   R0, R0, #0      ; Line 1
+       LD    R1, TIME        ; Line 2
+       LD    R2, TIME        ; Line 3
+
+NEXT   -------------------- (a)
+	   -------------------- (b)
+       BRn   P2_DEC          ; Line 6
+       ADD   R1, R1, #-1     ; Line 7
+       ------------------- (c)
+       LEA   R0, P2WINS      ; Line 9
+       BRnzp END             ; Line 10
+P2_DEC ADD   R2, R2, #-1     ; Line 11
+	   ------------------- (d)
+       LEA   R0, P1WINS      ; Line 13
+END    PUTS                  ; Line 14
+       HALT                  ; Line 15
+COUNT  LD    R3, SECOND      ; Line 16
+LOOP   ADD   R3, R3, #-1     ; Line 17
+       BRp   LOOP            ; Line 18
+       ------------------- (e)
+TIME   .FILL    #300
+SECOND .FILL    #25000     ; 1 second
+P1WINS .STRINGZ "Player 1 Wins."
+P2WINS .STRINGZ "Player 2 Wins."
+       .END
+\end{alltt}
+
+\item[9.53]STAR A program is running in privilege mode (PSR[1]] = 0). We set a breakpoint at location x2000. The operator immediately pushes the run button. What are the subsequent MAR/MDR values? 
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|@{\hspace{0.2in}}c@{\hspace{0.2in}}||@{\hspace{0.2in}}c@{\hspace{0.2in}}|}
+\hline
+{\bf MAR}  & {\bf MDR}   \\[0.2in] \hline  \hline
+      & x8000 \\[0.2in] \hline
+      & x1050 \\[0.2in] \hline
+      & x0004 \\[0.2in] \hline
+      & xBCAE \\[0.2in] \hline
+      &       \\[0.2in] \hline
+x2800 & x2C04 \\[0.2in] \hline
+      &       \\[0.2in] \hline
+x1052 & x3C4D \\[0.2in] \hline
+      & x2C0A \\[0.2in] \hline 
+\end{tabular}
+\end{table}
+
+\end{exercises}
+\end{document}

@@ -1,0 +1,1807 @@
+\documentclass{patt}
+\usepackage{longtable}
+\usepackage[section]{placeins}
+\usepackage{xr}
+\usepackage{alltt}
+\usepackage{longtable}
+\graphicspath{{../art/ch06/},{../art/designelements/},{../art/designelements/UnNumberedArt/}}
+
+\setcounter{part}{1}
+\setcounter{chapter}{5}
+\setcounter{page}{155}
+
+ \makeatletter
+ \def\@makechapterhead#1{%
+  \begingroup
+  \parindent \z@%
+  \vspace*{-8.5\p@}%
+  \begin{picture}(0,0)
+    \put(432,-577){\includegraphics[width=0.723333in,height=9.52667in]{PattChp.eps}}
+    \put(428,-577){\rule{1\p@}{9.52667in}}
+    \put(381.5,-181){\vbox{%
+        \includegraphics{PattIcon1\ifnum\value{part}=4
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon2\ifnum\value{part}=4
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon3\ifnum\value{part}=4
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon4\ifnum\value{part}=4
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon5\ifnum\value{part}=4
+            a\else b\fi.eps}\vspace{1pc}}}
+  \end{picture}%
+  \settowidth{\chapternumberwidth}{\fontsize{12}{12}\selectfont\industriasolid\trackonefifty{chapter}}%
+  \hfill\parbox{\chapternumberwidth}{%
+    \centering\industriasolid
+    \centerline{\hss\fontsize{12}{12}\selectfont\trackonefifty{chapter}\hss}\par\vspace{1.5pc}
+    \centerline{\sans\fontsize{72}{12}\selectfont\colour\thechapter}}
+  \par
+  \vspace{6.48pc}
+  {\industriasolid\fontsize{30}{32}\selectfont\trackten{#1}\par}%
+  \vspace{1.5pc}%
+  {\colour\rule{36.4pc}{4\p@}}
+  \vspace{4pt}
+  \endgroup}
+\makeatother
+
+\begin{document}
+
+\chapter{Programming}
+\label{chapt:programming}
+
+We are now ready to develop programs to solve problems with
+the computer. In this chapter we attempt to do two things: first, we
+develop a methodology for constructing programs to solve problems 
+(Section 6.1, Problem Solving), and second, we develop a methodology 
+for fixing those programs 
+(Section 6.2, Debugging) under the likely
+condition that we did not get everything right the first time.  
+
+There is a long tradition that the errors present in programs are referred 
+to as {\em bugs}, and the process of removing those errors is called
+{\em debugging}.  The opportunities for introducing bugs into a 
+complicated program are
+so great that it usually takes much more time to get the program to
+work correctly (debugging) than it does to create the program in 
+the first place.
+
+\enlargethispage{-\baselineskip}
+%\vspace{-12pt}
+\vspace{-20pt}
+%6.1
+\section{Problem Solving}
+\subsection{Systematic Decomposition}
+
+\looseness=1 Recall from Chapter~1 that in order for electrons to
+solve a problem, we need to go through several levels of
+transformation to get from a natural language description of the
+problem (in our case English, although many of you might prefer
+Italian, Mandarin, Hindi, or something else) to something electrons
+can deal with. Once we have a natural language description of the
+problem, the next step is to transform the problem statement into an
+algorithm. That is, the~next~step is to transform the problem
+statement into a step-by-step procedure that has the properties of
+definiteness (each step is precisely stated), effective computability 
+(each step can be carried out by a computer), and finiteness (the 
+procedure terminates).
+
+In the late 1960s, the concept of {\em structured programming} emerged
+as a way to dramatically improve the ability of average programmers to take a
+complex description of a problem and systematically decompose it into
+smaller and smaller manageable units so that they could ultimately
+write a program that executed correctly.  The methodology has also
+been called {\em systematic decomposition} \index{systematic decomposition} 
+because the larger tasks are systematically broken down into smaller ones.
+
+We will find the systematic decomposition model a useful technique
+for designing computer programs to carry out complex tasks.
+
+%6.1.2
+\subsection{The Three Constructs: Sequential, Conditional, Iterative}
+
+%MATT: Is it possible to break this line so that second line starts with
+% Sequential
+
+%Figure 6.1
+\begin{figure}[b]
+\vspace{-6pt}
+\centerline{\includegraphics{pat67509_0601.eps}}
+\caption{The basic constructs of structured
+programming}
+\label{fig:structured_prog}
+\end{figure}
+
+Systematic decomposition is the process of taking a task, that is,
+a unit of work (see Figure~6.1a), and breaking it into
+smaller units of work such that the collection of smaller units
+carries out the same task as the one larger unit.  The idea is
+that if one starts with a large, complex task and applies this
+process again and again, one will end up with very small units of
+work, and consequently, be able to easily write a program to carry
+out each of these small units of work. The process is also
+referred to as {\em stepwise refinement,} \index{step-wise
+refinement} because the process is applied one step at a time, and
+each step refines one of the tasks that is still too complex into
+a collection of simpler subtasks.
+
+The idea is to replace each larger unit of work with a construct
+that correctly decomposes it.  There are basically three
+constructs for doing this: {\em sequential, conditional,} and {\em
+iterative}.
+
+The {\bf sequential} construct (Figure~6.1b) is the one to use if
+the designated task can be \index{sequential construct}
+broken down into two subtasks, one following the other. That is, the
+computer is to carry out the first subtask completely, {\em then} go
+on and carry out the second subtask completely--- {\em never} going back
+to the first subtask after starting the second subtask.
+
+The {\bf conditional} construct (Figure~6.1c) is the one to use if
+the task consists of
+\index{conditional construct}
+doing one of two subtasks but not both, depending on some condition.
+If the condition is true, the computer is to carry out one subtask.
+If the condition is not true, the computer is to carry out a different
+subtask. Either subtask may be vacuous, that is, 
+it may {\em do nothing}.  
+Regardless, after the correct subtask is completed, the
+program moves onward. The program never goes back and retests the
+condition.
+
+The {\bf iterative} construct (Figure~6.1d) is the one to use if
+the task consists of
+\index{iterative construct}
+doing a subtask a number of times, but only as long as some condition
+is true.  If the condition is true, do the subtask. After the subtask
+is finished, go back and test the condition again. As long as the result
+of the condition tested is true, the program continues to carry out the
+same subtask again and again.  The first time the test is not true, 
+the program proceeds onward.
+
+Note in Figure~6.1 that whatever the task of Figure~6.1a, work
+starts with the arrow into the top of the ``box'' representing
+the task and finishes with the arrow out of the bottom of the
+box. There is no mention of what goes on {\em inside} the box.
+In each of the three possible decompositions of Figure~6.1a
+(i.e., Figures~6.1b,~1c, and~1d), there is exactly {\em one entrance
+into the construct} and exactly  {\em one exit out of the construct}.
+Thus, it is easy to replace any task of the form of Figure~6.1a
+with whichever of its three decompositions apply. We will see
+how with several examples.
+
+%6.1.3
+\subsection{LC-3 Control Instructions to Implement
+  the~Three~Constructs}
+
+Before we move on to an example, we illustrate in
+Figure~6.2 the use of \hbox{LC-3} control instructions to direct the
+program counter to carry out each of the three decomposition
+constructs. That is, Figures~6.2b, 6.2c, and~6.2d correspond
+respectively to the three constructs shown in Figures~6.1b,
+6.1c, and~6.1d.
+
+%Figure 6.2
+\begin{figure}
+\centerline{\includegraphics{pat67509_0602.eps}}
+\caption{Use of LC-3 control instructions to
+implement structured programming}
+\label{fig:control}
+\vspace{6pt}
+\end{figure}
+
+We use the letters A, B, C, and D to represent addresses in memory
+containing LC-3 instructions. The letter A, for example, 
+represents the address of the first LC-3 instruction to
+be executed in all three cases, since it is the starting address of the
+task to be decomposed (shown in Figure~6.2a).
+
+Figure~6.2b illustrates the control flow of the sequential
+decomposition.  Note that no control instructions are needed since
+the PC is incremented from Address B$_1$ to Address B$_1+$1.  The
+program continues to execute instructions through address D$_1$.
+It does not return to the first subtask.
+
+Figure~6.2c illustrates the control flow of the conditional
+decomposition.  First, a condition is generated, resulting in
+the setting of one of the condition codes.  This condition is
+tested by the conditional branch instruction at Address B$_2$. If
+the condition is true, the PC is set to Address C$_2{+}1$, and subtask
+1 is executed. (Note: $x$ equals 1 + the number of instructions
+in subtask 2.)  If the condition is false, the
+PC (which had been incremented during the FETCH phase of the
+branch instruction) fetches the instruction at Address B$_2+$1,
+and subtask 2 is executed. Subtask 2 terminates in a branch
+instruction that at Address C$_2$ unconditionally branches to D$_2+$1.
+(Note: $y$ equals the number of instructions in subtask~1.)
+
+Figure~6.2d illustrates the control flow of the iterative
+decomposition. As in the case of the conditional construct,
+first a condition is generated, a condition code is set,
+and a conditional branch instruction is executed. In this case, the
+condition bits of the instruction at address B$_3$ are set to
+cause a conditional branch if the condition generated is false.
+If the condition is false, the PC is set to address D$_3+$1.
+(Note: $z$ equals 1 + the number of instructions in the subtask in
+Figure~6.2d.) On the other hand, as long as the
+condition is true, the PC will be incremented to B$_3+$1, and
+the subtask will be executed. The subtask terminates in an
+unconditional branch instruction at address D$_3$, which sets
+the PC to A to again generate and test the condition.
+(Note: $w$ equals the 
+total number of instructions in the decomposition shown as Figure~6.2d.)
+
+Now, we are ready to move on to an example.
+
+
+%6.1.4
+\subsection{The Character Count Example from Chapter~5, Revisited}
+
+Recall the example of Section 5.5. The
+statement of the problem is as follows:
+"We wish to input a character from the keyboard, count the number of 
+occurrences of that character in a file, and display that count on the 
+monitor."
+
+
+The systematic decomposition of this English language statement of the
+problem to the final LC-3 implementation is shown in Figure~6.3.
+Figure~6.3a is a brief statement of the problem.
+
+%Figure 6.3 a,b
+\begin{figure}
+\centerline{\includegraphics{pat67509_0603ab.eps}}
+\caption{Stepwise refinement of the character
+count program}
+\label{fig:count1}
+\vspace{-6pt}
+\end{figure}
+
+%Figure 6.3c,d
+\setcounter{figure}{2}
+\begin{figure}
+\centerline{\includegraphics{pat67509_0603cd.eps}}
+\caption{Stepwise refinement of the character
+count program ({\bf continued})}
+\label{fig:count1}
+\end{figure}
+
+%Figure 6.3e
+\setcounter{figure}{2}
+\begin{figure}
+\centerline{\includegraphics{pat67509_0603e.eps}}
+\caption{Stepwise refinement of the character
+count program ({\bf continued})}
+\label{fig:count1}
+\end{figure}
+
+In order to solve the problem, it is always a good idea first to
+examine exactly what is being asked for, and what is available
+to help solve the problem. In this case, the statement of
+the problem says that we will get the character of interest from the
+keyboard, and that we must examine all the characters in a file and
+determine how many are identical to the character obtained from the
+keyboard.  Finally, we must output the result.
+
+To do this, we will need to examine in turn all the characters in a file, we 
+will need to compare each to the character we input from the keyboard, and 
+we will need a counter to increment each time we get a match. 
+
+We will need registers to hold all these pieces of information:
+
+\begin{enumerate}[4.]
+\item[1.]
+The character input from the keyboard.
+\item[2.]
+Where we are (a pointer) in our scan of the file.
+\item[3.]
+The character in the file that is currently being examined.
+\item[4.]
+The count of the number of occurrences.
+\end{enumerate}
+We will also need to know when we have reached the end of the file.
+
+The problem decomposes naturally (using the sequential construct) into
+three parts as shown in Figure~6.3b: (A) initialization,
+which includes keyboard input of the character to be ``counted,''
+(B) the process of determining how many occurrences of
+the character are present in the file, and (C) displaying the
+count on the monitor.
+
+We have seen the importance of proper initialization in several
+examples already.  Before a computer program can get to the crux
+of the problem, it must have the correct initial values.  These
+initial values do not just show up in the GPRs by magic.  They
+get there as a result of the first set of steps in every algorithm:
+the initialization of its variables.
+
+In this particular algorithm, initialization (as we said in Chapter~5)
+consists of starting the counter at 0, setting the pointer to the address
+of the first character in the file to be examined, getting an input character
+from the keyboard, and getting the first character from the file.
+Collectively, these four steps comprise the initialization of the algorithm
+shown in Figure~6.3b as A.
+
+Figure~6.3c decomposes B into an iteration construct, such that as
+long as there are characters in the file to examine, the loop
+iterates. B1 shows what gets accomplished in each iteration. The
+character is tested and the count incremented if there is a match.
+Then the next character is prepared for examination. Recall from
+Chapter~5 that there are two basic techniques for controlling the
+number of iterations of a loop: the sentinel method and the use of a counter.  
+Since we are unlikely to know how many characters there are in a random
+file, and since each file ends with an end of text (EOT) character, our choice
+is obvious.  We use the sentinel method, i.e., testing each character to
+see if we are examining a character in the file or the EOT character.
+
+Figure~6.3c also shows the initialization step in greater detail. Four
+LC-3 registers
+(R0, R1, R2, and R3) have been specified to handle the four requirements
+of the algorithm: the input character from the keyboard, the current
+character being tested, the counter, and the pointer to the next
+character to be tested.
+
+Figure~6.3d decomposes both B1 and C using the sequential construct in
+both cases.
+In the case of B1, first the current character is tested (B2), and the
+counter incremented if we have a match, and then the next character is
+fetched (B3).  In the case of C, first the count is prepared for
+display by converting it from a 2's complement integer to an ASCII code (C1),
+and then the actual character output is performed (C2).
+
+Finally, Figure~6.3e completes the decomposition, replacing B2
+with the elements of the condition construct and B3 with the
+sequential construct (first the pointer is incremented, and
+then the next character to be scanned is loaded).
+
+The last step (and usually the easiest part) is to write the LC-3 code
+corresponding to each box in Figure~6.3e.  Note that Figure~6.3e is
+essentially identical to Figure~5.16 of Chapter~5 (except now you know
+where it all came from!).
+
+\lightbulb[3pc] Before leaving this topic, it is worth pointing
+out that it is not always possible to understand everything at the
+outset. When you find that to be the case, it is not a signal
+simply to throw up your hands and quit. In such cases (which
+realistically are most cases), you should see if you can make
+sense of a piece of the problem, and expand from there. Problems
+are like puzzles; initially they can be opaque, but the more you
+work at it, the more they yield under your attack. Once you do
+understand what is given, what is being asked for, and how to
+proceed, you are ready to return to square one (Figure~6.3a) and
+restart the process of systematically decomposing the problem.
+
+%6.2
+\section{Debugging}
+
+Debugging a program is pretty much applied common sense.
+A simple \index{debugging}
+example comes to mind: You are driving to a place you have never
+visited, and somewhere along the way you made a wrong turn. What do
+you do now? One common ``driving debugging'' technique is to wander
+aimlessly, hoping to find your way back. When that does not work,
+and you are finally willing to listen to the person sitting next to you, you
+turn around and return to some ``known'' position on the route. Then,
+using a map (very difficult for some people), you follow the directions
+provided, periodically comparing where you are (from landmarks you see
+out the window) with where the map says you should be, until you reach
+your desired destination.
+
+Debugging is somewhat like that.  A logical error in a program can make
+you take a wrong turn.  The simplest way to keep track of where you are
+as compared to where you want to be is to {\em trace} the program.
+\index{trace}
+This consists of keeping track of the {\bf sequence} of instructions
+that have been executed and the {\bf results} produced by each
+instruction executed.  When you examine the sequence of instructions
+executed, you can detect errors in the flow of the program.
+When you compare what each instruction has done to what it is supposed
+to do, you can detect logical errors in the program.  In short, when
+the behavior of the program as it is executing is different from
+what it should be doing, you know there is~a~bug.
+
+A useful technique is to partition the program into parts, often
+referred to as {\em modules}, and examine the results that have been
+\index{modules}
+computed at the end of execution of each module.  In fact, the structured programming
+approach discussed in Section~6.1 can help you determine where in the
+program's execution you should examine results.  This allows you to
+systematically get to the point where you are focusing your attention on
+the instruction or instructions that are causing the problem.
+
+%6.2.1
+\subsection{Debugging Operations}
+
+Many sophisticated debugging tools are offered in the
+marketplace, and undoubtedly you will use many of them in the years
+ahead.  In Chapter 15, for example, we will examine debugging techniques 
+using a source-level debugger for C.  
+
+Right now, however, we wish to stay at the level of the machine architecture, 
+so we will see what we can accomplish with a few very elementary 
+interactive debugging operations.  We will set breakpoints, single-step,
+and examine the state of a program written in the LC-3 ISA.
+
+In Chapter 15, We will see these same concepts again: breakpoints, 
+single-stepping, and examining program state that we are introducing here,
+but applied to a C program, instead of the 0s and 1s of a program written
+in the LC-3 ISA.
+
+When debugging interactively, the user sits in front of
+the keyboard and monitor and issues commands to the computer.  In our
+case, this means operating an LC-3 simulator, using the menu available
+with the simulator.  It is important to be able to:
+
+\begin{enumerate}
+\item[1.]
+Write values into memory locations and into registers.
+\item[2.]
+Execute instruction sequences in a program.
+\item[3.]
+Stop execution when desired.
+
+\item[4.]
+Examine what is in memory and registers at any point in the
+program.
+\end{enumerate}
+These few simple operations will go a long way toward
+debugging programs.
+
+\subsubsection{Set Values}
+In order to test the execution of a part of a program in isolation 
+without having to worry about parts of the program that come before it,
+it is useful to first write values in memory and in registers that would
+have been written by earlier parts of the program.  For example,
+suppose one module in your program supplies input from a keyboard, and a
+subsequent module operates on that input.  Suppose you want to test the
+second module before you have finished debugging the first module.  If
+you know that the keyboard input module ends up with an ASCII code in
+R0, you can test the module that operates on that input by first writing 
+an ASCII code into R0.
+
+\subsubsection{Execute Sequences}
+It is important to be able to execute a sequence of instructions and
+then stop execution in order to examine the values that the program
+has computed as a result of executing that sequence.  Three simple mechanisms 
+are usually available for doing this: run, step, and set breakpoints.
+
+The {\bf Run} command causes the program to execute until something
+makes it stop.  This can be either a HALT instruction or a breakpoint.
+
+The {\bf Step} command causes the program
+to execute a fixed number of instructions and then stop.  The
+interactive user enters the number of instructions he/she wishes
+the simulator to execute before it stops.  When that number is
+1, the computer executes one instruction, then stops.  Executing
+one instruction and then stopping is called {\em single-stepping}.
+It allows the person debugging the
+\index{single stepping}
+program to examine the individual results of each instruction
+executed.
+
+The {\bf Set Breakpoint} command causes the program to stop execution
+at a specific instruction in a program. Executing the debugging
+command Set Breakpoint consists of adding an address to a list
+maintained by the simulator.  During the FETCH phase of each instruction,
+the simulator compares the PC with the addresses in that list.  If
+there is a match, execution stops. Thus, the effect of setting a
+breakpoint is to allow execution to proceed until the PC contains
+an address that has been set as a breakpoint.  This is useful if one wishes to
+know what has been computed up to a particular point in the program.
+One sets a breakpoint at that address in the program and executes the
+Run command.  The program executes until that point and then stops so
+the user can examine what has been computed up to that point. (When
+one no longer wishes to have the program stop execution at that
+point, the breakpoint can be removed by executing the Clear Breakpoint
+command.)
+
+\subsubsection{Display Values}
+Finally, it is useful to examine the results of execution when the
+simulator has stopped execution.  The Display command allows the
+user to examine the contents of any memory location or any register.
+
+%6.2.2
+\subsection{Use of an Interactive Debugger}
+
+We conclude this chapter with four examples, showing how the use of
+interactive debugging operations can help us find errors in a
+program.  We have chosen the following four errors: (1) incorrectly
+setting the loop control so that the loop executes an incorrect number
+of times, (2) confusing the load instruction 0010, which loads a
+register with the {\em contents} of a memory location, with the load
+effective address instruction 1110, which loads a register with the
+{\em address} of~a~memory location, (3) forgetting which instructions set
+the condition codes, resulting in a~branch instruction testing the
+wrong condition, and (4) not covering all possible cases of input
+values.
+
+\subsubsection{Example 1: Multiplying Without a Multiply Instruction}
+
+Let's start with an example we have seen before, multiplying two 
+positive integers when the computer (such as the LC-3) does not have 
+a multiply instruction.  This time we will assume the two integers to be 
+multiplied are in R4 and R5,
+and the result of execution (the product of those two integers) will be
+put in R2.  Figure~6.4 shows the program we have written to do the job. 
+
+\FloatBarrier
+%Figure 6.4
+\setcounter{figure}{3}
+\begin{figure}
+\begin{minipage}{36pc}
+\noindent\small
+{\renewcommand{\tabcolsep}{5pt}
+\begin{tabular}{@{}l c c c c c c c c c c c c c c c c r}
+%\multicolumn{17}{c}{(a)}\\[4pt]
+Address & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3  & 2 & 1 & 0 \\
+\cline{2-17}
+x3200 & \multicolumn{1}{|c}{0} & 1 & 0 & \multicolumn{1}{c|}{1} & 0 & 1 & \multicolumn{1}{c|}{0} & 0 & 1 & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{1} & 0 & 0 & 0 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries R2 <- 0 }\\
+\cline{2-17}
+x3201 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 1 & \multicolumn{1}{c|}{0} & 0 & 1 & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0} & 0 & \multicolumn{1}{c|}{0} & 1 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries R2 <- R2 + R4}\\
+\cline{2-17}
+x3202 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & 1 & 0 & \multicolumn{1}{c|}{1} & 1 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{c|}{1} & 1 & 1 & 1 & 1 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries R5 <- R5 - 1}\\
+\cline{2-17}
+x3203 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{0} & 0 & 1 & \multicolumn{1}{c|}{1} & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries BRzp x3201}\\
+\cline{2-17}
+x3204 & \multicolumn{1}{|c}{1} & 1 & 1 & \multicolumn{1}{c|}{1} & 0 & 0 & 0 & \multicolumn{1}{c|}{0} & 0 & 0 & 1 & 0 & 0 & 1 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries HALT}\\
+\cline{2-17}
+\end{tabular}
+\caption{Debugging Example 1.  An LC-3 program to multiply (without~a
+  Multiply instruction).
+\label{fig:onlinedebug_code}}}
+\end{minipage}
+\end{figure}
+
+If we examine the program instruction by instruction, we note that
+the program first clears R2 (that is, initializes R2 to 0) and then
+attempts to perform the multiplication by adding R4 to itself a number
+of times equal to the initial value in R5.  Each time an add is performed,
+R5 is decremented.  When ${\rm R}5=0$, the program terminates.
+
+It looks like the program should work!  Upon execution, however, we find that 
+if R4 initially contains the integer 10 and R5 initially contains the 
+integer 3, the program produces the result 40.  What went wrong?
+
+Our first thought is to trace the program.  Before we do that, we note
+that the program assumes positive integers in R4 and R5.  Using the
+Set Values command, we put the value 10 in R4 and the value 3
+in R5.
+
+It is also useful to annotate each instruction with some algorithmic
+description of {\bf exactly} what each instruction is doing.  While
+this can be very tedious and not very helpful in a 10,000 instruction
+program, it often can be very helpful after one has isolated a bug to
+within a few instructions.  There is a big difference between quickly
+eyeballing a sequence of instructions and stating precisely what each
+instruction is doing.  Quickly eyeballing often results in mistaking
+what one eyeballs!  Stating precisely usually does not.  We have included 
+in Figure~6.4, next to each instruction, such an annotation.
+
+\FloatBarrier
+Figure~6.5a shows a trace of the program, which we can obtain by
+single-stepping. The column labeled {\em PC} shows the contents of
+the PC at the start of each instruction.  R2, R4, and R5 show the
+values in those three registers at the start of each instruction.
+
+%Figure 6.5
+\setcounter{figure}{4}
+\begin{figure}
+\begin{minipage}{36pc}
+\noindent\small
+{\renewcommand{\tabcolsep}{5pt}
+\noindent\hspace*{60.5pt}\begin{tabular}{| c | c | c | c |}
+\multicolumn{4}{c}{(a)}\\[4pt]\hline
+PC    & R2   &  R4   &  R5 \\
+\hline
+x3201 & 0    &  10  &   3  \\
+x3202 & 10   &  10  &   3  \\
+x3203 & 10   &  10  &   2  \\
+x3201 & 10   &  10  &   2  \\
+x3202 & 20   &  10  &   2  \\
+x3203 & 20   &  10  &   1  \\
+x3201 & 20   &  10  &   1  \\
+x3202 & 30   &  10  &   1  \\
+x3203 & 30   &  10  &   0  \\
+x3201 & 30   &  10  &   0  \\
+x3202 & 40   &  10  &   0  \\
+x3203 & 40   &  10  &   $-$1 \\
+x3204 & 40   &  10  &   $-$1 \\
+\hline
+      & 40   &  10  &   $-$1 \\
+\hline
+\end{tabular}%
+\hspace*{36pt}%
+\begin{tabular}{| c | c | c | c |}
+\multicolumn{4}{c}{(b)}\\[4pt]\hline
+PC    & R2   &  R4   &  R5 \\
+\hline
+x3203 & 10   &  10  &   2  \\
+x3203 & 20   &  10  &   1  \\
+x3203 & 30   &  10  &   0  \\
+x3203 & 40   &  10  &   $-$1 \\
+\hline
+\end{tabular}
+\vspace{4pt}
+\caption{Debugging Example 1. (a) A trace of the Multiply program.  (b)
+  Tracing with breakpoints.\label{fig:onlinedebug_debug}}}
+\end{minipage}
+\end{figure}
+
+A quick look at the trace shows that the loop body was executed 
+four times, rather than three.  That suggests that the condition codes 
+for our branch instruction could have been set incorrectly.  From there 
+it is a short step to noting that the branch should have been taken only 
+when R5 was positive, and not when R5 is 0.  That is, bit[10]=1 in the 
+branch instruction caused the extra iteration of the loop.
+
+\FloatBarrier
+The program can be corrected by simply replacing the instruction
+at x3203 with\vadjust{\smallskip}
+$$
+\mbox{\renewcommand{\tabcolsep}{6pt}
+\begin{tabular}
+{cccccccccccccccc}
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\hline
+\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{0}&
+\multicolumn{1}{|c}{0}&
+\multicolumn{1}{c}{0}&
+\multicolumn{1}{c}{1}&
+\multicolumn{1}{|c}{1}&
+\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{1}&
+\multicolumn{1}{c}{0}&
+\multicolumn{1}{c|}{1}\\
+\hline
+\multicolumn{4}{c}{BR} &
+\multicolumn{1}{c}{n} &
+\multicolumn{1}{c}{z} &
+\multicolumn{1}{c}{p} &
+\multicolumn{9}{c}{$-$3} \\
+\end{tabular}}
+$$
+\smallskip
+
+\noindent We should also note that we could have saved a lot of the work of
+tracing the program by using a breakpoint.  That is, instead of examining
+the results of {\bf each instruction,} if we set a breakpoint at x3203,
+we would examine the results of {\bf each iteration} of the loop.  
+Setting a breakpoint to stop the program after each iteration of the loop 
+is often enough to have us see the problem (and debug the program) without
+the tedium of single-stepping each iteration of the loop.  Figure~6.5b
+shows the results of tracing the program, where each step is one iteration
+of the loop.  We see that the loop executed four times instead of three,
+immediately identifying the bug.
+
+One last comment before we leave this example.  Before we started
+tracing the program, we initialized R4 and R5 with values 10 and 3.
+When testing a program, it is important to judiciously choose the
+initial values for the test.  Here, the program stated that the
+program had to work only for positive integers.  So, 10 and 3 are
+probably OK.  What if a (different) multiply program had been
+\lightbulb[-6pt]
+written to work for all integers?  Then, we could have tried initial
+values of $-$6 and 3, 4 and $-$12, and perhaps $-$5 and $-$7.  The
+problem with this set of tests is that we have left out one of the
+most important initial values of all: 0.  For the program to work for
+``all'' integers, it has to work for 0 as well.  The point is that,
+for a program to work, it must work for all valid source operands, 
+and a good test of
+such a program is to set source operands to the unusual values,
+the ones the programmer may have failed to consider.  These values are
+often referred to colloquially as {\em corner\break cases}, and more
+often that not are the values for which the program does not operate
+correctly. 
+
+\subsubsection{Example 2: Adding a Column of Numbers}
+The program of Figure~6.6 is supposed to add the numbers stored
+in the 10 locations starting with x3100, and leave the result
+in R1.  
+
+\FloatBarrier
+%Figure 6.6
+\setcounter{figure}{5}
+\begin{figure}[p]
+\vspace{-12pt}
+\noindent\small
+\begin{minipage}{36pc}
+\begin{center}
+\renewcommand{\tabcolsep}{5pt}%
+\begin{tabular}{@{}l c c c c c c c c c c c c c c c c l }
+%\multicolumn{18}{c}{(a)}\\[4pt]
+Address & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3  & 2 & 1 & 0 \\
+\cline{2-17}
+x3000 & \multicolumn{1}{|c}{0} & 1 & 0 & \multicolumn{1}{c|}{1} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{c|}{1} & 0 & 0 & 0 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries R1 <- 0} \\
+\cline{2-17}
+x3001 & \multicolumn{1}{|c}{0} & 1 & 0 & \multicolumn{1}{c|}{1} & 1 & 0 & \multicolumn{1}{c|}{0} & 1 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{1} & 0 & 0 & 0 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries R4 <- 0} \\
+\cline{2-17}
+x3002 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & 1 & 0 & \multicolumn{1}{c|}{0} & 1 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{1} & 0 & 1 & 0 & 1 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries R4 <- R4 + 10} \\
+\cline{2-17}
+x3003 & \multicolumn{1}{|c}{0} & 0 & 1 & \multicolumn{1}{c|}{0} & 0 & 1 & \multicolumn{1}{c|}{0} & 0 & 1 & 1 & 1 & 1 & 1 & 1 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries R2 <- M[x3100]} \\
+\cline{2-17}
+x3004 & \multicolumn{1}{|c}{0} & 1 & 1 & \multicolumn{1}{c|}{0} & 0 & 1 & \multicolumn{1}{c|}{1} & 0 & 1 & \multicolumn{1}{c|}{0} &  0  & 0 & 0 & 0 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries R3 <- M[R2]} \\
+\cline{2-17}
+x3005 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 1 & \multicolumn{1}{c|}{0} & 0 & 1 & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{1} & 0 & 0 & 0 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries R2 <- R2 + 1} \\
+\cline{2-17}
+x3006 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{c|}{0} & 0 & \multicolumn{1}{c|}{0} & 0 & 1 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries R1 <- R1 + R3} \\
+\cline{2-17}
+x3007 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & 1 & 0 & \multicolumn{1}{c|}{0} & 1 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{1} & 1 & 1 & 1 & 1 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries R4 <- R4 - 1} \\
+\cline{2-17}
+x3008 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & 1 & 1 &         1          &         1          & 1 & 1 & 0 & 1 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries BRp x3004} \\
+\cline{2-17}
+x3009 & \multicolumn{1}{|c}{1} & 1 & 1 & \multicolumn{1}{c|}{1} & 0 & 0 & 0 & \multicolumn{1}{c|}{0} & 0 &         0          &         1          & 0 & 0 & 1 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries HALT} \\
+\cline{2-17}
+\end{tabular}
+\end{center}
+\caption{Debugging Example 2.  An LC-3 program to add 10 integers.} 
+\end{minipage}
+\end{figure}
+
+\FloatBarrier
+The contents of the 20 memory locations starting at
+location x3100 are shown in Figure~6.7.
+
+%Figure~6.7
+\begin{figure}[p]
+\begin{center}
+\small
+\begin{tabular}{@{}| c | c |}
+\multicolumn{2}{c}{}\\[4pt]\hline
+Address& Contents \\
+\hline
+x3100 &  x3107\\
+x3101 &  x2819\\
+x3102 &  x0110\\
+x3103 &  x0310\\
+x3104 &  x0110\\
+x3105 &  x1110\\
+x3106 &  x11B1\\
+x3107 &  x0019\\
+x3108 &  x0007\\
+x3109 &  x0004\\
+x310A &  x0000\\
+x310B &  x0000\\
+x310C &  x0000\\
+x310D &  x0000\\
+x310E &  x0000\\
+x310F &  x0000\\
+x3110 &  x0000\\
+x3111 &  x0000\\
+x3112 &  x0000\\
+x3113 &  x0000\\
+\hline
+\end{tabular}
+\end{center}
+\caption{Contents of memory locations x3100 to x3113 for
+Debugging Example 2}
+\vspace{50pt}
+\end{figure}
+
+\FloatBarrier
+The program should work as follows.  The instructions in x3000 to
+x3003 initialize the variables.  In x3000, the sum (R1) is
+initialized to 0. In x3001 and x3002, the loop control (R4),
+which counts the number of values added to R1, is initialized
+to \#10.  The program subtracts 1 each time through the loop and
+repeats until R4 contains 0.  In x3003, the base register (R2) is
+initialized to the starting location of the values to be added:
+x3100.
+
+From there, each time through the loop, one value is loaded into
+R3 (in x3004), the base register is incremented to get ready for
+the next iteration (x3005), the value in R3 is added to R1, which
+contains the running sum (x3006), the counter is decremented (x3007),
+the P bit is tested, and if true, the PC is set to x3004 to begin
+the next iteration of the loop body (x3008).  After 10 times through 
+the loop, R4 contains 0, the P bit is 0, the branch is not taken, and 
+the program terminates (x3009).
+
+It looks like the program should work.  However, when we execute the
+program and then check the value in R1, we find the number x0024,
+which is not x8135, the sum of the numbers stored in locations
+x3100 to x3109.  What went wrong?
+
+We turn to the debugger and trace the program.  Figure~6.8 shows a
+trace of the first four instructions executed.  Note that after the
+instruction at x3003 has executed, R2 contains x3107, not
+x3100, as we had expected. The problem is that the opcode 0010
+loaded the {\bf contents} of M[x3100] (i.e., x3107) into R2, not 
+the {\bf address} x3100.  The result was to add the ten numbers starting 
+at M[x3107] instead of the ten numbers starting at M[x3100].  
+
+%Figure 6.8
+\setcounter{figure}{7}
+\begin{figure}[p]
+\vspace{-12pt}
+\noindent\small
+\begin{minipage}{36pc}
+\begin{center}
+\renewcommand{\tabcolsep}{5pt}%
+\begin{tabular}{| c | c | c | c |}
+%\multicolumn{4}{c}{(b)}\\[4pt]
+\hline
+PC    & R1   &  R2   &  R4 \\
+\hline
+x3001 & 0    &   x   &   x  \\
+x3002 & 0    &   x   &   0  \\
+x3003 & 0    &   x   & \#10  \\
+x3004 & 0    & x3107 & \#10  \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Debugging Example 2.  A trace of the first four instructions of the 
+Add program}
+\end{minipage}
+\end{figure}
+
+\FloatBarrier
+Our mistake: We used the wrong opcode.  We should have used the opcode
+1110 which would have loaded R2 with the address x3100.  We correct the
+bug by replacing the opcode 0010 with 1110, and the program runs correctly.
+
+\subsubsection{Example 3: Does a Sequence of Memory Locations Contain a 5}
+The program of Figure~6.9 has been written to examine the contents of
+the 10 memory locations starting at address x3100 and to store a 1
+in R0 if any of them contains a 5 and a 0 in R0 if none of them
+contains a 5.
+
+\FloatBarrier
+%Figure 6.9
+\setcounter{figure}{8}
+\begin{figure}
+\noindent\small
+\begin{minipage}{36pc}
+\begin{center}
+\renewcommand{\tabcolsep}{6pt}%
+\begin{tabular}{@{}l c c c c c c c c c c c c c c c c l }
+%\multicolumn{18}{c}{(a)}\\[2pt]
+Address & 15 & 14 & 13 & \hfill{12} & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+\cline{2-17}
+x3000 & \multicolumn{1}{|c}{0} & 1 & 0 & \multicolumn{1}{c|}{1} & 0 & 0 & \multicolumn{1}{c|}{0} & 0 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{1} & 0 & 0 & 0 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries R0 <- 0} \\
+\cline{2-17}
+x3001 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 0 & \multicolumn{1}{c|}{0} & 0 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{1} & 0 & 0 & 0 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries R0 <- R0 + 1}\\
+\cline{2-17}
+x3002 & \multicolumn{1}{|c}{0} & 1 & 0 & \multicolumn{1}{c|}{1} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{c|}{1} & 0 & 0 & 0 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries R1 <- 0} \\
+\cline{2-17}
+x3003 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{c|}{1} & 1 & 1 & 0 & 1 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries R1 <- R1 - 5}\\
+\cline{2-17}
+x3004 & \multicolumn{1}{|c}{0} & 1 & 0 & \multicolumn{1}{c|}{1} & 0 & 1 & \multicolumn{1}{c|}{1} & 0 & 1 & \multicolumn{1}{c|}{1} & \multicolumn{1}{c|}{1} & 0 & 0 & 0 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries R3 <- 0}\\
+\cline{2-17}
+x3005 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 1 & \multicolumn{1}{c|}{1} & 0 & 1 & \multicolumn{1}{c|}{1} & \multicolumn{1}{c|}{1} & 0 & 1 & 0 & 1 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries R3 <- R3 + 10}\\
+\cline{2-17}
+x3006 & \multicolumn{1}{|c}{0} & 0 & 1 & \multicolumn{1}{c|}{0} & 1 & 0 & \multicolumn{1}{c|}{0} & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries R4 <- M[x3010]}\\
+\cline{2-17}
+x3007 & \multicolumn{1}{|c}{0} & 1 & 1 & \multicolumn{1}{c|}{0} & 0 & 1 & \multicolumn{1}{c|}{0} & 1 & 0 & \multicolumn{1}{c|}{0} & 0 & 0 & 0 & 0 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries R2 <- M[R4]}\\
+\cline{2-17}
+x3008 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 1 & \multicolumn{1}{c|}{0} & 0 & 1 & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0} & 0 & \multicolumn{1}{c|}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries R2 <- R2 + R1}\\
+\cline{2-17}
+x3009 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{0} & 0 & 1 & \multicolumn{1}{c|}{0} & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries BRz x300F}\\
+\cline{2-17}
+x300A & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & 1 & 0 & \multicolumn{1}{c|}{0} & 1 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{1} & 0 & 0 & 0 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries R4 <- R4 + 1}\\
+\cline{2-17}
+x300B & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 1 & \multicolumn{1}{c|}{1} & 0 & 1 & \multicolumn{1}{c|}{1} & \multicolumn{1}{c|}{1} & 1 & 1 & 1 & 1 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries R3 <- R3 - 1}\\
+\cline{2-17}
+x300C & \multicolumn{1}{|c}{0} & 1 & 1 & \multicolumn{1}{c|}{0} & 0 & 1 & \multicolumn{1}{c|}{0} & 1 & 0 & \multicolumn{1}{c|}{0} & 0 & 0 & 0 & 0 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries R2 <- M[R4]}\\
+\cline{2-17}
+x300D & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & 1 & 1 & 1 & 1 & 1 & 1 & 0 & 1 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries BRp x3008}\\
+\cline{2-17}
+x300E & \multicolumn{1}{|c}{0} & 1 & 0 & \multicolumn{1}{c|}{1} & 0 & 0 & \multicolumn{1}{c|}{0} & 0 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{1} & 0 & 0 & 0 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries R0 <- 0}\\
+\cline{2-17}
+x300F & \multicolumn{1}{|c}{1} & 1 & 1 & \multicolumn{1}{c|}{1} & 0 & 0 & 0 & \multicolumn{1}{c|}{0} & 0 & 0 & 1 & 0 & 0 & 1 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries HALT}\\
+\cline{2-17}
+x3010 & \multicolumn{1}{|c}{0} & 0 & 1 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries x3100}\\
+\cline{2-17}
+\end{tabular}
+\end{center}
+\caption{Debugging Example 3.  An LC-3 program to detect the presence of a 5.}
+\end{minipage}
+\end{figure}
+
+
+The program is supposed to do the following:
+The first six instructions (at x3000 to x3005) initialize R0 to 1, R1
+to $-$5, and R3 to 10.  
+The instruction at x3006 initializes R4 to the address (x3100) of the
+first location to be tested, and x3007 loads the contents of x3100 into R2.
+
+The instructions at x3008 and x3009 determine if R2 contains the value 5 
+by adding $-$5 to R2 and branching to x300F if the result is 0.  Since R0 is
+initialized to 1, the program terminates with R0 reporting the
+presence of a 5 among the locations tested.
+
+x300A increments R4, preparing to load the next value.  x300B decrements R3,
+indicating the number of values remaining to be tested.  x300C loads the
+next value into R2.  x300D branches back to x3008 to repeat the process if
+R3 still indicates more values to be tested.  If R3${}=0$, we have exhausted
+our tests, so R0 is set to 0 (x300E), and the program terminates (x300F).
+
+When we run the program for some sample data that contains a 5 in one of the
+memory locations, the program terminates with R$0=0$, indicating 
+there were no 5s in locations x3100 to x310A.
+
+What went wrong? We examine a trace of the program, with a breakpoint
+set at x300D.  The results are shown in Figure~6.10.
+
+%Figure 6.10
+\setcounter{figure}{9}
+\begin{figure}
+\noindent\small
+\begin{minipage}{36pc}
+\begin{center}
+\renewcommand{\tabcolsep}{6pt}%
+\noindent\begin{tabular}{| c | c | c | c | c |}
+%\multicolumn{5}{c}{(b)}\\[2pt]
+\hline
+PC    & R1 & R2 & R3 & R4 \\
+\hline
+x300D & $-$5 &  7 &  9 & 3101 \\
+x300D & $-$5 & 32 &  8 & 3102 \\
+x300D & $-$5 &  0 &  7 & 3013 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Debugging Example 3.  Tracing Example 3 with a breakpoint at x300D.\label{fig:onlinedebug}}
+\end{minipage}
+\end{figure}
+
+The first time the PC is at x300D, we have already tested the value
+stored in x3100, we have loaded 7 (the contents of x3101) into R2, and R3
+indicates there are still nine values to be tested.  R4 contains the address
+from which we most recently loaded R2.
+
+The second time the PC is at x300D, we have loaded 32 (the contents of
+x3102) into R2, and R3 indicates there are eight values still to be
+tested.  The third time the PC is at x300D, we have loaded 0 (the
+contents of x3103) into R2, and R3 indicates seven values still
+to be tested.  The value 0 loaded into R2 causes the branch instruction 
+at x300D to be not taken, R0 is set to 0 (x300E), and the program 
+terminates (x300F) before the locations containing a 5 are tested.
+
+The error in the program occurred because the branch instruction immediately
+followed the load instruction which set the condition codes based on what
+was loaded.  That wiped out the condition codes set by the iteration control 
+instruction at x300B which was keeping track of the number of iterations left 
+to do.  Since the branch instruction should branch if there are still more
+memory locations to examine, the branch instruction should have immediately 
+followed the iteration control instruction, and NOT the load instruction 
+which also sets condition codes.  
+
+A conditional branch instruction should be considered the second instruction
+in a pair of instructions. 
+
+\begin{colorverbatim}
+     Instruction A  ; sets the condition codes
+     BR instruction ; branches based on the condition codes
+\end{colorverbatim}
+
+The first instruction in the pair (Instruction A) sets the condition codes.  
+The second instruction (BR) branches or not, depending on the condition codes 
+set by instruction A.  It is important to never insert any instruction that
+sets condition codes between instruction A and the branch instruction, since
+doing so will wipe out the condition codes set by instruction A that are 
+needed by the branch instruction.
+
+Since the branch at x300D was based
+on the value loaded into R2, instead of how many values 
+remained to be tested, the third time the branch instruction was executed,
+it was not taken when it should have been.
+If we interchange the instructions at x300B and x300C, the branch
+instruction at x300D immediately follows the iteration control 
+instruction and the program executes correctly.
+
+It is also worth noting that the branch at x300D {\em coincidentally} behaved 
+correctly the first two times it executed because the load instruction at
+x300C loaded positive values into R2.  The bug did not produce incorrect
+behavior until the third iteration.  It would be nice if bugs would 
+manifest themselves the first time they are encountered, but that is often 
+not the case.  Coincidences do occur, which adds to the challenges of
+debugging.
+
+\subsubsection{Example 4: Finding the First 1 in a Word}
+
+\enlargethispage{-2\baselineskip}
+
+Our last example contains an error that is usually one of the
+hardest to find, as we will see. The program of Figure~6.11 has been 
+written to examine the contents of a memory location,
+find the first bit (reading from left to right) that is set, and store
+its bit position into R1. If no bit is set, the program
+is to store $-$1 in R1.  For example, if the location examined
+contained 0010000110000000, the program would terminate with
+R$1=13$.  If the location contained 0000000000000110, the program
+would terminate with R$1=2$.
+
+%Figure 6.11
+\setcounter{figure}{10}
+\begin{figure}
+\noindent\small
+\hspace*{-8pc}\begin{minipage}{36pc}
+\begin{center}
+\renewcommand{\tabcolsep}{6pt}%
+\begin{tabular}{@{}l c c c c c c c c c c c c c c c c l}
+%\multicolumn{18}{c}{(a)}\\[4pt]
+Address & 15 & 14 & 13 & \hfill{12} & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3  & 2 & 1 & 0 \\
+\cline{2-17}
+x3000 & \multicolumn{1}{|c}{0} & 1 & 0 & \multicolumn{1}{c|}{1} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{c|}{1} & 0 & 0 & 0 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries R1 <- 0}\\
+\cline{2-17}
+x3001 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{c|}{1} & 0 & 1 & 1 & 1 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries R1 <- R1 + 15}\\
+\cline{2-17}
+x3002 & \multicolumn{1}{|c}{1} & 0 & 1 & \multicolumn{1}{c|}{0} & 0 & 1 & \multicolumn{1}{c|}{0} & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries R2 <- M[M[x3009]]}\\
+\cline{2-17}
+x3003 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{0} & 1 & 0 & \multicolumn{1}{c|}{0} & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries BRn x3008}\\
+\cline{2-17}
+x3004 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{c|}{1} & 1 & 1 & 1 & 1 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries R1 <- R1 - 1}\\
+\cline{2-17}
+x3005 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{1} & 0 & 1 & \multicolumn{1}{c|}{0} & 0 & 1 & \multicolumn{1}{c|}{0} & \multicolumn{1}{c|}{0} & 0 & \multicolumn{1}{c|}{0} & 0 & 1 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries R2 <- R2 + R2}\\
+\cline{2-17}
+x3006 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{0} & 1 & 0 & \multicolumn{1}{c|}{0} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries BRn x3008}\\
+\cline{2-17}
+x3007 & \multicolumn{1}{|c}{0} & 0 & 0 & \multicolumn{1}{c|}{0} & 1 & 1 & \multicolumn{1}{c|}{1} & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries BRnzp x3004}\\
+\cline{2-17}
+x3008 & \multicolumn{1}{|c}{1} & 1 & 1 & \multicolumn{1}{c|}{1} & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 1 & 0 & \multicolumn{1}{c|}{1} & \multicolumn{1}{l}{\tt\bfseries HALT}\\
+\cline{2-17}
+x3009 & \multicolumn{1}{|c}{0} & 0 & 1 & 1 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \multicolumn{1}{c|}{0} & \multicolumn{1}{l}{\tt\bfseries x3400}\\
+\cline{2-17}
+\end{tabular}
+\end{center}
+\caption{Debugging Example 4.  An LC-3 program to find the first 1 in a word.
+\label{fig:onlinedebug}}
+\end{minipage}
+\end{figure}
+
+\FloatBarrier
+The program Figure~6.11 is supposed to work as follows (and it usually does):
+x3000 and x3001 initialize R1 to 15, the bit number of the left-most bit.
+
+x3002 loads R2 with the contents of x3400, the bit pattern to be examined.
+Since x3400 is too far from x3000 for a LD instruction, the load indirect
+instruction is used, obtaining the location of the bit pattern in x3009.
+
+x3003 tests the most significant bit of the bit pattern (bit [15]), and 
+if it is a 1, branches to x3008, where the program terminates with R1=15.  
+If the most significant bit is 0, the branch is not taken, and processing 
+continues at x3004.
+
+The loop body, locations x3004 to x3007, does two things.  First (x3004), 
+it subtracts 1 from R1, yielding the bit number of the next bit to the right.  
+Second (x3005), it adds R2 to itself, resulting in the contents of R2 
+shifting left one bit, resulting in the next bit to the right being shifted 
+into the bit [15] position.  Third (x3006), the BR instruction tests the
+"new" bit [15], and if it is a 1, branches to x3008, where the program halts
+with R1 containing the actual bit number of the current left-most bit.  If
+the new bit [15] is 0, x3007 is an unconditional branch to x3004 for the
+next iteration of the loop body.
+
+The process continues until the first 1 is found.  The program works correctly
+almost all the time. However, when we ran the program on our data,
+the program failed to terminate.  What went wrong?
+
+A trace of the program, with a breakpoint set at x3007, is shown in 
+Figure~6.12.
+
+\FloatBarrier
+%Figure 6.12
+\setcounter{figure}{11}
+\begin{figure}[b]
+\noindent\small
+\hspace*{-8pc}\begin{minipage}{36pc}
+\begin{center}
+\renewcommand{\tabcolsep}{6pt}%
+\begin{tabular}{| c | c |}
+%\multicolumn{2}{c}{(b)}\\[4pt]
+\hline
+PC    & R1 \\
+\hline
+x3007 & 14 \\
+x3007 & 13 \\
+x3007 & 12 \\
+x3007 & 11 \\
+x3007 & 10 \\
+x3007 &  9 \\
+x3007 &  8 \\
+x3007 &  7 \\
+x3007 &  6 \\
+x3007 &  5 \\
+x3007 &  4 \\
+x3007 &  3 \\
+x3007 &  2 \\
+x3007 &  1 \\
+x3007 &  0 \\
+x3007 & $-$1 \\
+x3007 & $-$2 \\
+x3007 & $-$3 \\
+x3007 & $-$4 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Debugging Example 4. A Trace of Debugging Example 4 with 
+a breakpoint at x3007.\label{fig:onlinedebug}}
+\end{minipage}
+\end{figure}
+
+\FloatBarrier
+Each time the PC contained the address x3007, R1 contained a value smaller
+by 1 than the previous time.  The reason is as follows: After R1 was
+decremented and the value in R2 shifted left, the bit tested was a 0, and so the
+program did not terminate.  This continued for values in R1 equal to  14, 13,
+12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, $-$1, $-$2, $-$3, $-$4,
+and so forth.
+
+The problem was that the initial value in x3400 was x0000.
+The program worked fine as long as there was at least one 1
+present.  For the case where x3400 contained all zeros, the conditional branch
+at x3006 was never taken, and so the program continued with execution of x3007,
+then x3004, x3005, x3006, x3007, and then back again to x3004.  There was no
+way to break out of the sequence x3004, x3005, x3006, x3007, and back again to
+x3004.  We call the sequence x3004 to x3007 a loop.  Because there is no way
+for the program execution to break out of this loop, we call it an {\em infinite
+loop}.  Thus, the program never terminates, and so we can never get
+the correct answer.
+
+Again, we emphasize that this is often the hardest error to detect because it 
+is as we said earlier a corner case.  The programmer assumed that 
+at least one bit was set.  What if no bits are set?  
+That is, it is not enough for a program to execute correctly
+most of the time; it must execute correctly all the time, independent of the
+data that the program is asked to process.  
+
+\begin{exercises}
+
+\item[6.1]
+Can a procedure that is {\em not} an algorithm be constructed from
+the three basic constructs of structured programming? If so,
+demonstrate through an example.
+
+\item[6.2]
+The LC-3 has no Subtract instruction. If a programmer needed to\hfill\break subtract
+two numbers he/she would have to write a routine to handle it.
+Show the systematic decomposition of the process of subtracting
+two integers.
+
+\item[6.3] Recall the machine busy example from previous chapters. Suppose
+memory location x4000 contains an integer between 0 and 15
+identifying a particular machine that has just become busy.
+Suppose further that the value in memory location x4001 tells
+which machines are busy and\hfill\break which machines are idle. Write an
+LC-3 machine language program\hfill\break that sets the appropriate bit
+in x4001 indicating that the machine in\hfill\break x4000 is busy.
+
+For example, if x4000 contains x0005 and x4001
+contains x3101 at the start of execution, x4001 should contain
+x3121 after your program terminates.
+
+\item[6.4] Write a short LC-3 program that compares the two numbers in
+  R1 and\hfill\break R2 and puts the value 0 in R0 if ${\rm R}1={\rm R}2$, 1 if
+  ${\rm R}1>{\rm R}2$ and $-1$ if ${\rm R}1<{\rm R}2$.
+
+\item[6.5]
+Which of the two algorithms for multiplying two numbers is preferable
+and why? $88 \cdot 3 = 88 + 88 + 88$ OR $3 + 3 + 3 + 3 + \ldots + 3$?
+
+\item[6.6]
+Use your answers from Exercises 6.4 and 6.5 to develop a program
+that efficiently multiplies two integers and places the result in
+R3. Show the complete systematic decomposition, from the problem
+statement to the final program.\vfill\pagebreak
+
+\item[6.7] What does the following LC-3 program do?
+
+\begin{inlinetable}
+\ttfamily\color{seventyblack}
+\vspace{-12pt}
+\begin{longtable}{llllll}
+x3001 &  & 1110 & 0000 & 0000 & 1100\\
+x3002 &  & 1110 & 0010 & 0001 & 0000\\
+x3003 &  & 0101 & 0100 & 1010 & 0000\\
+x3004 &  & 0010 & 0100 & 0001 & 0011\\
+x3005 &  & 0110 & 0110 & 0000 & 0000\\
+x3006 &  & 0110 & 1000 & 0100 & 0000\\
+x3007 &  & 0001 & 0110 & 1100 & 0100\\
+x3008 &  & 0111 & 0110 & 0000 & 0000\\
+x3009 &  & 0001 & 0000 & 0010 & 0001\\
+x300A &  & 0001 & 0010 & 0110 & 0001\\
+x300B &  & 0001 & 0100 & 1011 & 1111\\
+x300C &  & 0000 & 0011 & 1111 & 1000\\
+x300D &  & 1111 & 0000 & 0010 & 0101\\
+x300E &  & 0000 & 0000 & 0000 & 0101\\
+x300F &  & 0000 & 0000 & 0000 & 0100\\
+x3010 &  & 0000 & 0000 & 0000 & 0011\\
+x3011 &  & 0000 & 0000 & 0000 & 0110\\
+x3012 &  & 0000 & 0000 & 0000 & 0010\\
+x3013 &  & 0000 & 0000 & 0000 & 0100\\
+x3014 &  & 0000 & 0000 & 0000 & 0111\\*
+x3015 &  & 0000 & 0000 & 0000 & 0110\\*
+x3016 &  & 0000 & 0000 & 0000 & 1000\\*
+x3017 &  & 0000 & 0000 & 0000 & 0111\\*
+x3018 &  & 0000 & 0000 & 0000 & 0101
+\end{longtable}
+\vspace{-10pt}
+\end{inlinetable}
+
+\item[6.8] Why is it necessary to initialize R2 in the character counting example\break
+in Section 6.1.4?  In other words, in what manner might the program\break
+behave incorrectly if the R2 $\leftarrow$ 0 step were removed
+from the\break routine?
+
+\item[6.9]
+Using the iteration construct, write an LC-3 machine language routine
+that displays exactly 100 Zs on the screen.
+
+\item[6.10] Using the conditional construct, write an LC-3 machine language
+routine that determines if a number stored in R2 is odd.
+
+\item[6.11] Write an LC-3 machine language routine to increment each of the
+numbers stored in memory location A through memory location B.
+Assume these locations have already been initialized with meaningful
+numbers.  The addresses A and B can be found in memory locations
+x3100 and x3101.
+
+\enlargethispage*{6pt}
+
+\item[6.12]
+\begin{enumerate}[b.]
+\item[a.]
+Write an LC-3 machine language routine that echoes the last character
+typed at the keyboard.  If the user types an $R\hbox{{\em ,}}$ the program then
+immediately outputs an $R$ on the screen.
+
+\item[b.]
+Expand the routine from part $a$ such that it echoes a line at a
+time.  For example, if the user types:
+
+\medskip
+
+\begin{colorverbatim}
+The quick brown fox jumps over the lazy dog.
+\end{colorverbatim}
+
+\medskip
+
+\noindent
+then the program waits for the user to press the Enter
+key (the ASCII code for which is x0A) and then outputs the same
+line.
+\end{enumerate}
+\item[6.13]
+Notice that we can shift a number to the left by one bit position
+by adding it to itself. For example, when the binary number 0011
+is added to itself, the result is 0110.  Shifting a number one bit
+pattern to the right is not as easy.  Devise a routine in LC-3
+machine code to shift the contents of memory location x3100 to
+the right by one bit.
+
+\item[6.14]
+Consider the following machine language program:
+
+\begin{inlinetable}
+\ttfamily\color{seventyblack}
+\vspace{-6pt}
+\begin{tabular}{@{}llllll@{}}
+x3000 &  &   0101 & 0100 & 1010 & 0000\\
+x3001 &  &  0001 & 0010 & 0111 & 1111\\
+x3002 &  &   0001 & 0010 & 0111 & 1111\\
+x3003  &  &   0001 & 0010 & 0111 & 1111\\
+x3004 &  &    0000 & 1000 & 0000 & 0010\\
+x3005  &  &   0001 & 0100 & 1010 & 0001\\
+x3006   &  &  0000 & 1111 & 1111 & 1010\\
+x3007 &  &    1111 & 0000 & 0010 & 0101\\
+\end{tabular}
+\vspace{-6pt}
+\end{inlinetable}
+
+What are the possible initial values of R1 that
+cause the final value in R2 to be 3?
+
+
+
+\item[6.15] Shown below are the contents of memory and registers {\bf
+    before} and {\bf after} the LC-3 instruction at location x3010 is
+  executed. Your job: Identify the instruction stored in x3010. Note:
+  There is enough information below to uniquely specify the
+  instruction at x3010.
+
+\begin{inlinetable}
+{\fontsize{9}{13}\selectfont
+\begin{tabular}{|l|l|l|}
+\hline
+\rule{0pt}{10pt}&Before &After\\
+\hline
+\rule{0pt}{10pt}R0:\rule{0pt}{10pt}
+& x3208 & x3208\\
+R1: & x2d7c & x2d7c\\
+R2: & xe373 & xe373\\
+R3: & x2053 & x2053\\
+R4: & x33ff & x33ff\\
+R5: & x3f1f & x3f1f\\
+R6: & xf4a2 & xf4a2\\
+R7: & x5220 & x5220\\\hline
+\multicolumn{1}{|c|}{\ldots\rule{0pt}{10pt}} & & \\
+x3400: & x3001 & x3001\\
+x3401: & x7a00 & x7a00\\
+x3402: & x7a2b & x7a2b\\
+x3403: & xa700 & xa700\\
+x3404: & xf011 & xf011\\
+x3405: & x2003 & x2003\\
+x3406: & x31ba & xe373\\
+x3407: & xc100 & xc100 \\
+x3408: & xefef & xefef\\
+\multicolumn{1}{|c|}{\ldots\rule{0pt}{10pt}} & & \\
+\hline
+\end{tabular}}
+\end{inlinetable}\vspace{1.5pc}
+
+\item[6.16] An LC-3 program is located in memory locations x3000 to
+  x3006. It starts executing at x3000. If we keep track of all values
+  loaded into the MAR as the program executes, we will get a sequence
+  that starts as follows. Such a sequence of values is referred to as
+  a trace.
+\vspace{-0.2in}
+\begin{inlinetable}
+{\fontsize{9}{13}\selectfont
+\begin{tabular}{@{}c@{}}
+MAR Trace\\
+\hline
+\rule{0pt}{10pt}x3000\rule{0pt}{10pt}\\
+ x3005\\
+ x3001 \\
+x3002\\
+ x3006\\
+ x4001\\
+ x3003\\
+ x0021
+\end{tabular}}
+\end{inlinetable}
+
+\noindent
+We have shown below some of the bits stored in locations x3000 to
+x3006. Your job is to fill in each blank space with a 0 or a 1, as
+appropriate.
+
+\begin{inlinetable}
+\begin{tabular}{|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|l|}
+\hline
+\rule{0pt}{10pt} x3000 & 0 & 0 & 1 & 0 & 0 & 0 & 0 &   &   &   &   &   &   &   &   &  \\\hline
+\rule{0pt}{10pt} x300l & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 1\\\hline
+\rule{0pt}{10pt} x3002 & 1 & 0 & 1 & 1 & 0 & 0 & 0 &   &   &   &   &   &   &   &   &  \\\hline
+\rule{0pt}{10pt} x3003 &   &   &   &   &   &   &   &   &   &   &   &   &   &   &   &  \\\hline
+\rule{0pt}{10pt} x3004 & 1 & 1 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 1 & 0 & 1\\\hline
+\rule{0pt}{10pt} x3005 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 0 & 0 & 0 & 0\\\hline
+\rule{0pt}{10pt} x3006 &   &   &   &   &   &   &   &   &   &   &   &   &   &   &   &  \\
+\hline
+\end{tabular}
+\end{inlinetable}
+
+\item[6.17] Shown below are the contents of registers before and after
+  the LC-3 instruction at location x3210 is executed. Your job:
+  Identify the instruction stored in x3210. Note: There is enough
+  information below to~uniquely specify the instruction at x3210.
+
+\begin{inlinetable}
+\begin{tabular}{|l|l|l|}
+\hline
+\rule{0pt}{10pt} &Before& After\\
+\hline
+\rule{0pt}{10pt} R0: & xFF1D & xFF1D\\
+\rule{0pt}{10pt} R1: & x301C & x301C\\
+\rule{0pt}{10pt} R2: & x2F11 & x2F11\\
+\rule{0pt}{10pt} R3: & x5321 & x5321\\
+\rule{0pt}{10pt} R4: & x331F & x331F\\
+\rule{0pt}{10pt} R5: & x1F22 & x1F22\\
+\rule{0pt}{10pt} R6: & x01FF & x01FF\\
+\rule{0pt}{10pt} R7: & x341F & x3211\\
+\rule{0pt}{10pt} PC: & x3210 & x3220\\
+\rule{0pt}{10pt} N: & 0 & 0\\
+\rule{0pt}{10pt} Z: & 1 & 1\\
+\rule{0pt}{10pt} P: & 0 & 0\\\hline
+\end{tabular}
+\end{inlinetable}
+
+\item[6.18] The LC-3 has no Divide instruction. A programmer needing
+  to divide two numbers would have to write a routine to handle it.
+  Show the systematic decomposition of the process of dividing two
+  positive integers. Write an LC-3 machine language program starting
+  at location x3000 which divides the number in memory location x4000
+  by the number in memory location x4001 and stores the quotient at
+  x5000 and the remainder at x500l.
+
+\item[6.19] It is often necessary to encrypt messages to keep them
+  away from prying eyes. A message can be represented as a string of
+  ASCII characters, one per memory location, in consecutive memory
+  locations. Bits [15:8] of each location contains 0, and the location
+  immediately following the string contains x0000.
+
+  A student who has not taken this course has written the following
+  LC-3 machine language program to encrypt the message starting at
+  location x4000 by adding 4 to each character and storing the
+  resulting message at x5000. For example, if the message at x4000 is
+  ``Matt,'' then the encrypted message at x5000 is ``Qeyy.'' However,
+  there are four bugs in his code. Find and correct these errors so
+  that the program works correctly.
+
+\begin{inlinetable}
+\ttfamily\color{seventyblack}
+\begin{tabular}{@{}llllll@{}}
+x3000 & & 1110 & 0000 & 0000 & 1010\\
+x3001 &  &0010 & 0010 & 0000 & 1010 \\
+x3002 &  &0110 & 0100 & 0000 & 0000 \\
+x3003 &  &0000 & 0100 & 0000 & 0101 \\
+x3004 &  &0001 & 0100 & 1010 & 0101 \\
+x3005 & & 0111 & 0100 & 0100 & 0000 \\
+x3006 & & 0001 & 0000 & 0010 & 0001 \\
+x3007 & & 0001 & 0010 & 0110 & 0001 \\
+x3008 & & 0000 & 1001 & 1111 & 1001 \\
+x3009 & & 0110 & 0100 & 0100 & 0000 \\
+x300A &  &1111 & 0000 & 0010 & 0101 \\
+x300B &  &0100 & 0000 & 0000 & 0000 \\
+x300C &  &0101 & 0000 & 0000 & 0000\\
+\end{tabular}
+\end{inlinetable}
+
+\item[6.20] Redo Exercise 6.18 for all integers, not just positive integers.
+
+\item[6.21] You have been asked to design the volume control system in a stereo. The user controls the volume by using “volume up” and “volume down” buttons on the stereo. When the user presses the “volume up” button, the volume should increase by 1; when the user presses the “volume down” button, the volume should decrease by 1. The volume level is represented as a 4-bit unsigned value, ranging from 0 to 15. If the user presses “volume up” when the volume is already at the maximum level of 15, the volume should remain at 15; similarly, if the user presses “volume down” when the volume is already at the minimum level of 0, the volume should remain at 0. The memory location x3100 has been directly hooked up to the speakers so that reading bits 3 through 0 from that memory location will give the current speaker volume, while writing bits 3 through 0 of that memory location will set the new speaker volume. \\
+
+\noindent
+When the user presses one of the volume buttons, the stereo hardware will reset the PC of the processor to x3000 and begin execution. If the user had pressed “volume up”, then memory location x3101 will be set to 1; otherwise, if the user had pressed “volume down”, then the memory location x3101 will be set to 0. \\
+
+\noindent
+Below is the program that controls the volume on the stereo. Two of the instructions in the program have been left out. Your job: fill in the missing instructions so that the program controls the volume correctly as specified. \\
+
+\begin{tabular}[t]{|c|c|l|}
+\hline
+Address & Contents & Description \\
+\hline
+x3000 & 0010000011111111 & R0 $\leftarrow$ M[x3100] \\
+\hline
+x3001 & 0010001011111111 & R1 $\leftarrow$ M[x3101] \\
+\hline
+x3002 & 0000010000000100 & Branch to x3007 if Z is set  \\
+\hline
+%x3003 & 0001001000110001 & R1 $\leftarrow$ R0 + xFFF1 \\
+x3003 &                  &  \\
+\hline
+x3004 & 0000010000000101 & Branch to x300A if Z is set  \\
+\hline
+x3005 & 0001000000100001 & R0 $\leftarrow$ R0 + x0001 \\
+\hline
+x3006 & 0000111000000011 & Branch always to x300A \\
+\hline
+x3007 & 0001001000100000 & R1 $\leftarrow$ R0 + x0000 \\
+\hline
+x3008 & 0000010000000001 & Branch to x300A if Z is set  \\
+\hline
+%x3009 & 0001000000111111 & R0 $\leftarrow$ R0 + xFFFF \\
+x3009 &                  &  \\
+\hline
+x300A & 0011000011110101 & M[x3100] $\leftarrow$ R0 \\
+\hline
+x300B & 1111000000100101 & TRAP x25 \\
+\hline
+\end{tabular}
+
+\vspace{0.35in}
+
+\item[6.22]STAR A warehouse is controlled by an electronic lock having
+an n-digit combination.  The electronic lock has ten buttons, labeled 0 to 9
+on its face.  To open the lock, a user presses a sequence of n buttons. The corresponding
+ASCII characters get loaded into sequential locations of memory, starting at location x3150.  After
+n buttons have been pressed, the null character x00 is loaded into the next
+sequential memory location. \\
+
+\noindent
+The program shown below determines whether or not the lock should open,
+depending on whether the combination entered agrees with the combination
+stored in the n memory locations starting at x3100.  If the lock should
+open, the program stores a 1 in location x3050.  If the lock should not
+open, the program stores a 0 in location x3050. \\
+
+\noindent
+Note that some of the instructions are missing. \\
+
+\noindent
+Complete the program by filling in the missing instructions. \\
+
+\vspace{0.1in}
+\noindent
+\begin{tabular} { |c|c|l| }
+  \hline
+  x3000 & 0101 101 101 1 00000  &; R5 \textless-- x0000 \\
+  \hline
+  x3001 & 0010 000 000001111    &; R0 \textless-- M[x3011] \\
+  \hline
+  x3002 & 0010 001 000001101    &; R1 \textless-- M[x3010] \\
+  \hline
+  x3003 & 0110 010 000 000000   &; R2 \textless-- M[R0] \\
+  \hline
+  x3004 &    & \\
+  \hline
+  x3005 & 0110 011 001 000000   &; R3 \textless-- M[R1] \\
+  \hline
+  x3006 & 1001 011 011 111111   &; NOT R3 \\
+  \hline
+  x3007 & 0001 011 011 1 00001  &; R3 \textless-- R3 + 1 \\
+  \hline
+  x3008 & & \\
+  \hline
+  x3009 & 0000 101 000000100    &; Branch to x300E if N or P is set \\
+  \hline
+  x300A & & \\
+  \hline
+  x300B & & \\
+  \hline
+  x300C & 0000 111 111110110    &; Branch always to x3003 \\
+  \hline
+  x300D & & \\
+  \hline
+  x300E & 0011 101 001000001    &; Store R5 in x3050 \\
+  \hline
+  x300F & 1111 0000 0010 0101   &; HALT \\
+  \hline
+  x3010 & 0011 0001 0000 0000   &; x3100 \\
+  \hline
+  x3011 & 0011 0001 0101 0000   &; x3150 \\
+  \hline
+\end{tabular}
+
+\vspace{0.15in}
+A simple change to the contents of memory will allow us to
+eliminate the instructions at memory locations x3006 and x3007 in our
+program. What is the change? \\
+
+\item[6.23] STAR The PC is loaded with x3000, and the instruction
+at address x3000 is executed.  In fact, execution continues and four more
+instructions are executed.  The table below contains the contents of various
+registers at the end of execution for each of the five (total) instructions. \\
+
+\noindent
+Your job: complete the table.
+
+\vspace{0.25in}
+\noindent
+\begin{tabular} { |c|c|c|c|c|c|c| }
+  \hline
+  & \textbf{PC} & \textbf{MAR} & \textbf{MDR} & \textbf{IR} & \textbf{R0} &
+  \textbf{R1} \\
+  \hline
+  Before execution starts & x3000 & ------ & ------ & ------ & x0000 & x0000 \\
+  \hline
+  After the first finishes &  &  & xB333 & x2005 & \ \ \ \ \ \ \ \ \ \ \ & \ \ \ \ \ \ \ \ \ \ \ \\
+  \hline
+  After the 2nd finishes &  &  &  & x0601 &  & \\
+  \hline
+  After the 3rd finishes &  &  & x1\_\_\_ &  &  & x0001 \\
+  \hline
+  After the 4th finishes & \ \ \ \ \ \ \ \ \ \ \ & \ \ \ \ \ \ \ \ \ \ \ &
+  x1\_\_\_ & \ \ \ \ \ \ \ \ \ \ \ & x6666 & \\
+  \hline
+  After the 5th finishes &  &  & \ \ \ \ \ \ \ \ \ \ \ & x0BFC &  & \\
+  \hline
+\end{tabular}
+
+
+Let's start execution again, starting with PC = x3000.
+First, we re-initialize R0 and R1 to 0, and set a breakpoint at x3004.
+We press RUN eleven times, each time the program executes until the
+breakpoint. What are the final values of R0 and R1?
+
+\item[6.24] A student is debugging his program.  His program does not have access to
+memory locations x0000 to x2FFF.  Why that is the case we will discuss
+before the end of the book.  The term is "privileged memory" but not
+something for you to worry about today. \\
+
+\noindent
+He sets a breakpoint at x3050, and then starts executing the program.  When
+the program stops, he examines the contents of several memory locations and
+registers, then hits single step.  The simulator executes one instruction
+and then stops.  He again examines the contents of the memory      locations and
+registers.  They are as follows:
+
+\begin{center}
+\begin{tabular}{|l|r|r|}
+\hline
+ & Before & After \\ \hline \hline
+PC & x3050 & x3051 \\ \hline
+R0 & x2F5F & xFFFF \\ \hline
+R1 & x4200 & x4200 \\ \hline
+R2 & x0123 & x0123 \\ \hline
+R3 & x2323 & x2323 \\ \hline
+R4 & x0010 & x0010 \\ \hline
+R5 & x0000 & x0000 \\ \hline
+R6 & x1000 & x1000 \\ \hline
+R7 &      x0522 &  x0522 \\ \hline
+\textbf{M[x3050]} & \textbf{x6???} &  \textbf{x6???} \\ \hline
+M[x4200]& x5555 &  x5555 \\ \hline
+M[x4201]& xFFFF &  xFFFF \\ \hline
+
+\end{tabular}
+\end{center}
+
+\noindent
+Complete the contents of location x3050 \\
+
+\begin{tabular}{|@{}c|@{}c|@{}c|@{}c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+0&1&1&0& &{ }&{ }&{ }&{ }&{ }&{ }&{ }&{ }&{ }&{ }&{ }\\ 
+\hline 
+\end{tabular}\\
+
+\item[6.25] A student is writing a program and needs to subtract the contents of R1
+from the contents of R2, and put the result in R3.  Instead of writing:
+
+\begin{center}
+\begin{minipage}[t]{0.5\linewidth}
+\begin{flushleft}
+{
+\begin{alltt}
+NOT   R3,R1
+ADD   R3,R3,#1
+ADD   R3,R3,R2
+\end{alltt}
+}
+\end{flushleft}
+\end{minipage}
+\end{center}
+
+\noindent
+he writes:
+
+\begin{center}
+\begin{minipage}[t]{0.5\linewidth}
+\begin{flushleft}
+{
+\begin{alltt}
+NOT   R3,R1
+.FILL x16E1
+ADD   R3,R3,R2
+\end{alltt}
+}
+\end{flushleft}
+\end{minipage}
+\end{center}
+
+\noindent 
+He assembles the program and attempts to execute it.
+Does the subtract execute correctly?  Why or why not? \\
+
+\item[6.26]STAR During the execution of an LC-3 program, an instruction in the program
+starts executing at clock cycle T and requires 15 cycles to complete. \\
+
+\noindent
+The table below lists \textbf{ALL} five clock cycles during the
+processing of this instruction which require use of the bus.  The table
+shows for each of those clock cycles: which clock cycle, the state of the
+state machine, the value on the bus, and the important control signals that
+are active during that clock cycle. \\
+
+
+\begin{center}
+\begin{tabular}{|l|c|c|l|}
+\hline
+Cycle & State & Bus & Important Control Signals For This Cycle \\ \hline \hline
+T &18 & x3010 & LD.MAR = 1, LD.PC =1, PCMux = PC + 1, GatePC = 1 { }{ }{ }{ }{ }{ }{ }{ }{ }{ }{ }{ }{ }{ }{ }{ }{ }{ }{ }{ }{ }{ }{ }{ }{ }\\ \hline
+T + 4 &  &  &  \\ \hline
+T + 6 &    & x3013 & \\ \hline
+T + 10 &   & x4567 & \\ \hline
+T + 14 &   & x0000 &  LD.REG = 1, LD.CC = 1, GateMDR = 1, DR =  001 \\ \hline
+
+\end{tabular}
+\end{center}
+
+\noindent
+a. Fill in the missing entries in the table. \\
+b. What is the instruction being processed?\\
+c. Where in memory is that instruction? \\
+d. How many clock cycles does it take memory to read or write? \\
+e. There is enough information above for you to know the contents of three
+memory locations.  What are they and what are their contents?\\
+
+
+\item[6.27]STAR An LC-3 program starts execution at x3000. During the execution of the
+program, a snapshot of all 8 registers were taken at six different times as
+shown below: before the program executes, after execution of instruction 1, after execution of
+instruction 2, after execution of instruction 3, after execution of instruction
+4, after execution of instruction 5, and after execution of instruction 6. 
+
+\vspace{0.2in}
+
+\begin{table}[h*]
+\setlength{\tabcolsep}{0.6\tabcolsep}
+
+\setlength{\extrarowheight}{0.08in}
+
+%\begin{figure}[h!]
+%  \centering
+%  \unitlength1in
+  %\begin{minipage}[h!]{2.0in}
+\begin{tabular}{|c|c|c|c|c|c|c|c|} \hline
+{\bf Registers} & {\bf Initial} & {\bf After 1st} & {\bf After 2nd} & {\bf After 3rd} & {\bf After 4th} &
+{\bf After 5th} & {\bf After 6th} \\
+          & {\bf Value}   & {\bf Instruction} & {\bf Instruction}  & {\bf Instruction} &
+       {\bf Instruction} &
+       {\bf Instruction} & {\bf Instruction} \\
+\hline
+{\bf R0} & x4006 & x4050 & x4050 & x4050 & x4050 & x4050 & x4050\\
+\hline                                                                       
+{\bf R1} & x5009 & x5009 & x5009 & x5009 & x5009 & x5009 & x5009\\
+\hline                                                                       
+{\bf R2} & x4008 & x4008 & x4008 & x4008 & x4008 & x4008 & xC055\\
+\hline                                                                       
+{\bf R3} & x4002 &       &       & x8005 & x8005 & x8005 & x8005\\
+\hline                                                                       
+{\bf R4} & x4003 & x4003 & x4003 & x4003 &       &       & x4003\\
+\hline                                                                       
+{\bf R5} & x400D & x400D &       &       & x400D & x400D & x400D\\
+\hline                                                                       
+{\bf R6} & x400C & x400C & x400C & x400C & x400C & x400C & x400C\\
+\hline                                                                       
+{\bf R7} & x6001 & x6001 & x6001 & x6001 &       &       & x400E\\
+\hline
+\end{tabular}
+%\end{minipage}
+%\end{figure}
+\end{table}
+\vspace{0.2in}
+
+\noindent Also, during the execution of the program, the PC trace, the MAR
+trace, and the MDR trace were also recorded as shown below.
+Note that a PC trace records the addresses of the instructions executed in sequence by the program.
+\vspace{0.2in}
+
+\begin{center}
+\begin{tabular}{lcr} 
+
+\begin{tabular}{|c|} \hline
+{\bf PC Trace} \\
+\hline
+ \\
+\hline                                                                       
+ \\
+\hline                                                                       
+ \\
+\hline                                                                       
+x400D \\
+\hline                                                                       
+ \\
+\hline                                                                       
+x400E \\
+\hline                                                                       
+\end{tabular} & \hspace{0.8in} &
+
+
+
+\begin{tabular}{|c|c|} \hline
+{\bf MAR Trace} & {\bf MDR Trace} \\
+\hline
+ & xA009 \\
+\hline                                                                       
+ & \\
+\hline                                                                       
+x3025 & \\
+\hline                                                                       
+ & x1703 \\
+\hline                                                                       
+ & \\
+\hline                                                                       
+ & x4040 \\
+\hline                                                                       
+ & \\
+\hline                                                                       
+x400E & x1403\\
+\hline                                                                       
+\end{tabular}
+
+\end{tabular}
+\end{center}
+
+\vspace{0.2in}
+
+\noindent {\bf Your job:} Fill in the missing entries in the 3 tables above.  
+
+\end{exercises}
+\end{document}
