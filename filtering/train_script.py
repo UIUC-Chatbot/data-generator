@@ -33,7 +33,7 @@ class MSMARCOData(LightningDataModule):
     def __init__(
         self,
         model_name: str,
-        #triplets_path: str,
+        triplets_path: str,
         langs,
         max_seq_length: int = 250,
         train_batch_size: int = 32,
@@ -44,7 +44,7 @@ class MSMARCOData(LightningDataModule):
     ):
         super().__init__()
         self.model_name = model_name
-        #self.triplets_path = triplets_path
+        self.triplets_path = triplets_path
         self.max_seq_length = max_seq_length
         self.train_batch_size = train_batch_size
         self.eval_batch_size = eval_batch_size
@@ -67,8 +67,8 @@ class MSMARCOData(LightningDataModule):
         self.collections = {lang: load_dataset('unicamp-dl/mmarco', f'collection-{lang}')['collection'] for lang in self.langs}
 
         #Get the triplets
-        # with gzip.open(self.triplets_path, 'rt') as fIn:
-        #     self.triplets = [json.loads(line) for line in tqdm.tqdm(fIn, desc="triplets", total=502938)] 
+        with gzip.open(self.triplets_path, 'rt') as fIn:
+            self.triplets = [json.loads(line) for line in tqdm.tqdm(fIn, desc="triplets", total=502938)] 
         #     """
         #     self.triplets = []
         #     for line in tqdm.tqdm(fIn):
@@ -78,6 +78,7 @@ class MSMARCOData(LightningDataModule):
         #     """
 
 
+        # josh's paths
         s = open("/Users/joshuamin/Desktop/Internships/UIUC_chatbot_data_generator/prompt_engineering/gpt-3_semantic_search/1_top_quality.json")
         first = json.load(s)
         s = open("/Users/joshuamin/Desktop/Internships/UIUC_chatbot_data_generator//prompt_engineering/gpt-3_semantic_search/2_decent_enough_to_keep.json")
@@ -86,25 +87,70 @@ class MSMARCOData(LightningDataModule):
         third = json.load(s)
         s = open("/Users/joshuamin/Desktop/Internships/UIUC_chatbot_data_generator//prompt_engineering/gpt-3_semantic_search/4_invalid_items.json")
         fourth = json.load(s)
+        
+        # kastan's paths
+        # s = open("/home/kastan/vlad_chatbot/human_data_review/gpt-3_semantic_search/1_top_quality.json")
+        # first = json.load(s)
+        # s = open("/home/kastan/vlad_chatbot/human_data_review/gpt-3_semantic_search/2_decent_enough_to_keep.json")
+        # second = json.load(s)
+        # s = open("/home/kastan/vlad_chatbot/human_data_review/gpt-3_semantic_search/3_to_delete.json")
+        # third = json.load(s)
+        # s = open("/home/kastan/vlad_chatbot/human_data_review/gpt-3_semantic_search/4_invalid_items.json")
+        # fourth = json.load(s)
 
-        self.bad_data = []
-        for dataset in [third, fourth]:
-            for row in dataset:
-                self.bad_data.append(row['GPT-3-Semantic-Search-Generations']['answer'])
+        # todo uncomment
+        # self.bad_data = []
+        # for dataset in [third, fourth]:
+        #     for row in dataset:
+        #         self.bad_data.append(row['GPT-3-Semantic-Search-Generations']['answer'])
 
-        self.triplets = []
-        for dataset in [first, second]:
-            for row in dataset:
-                self.triplets.append([row['GPT-3-Semantic-Search-Generations']['question'], row['GPT-3-Semantic-Search-Generations']['answer'],random.choice(self.bad_data)])
+        # self.triplets = []
+        # for dataset in [first, second]:
+        #     for row in dataset:
+        #         self.triplets.append([row['GPT-3-Semantic-Search-Generations']['question'], row['GPT-3-Semantic-Search-Generations']['answer'],random.choice(self.bad_data)])
 
     def collate_fn(self, batch):
-        cross_lingual_batch = random.random() < self.cross_lingual_chance 
-
+        '''
+        # EXPECED DATA FORMAT BEFORE TOKENIZATION
+        query_doc_pairs_OUR_INTERPRETATION = [
+            [('query1', 'pos1'), ('query2', 'po2')],
+            [('query1', 'neg1'), ('query2', 'neg2')],
+            [],
+            [],
+            []
+        ]
+        '''
         #Create data for list-rank-loss
         query_doc_pairs = [[] for _ in  range(1+self.num_negs)]
+        
+        example_train_data = [
+        ['query', 'pos', 'neg'],
+        ['query2', 'po2', 'neg2'],
+        ]
 
+        for row in example_train_data:
+            # TODO @josh
+            # row[0] = query
+            # row[1] = pos
+            # row[2] = neg
+            query_text = row[0]
+            # pos
+            query_doc_pairs[0].append((query_text, row[1]))
+            # negs
+            query_doc_pairs[1+0].append((query_text, row[2]))
+            
+            ''' 
+            future refernece for multiple negs
+            # for num_neg, neg_id in enumerate(neg_ids):
+                # query_doc_pairs[1+num_neg].append((query_text, row[2]))
+            '''
+
+        ''' ORIGINAL CODE
+        query_doc_pairs = [[] for _ in  range(1+self.num_negs)]
+        cross_lingual_batch = random.random() < self.cross_lingual_chance 
         for row in batch:
             qid = row['qid']
+            print('qid', qid)
             pos_id = random.choice(row['pos'])
 
             query_lang = random.choice(self.langs)
@@ -119,7 +165,9 @@ class MSMARCOData(LightningDataModule):
             for num_neg, neg_id in enumerate(neg_ids):
                 doc_lang = random.choice(self.langs) if cross_lingual_batch else query_lang
                 query_doc_pairs[1+num_neg].append((query_text, self.collections[doc_lang][neg_id]['text']))
-
+        '''
+        print("query_doc_pairs", query_doc_pairs)
+        
         #Now tokenize the data
         features = [self.tokenizer(qd_pair, max_length=self.max_seq_length, padding=True, truncation='only_second', return_tensors="pt") for qd_pair in query_doc_pairs]
     
@@ -159,6 +207,8 @@ class ListRankLoss(LightningModule):
 
     def training_step(self, batch, batch_idx):
         pred_scores = []
+        print("batch", batch)
+        print("batch a 0", batch[0])
         scores = torch.tensor([0] * len(batch[0]['input_ids']), device=self.model.device)
    
         for feature in batch:
@@ -222,7 +272,8 @@ def main(args):
     dm = MSMARCOData(
         model_name=args.model,
         langs=args.langs,
-        #triplets_path='data/msmarco-hard-triplets.jsonl.gz',
+        # triplets_path='./msmarco-hard-triplets.jsonl.gz',
+        triplets_path='./msmarco-triplets.jsonl.gz',
         train_batch_size=args.batch_size,
         cross_lingual_chance=args.cross_lingual_chance,
         num_negs=args.num_negs
