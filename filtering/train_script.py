@@ -103,11 +103,20 @@ class MSMARCOData(LightningDataModule):
             for row in dataset:
                 self.bad_data.append(row['GPT-3-Semantic-Search-Generations']['answer'])
 
+        # create tirplets+ of <question, good answer (pos), and 3 bad answers (neg1, neg2, neg3)>
         self.triplets = []
         for dataset in [first, second]:
             for row in dataset:
-                "TODO equality check for negs"
-                self.triplets.append([row['GPT-3-Semantic-Search-Generations']['question'], row['GPT-3-Semantic-Search-Generations']['answer'],[random.choice(self.bad_data), random.choice(self.bad_data), random.choice(self.bad_data)]])
+                itr_counter = 0 
+                # Ensure our negative samples are not the same as each other (and that neg not == pos sample)
+                
+                neg1, neg2, neg3, = random.choice(self.bad_data), random.choice(self.bad_data), random.choice(self.bad_data)
+                while ( neg1 == neg2 or neg1 == neg3 or neg2 == neg3 ) and ( any(neg_ex in row['GPT-3-Semantic-Search-Generations']['answer'] for neg_ex in [neg1, neg2, neg3]) ) and itr_counter < 50:
+                    neg1, neg2, neg3, = random.choice(self.bad_data), random.choice(self.bad_data), random.choice(self.bad_data)
+                    itr_counter += 1
+                if itr_counter == 50:
+                    print("❌❌❌ WARNING: 50 iterations reached, negs may be equal ❌❌❌")
+                self.triplets.append([row['GPT-3-Semantic-Search-Generations']['question'], row['GPT-3-Semantic-Search-Generations']['answer'],[neg1, neg2, neg3]])
 
     def collate_fn(self, batch):
         '''
@@ -305,8 +314,7 @@ def main(args):
 
     model = ListRankLoss(model_name=args.model)
 
-    trainer = Trainer(default_root_dir="./finetuned_model_checkpoints",
-                      max_epochs=args.epochs, 
+    trainer = Trainer(max_epochs=args.epochs, 
                       accelerator="gpu", 
                       devices=args.num_gpus, 
                       precision=args.precision, 
