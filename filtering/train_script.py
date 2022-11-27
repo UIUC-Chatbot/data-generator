@@ -79,26 +79,25 @@ class MSMARCOData(LightningDataModule):
 
 
         # josh's paths
-        s = open("/Users/joshuamin/Desktop/Internships/UIUC_chatbot_data_generator/prompt_engineering/gpt-3_semantic_search/1_top_quality.json")
-        first = json.load(s)
-        s = open("/Users/joshuamin/Desktop/Internships/UIUC_chatbot_data_generator//prompt_engineering/gpt-3_semantic_search/2_decent_enough_to_keep.json")
-        second = json.load(s)
-        s = open("/Users/joshuamin/Desktop/Internships/UIUC_chatbot_data_generator//prompt_engineering/gpt-3_semantic_search/3_to_delete.json")
-        third = json.load(s)
-        s = open("/Users/joshuamin/Desktop/Internships/UIUC_chatbot_data_generator//prompt_engineering/gpt-3_semantic_search/4_invalid_items.json")
-        fourth = json.load(s)
+        # s = open("/Users/joshuamin/Desktop/Internships/UIUC_chatbot_data_generator/prompt_engineering/gpt-3_semantic_search/1_top_quality.json")
+        # first = json.load(s)
+        # s = open("/Users/joshuamin/Desktop/Internships/UIUC_chatbot_data_generator//prompt_engineering/gpt-3_semantic_search/2_decent_enough_to_keep.json")
+        # second = json.load(s)
+        # s = open("/Users/joshuamin/Desktop/Internships/UIUC_chatbot_data_generator//prompt_engineering/gpt-3_semantic_search/3_to_delete.json")
+        # third = json.load(s)
+        # s = open("/Users/joshuamin/Desktop/Internships/UIUC_chatbot_data_generator//prompt_engineering/gpt-3_semantic_search/4_invalid_items.json")
+        # fourth = json.load(s)
         
         # kastan's paths
-        # s = open("/home/kastan/vlad_chatbot/human_data_review/gpt-3_semantic_search/1_top_quality.json")
-        # first = json.load(s)
-        # s = open("/home/kastan/vlad_chatbot/human_data_review/gpt-3_semantic_search/2_decent_enough_to_keep.json")
-        # second = json.load(s)
-        # s = open("/home/kastan/vlad_chatbot/human_data_review/gpt-3_semantic_search/3_to_delete.json")
-        # third = json.load(s)
-        # s = open("/home/kastan/vlad_chatbot/human_data_review/gpt-3_semantic_search/4_invalid_items.json")
-        # fourth = json.load(s)
+        s = open("/home/kastan/vlad_chatbot/human_data_review/gpt-3_semantic_search/1_top_quality.json")
+        first = json.load(s)
+        s = open("/home/kastan/vlad_chatbot/human_data_review/gpt-3_semantic_search/2_decent_enough_to_keep.json")
+        second = json.load(s)
+        s = open("/home/kastan/vlad_chatbot/human_data_review/gpt-3_semantic_search/3_to_delete.json")
+        third = json.load(s)
+        s = open("/home/kastan/vlad_chatbot/human_data_review/gpt-3_semantic_search/4_invalid_items.json")
+        fourth = json.load(s)
 
-        # todo uncomment
         self.bad_data = []
         for dataset in [third, fourth]:
             for row in dataset:
