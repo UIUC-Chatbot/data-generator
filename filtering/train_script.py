@@ -305,7 +305,8 @@ def main(args):
 
     model = ListRankLoss(model_name=args.model)
 
-    trainer = Trainer(max_epochs=args.epochs, 
+    trainer = Trainer(default_root_dir="./finetuned_model_checkpoints",
+                      max_epochs=args.epochs, 
                       accelerator="gpu", 
                       devices=args.num_gpus, 
                       precision=args.precision, 
