@@ -1,0 +1,2923 @@
+\documentclass{patt}
+\usepackage[section]{placeins}
+\usepackage{float}
+\graphicspath{{../art/ch03/},{../art/designelements/},{../art/designelements/UnNumberedArt/}}
+
+\setcounter{part}{1}
+\setcounter{chapter}{2}
+\setcounter{page}{51}
+
+ \makeatletter
+\def\@makechapterhead#1{%
+  \begingroup
+  \parindent \z@%
+  \vspace*{-8.5\p@}%
+  \begin{picture}(0,0)
+    \put(432,-577){\includegraphics[width=0.723333in,height=9.52667in]{PattChp.eps}}
+    \put(428,-577){\rule{1\p@}{9.52667in}}
+    \put(381.5,-181){\vbox{%
+        \includegraphics{PattIcon1\ifnum\value{part}=0
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon2\ifnum\value{part}=2
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon3\ifnum\value{part}=3
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon4\ifnum\value{part}=4
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon5\ifnum\value{part}=1
+            a\else b\fi.eps}\vspace{1pc}}}
+  \end{picture}%
+  \settowidth{\chapternumberwidth}{\fontsize{12}{12}\selectfont\industriasolid\trackonefifty{chapter}}%
+  \hfill\parbox{\chapternumberwidth}{%
+    \centering\industriasolid
+    \centerline{\hss\fontsize{12}{12}\selectfont\trackonefifty{chapter}\hss}\par\vspace{1.5pc}
+    \centerline{\sans\fontsize{72}{12}\selectfont\colour\thechapter}}
+  \par
+  \vspace{6.48pc}
+  {\industriasolid\fontsize{30}{32}\selectfont\trackten{#1}\par}%
+  \vspace{1.5pc}%
+  {\colour\rule{36.4pc}{4\p@}}
+  \vspace{4pt}
+  \endgroup}
+  \makeatother
+%
+
+\begin{document}
+
+% \bgroup
+
+\chapter{Digital Logic Structures}
+\label{chapt:logic}
+ % \egroup
+
+In Chapter~1, we stated that computers were built from very large
+numbers of very simple structures.  For example, Intel's Broadwell-E5
+microprocessor, introduced in 2016, contained more than 7 billion
+transistors.  Similarly, IBM's Power9 microprocessor, introduced in
+2017 contained 8 billion transistors.  In this chapter, we will explain 
+how the MOS transistor works (as a logic element), show how these transistors
+are connected to form logic gates, and then show how logic gates
+are interconnected to form larger units that are needed to
+construct a computer.  In Chapter~4, we will connect those larger
+units and form a computer.
+
+But first, the transistor.
+
+%\enlargethispage{-\baselineskip}
+%\vspace{1pc}
+
+%3.1
+\section{The Transistor}
+Most computers today, or rather most microprocessors (which form the
+core of the computer) are constructed out of MOS transistors.  MOS
+stands for {\em metal-oxide semiconductor.}  The electrical properties
+of \index{Metal Oxide Semiconductor} \index{MOS} metal-oxide
+semiconductors are well beyond the scope of what we want to understand
+in this course.  They are below our lowest level of abstraction, which
+means that if somehow transistors start misbehaving, we are at their
+mercy.  However, it is unlikely in this course that we will have any problems 
+from the transistors.
+
+Still, it is useful to know that there are two types of MOS
+transistors: P-type and N-type.  They both operate ``logically,'' very
+similar to the way wall switches work.
+
+Figure~\ref{fig:wall_switch} shows the most basic of electrical circuits.
+It consists of (1) a power supply (in this case, the 120 volts that come 
+into your house if you live in the United States, or the 220 volts if you 
+live in most of the rest of the world), (2) a wall
+switch, and (3) a lamp (plugged into an outlet in the wall).  In order for
+the lamp to glow, electrons must flow; in order for electrons to flow,
+there must be a closed circuit from the power supply to the lamp and
+back to the power supply.  The lamp can be turned on and off by simply
+manipulating the wall switch to make or break the closed circuit.
+
+%Figure 3.1
+\begin{figure}
+\centerline{\includegraphics{pat67509_0301.eps}}
+\vspace{-1pt}
+\caption{A simple electric circuit showing
+  the use of a wall switch}\label{fig:wall_switch}
+\end{figure}
+
+Instead of the wall switch, we could use an N-type or a P-type MOS
+transistor to make or break the closed circuit.  Figure~3.2 shows a
+schematic rendering of an N-type transistor (a) by itself, and (b) in
+a circuit.  Note (Figure~3.2a) that the transistor has three
+terminals.  They are called the \textit{gate}, the \textit{source}, and
+the \textit{drain}.  The reasons for the names source and drain are
+not of interest to us in this course.  What is of interest is the fact
+that if the gate of the N-type transistor is supplied with 1.2 volts,
+the connection from source to drain acts like a piece of wire.  We say
+(in the language of electricity) that we have a {\em short circuit }
+\index{short circuit} between the source and drain.  If the gate of
+the N-type transistor is supplied with 0 volts, the connection between
+the source and drain is broken.  We say that between the source and
+drain we have an {\em open circuit}.  \index{open circuit}
+
+%Figure 3.2
+\begin{figure}[b]
+\centerline{\includegraphics{pat67509_0302.eps}}
+\vspace{-1pt}
+\caption{The N-type MOS transistor}
+\label{fig:nmos}
+\end{figure}
+
+
+Figure~\ref{fig:nmos} shows the N-type transistor in \index{N-type transistor} 
+a circuit with a battery and a bulb.  When the gate is supplied with 1.2
+volts, the transistor acts like a piece of wire, completing the
+circuit and causing the bulb to glow.  When the gate is supplied with
+0 volts, the transistor acts like an open circuit, breaking the
+circuit, and causing the bulb to not glow.
+
+Figure~3.2c is a shorthand notation for describing the circuit of
+Figure~3.2b.  Rather than always showing the power supply and the
+complete circuit, electrical engineers usually show only the terminals
+of the power supply.  The fact that the power supply itself provides
+the completion of the completed circuit is well understood, and so is
+not usually shown.
+
+The P-type transistor works in exactly the opposite fashion from the
+N-type\index{P-type transistor} transistor.  Figure~3.3 shows the
+schematic representation of a P-type transistor.  When the gate is
+supplied with 0 volts, the P-type transistor acts (more or less) like
+a piece of wire, closing the circuit.  When the gate is supplied with
+1.2 volts, the P-type transistor acts like an open circuit.  Because
+the P-type and N-type transistors act in this complementary way, we
+refer to circuits that contain both P-type and N-type transistors as
+CMOS circuits, for {\em complementary metal-oxide semiconductor}.
+\index{CMOS} \index{Complementary Metal-Oxide Semiconductor}
+
+%Figure 3.3
+\begin{figure}
+\centerline{\includegraphics{pat67509_0303.eps}}
+\caption{A P-type MOS transistor}
+\label{fig:pmos}
+\vspace{3pt}
+\end{figure}
+
+\vspace{-6pt}
+
+%3.2
+\section{Logic Gates}
+
+One step up from the transistor is the {\em logic gate}.  That is, we
+construct basic logic structures out of individual MOS transistors.
+In Chapter~2, we studied the behavior of the AND, the OR, and the NOT
+functions.  In this chapter we construct transistor circuits that
+implement each of these functions.  The corresponding circuits are
+called AND, OR, and NOT {\em gates}.
+
+\vspace{3pt}
+
+%3.2.1
+\subsection{The NOT Gate (Inverter)}
+\index{inverter}\index{NOT gate}
+
+Figure~3.4 shows the simplest logic structure that exists in a
+computer.  It is constructed from two MOS transistors, one P-type and
+one N-type.  Figure~3.4a is the schematic representation of that
+circuit.  Figure~3.4b shows the behavior of the circuit if the input
+is supplied with 0 volts.  Note that the P-type transistor acts like a
+short circuit and the N-type transistor acts like an open circuit.  
+The output is, therefore,
+connected to 1.2 volts.  On the other hand, if the input is supplied
+with 1.2 volts, the P-type transistor acts like an open circuit, but the N-type
+transistor acts like a short circuit.  The output in this case is connected to
+ground (i.e., 0 volts).  The complete behavior of the circuit can be
+described by means of a table, as shown in Figure~3.4c.  If we replace
+0 volts by the symbol 0 and 1.2 volts by the symbol 1, we have the
+truth table (Figure~3.4d) for the complement or NOT function, which we
+studied in Chapter~2.
+
+%Figure 3.4
+\begin{figure}
+\centerline{\includegraphics{pat67509_0304.eps}}
+\caption{A CMOS inverter}
+\label{fig:inverter}
+\end{figure}
+
+In other words, we have just shown how to construct an electronic
+circuit that implements the NOT logic function discussed in Chapter~2.
+We call this circuit a~{\em NOT gate}, or an {\em inverter}.
+
+%3.2.2
+\subsection{OR and NOR Gates}
+
+Figure~3.5 illustrates a NOR gate.  Figure~3.5a is a schematic of a
+circuit that implements a NOR gate.  It contains two P-type and two
+N-type transistors.
+
+%Figure 3.5
+\begin{figure}
+\centerline{\includegraphics{pat67509_0305.eps}}
+\caption{The NOR gate}\label{fig:nor}
+\end{figure}
+
+Figure~3.5b shows the behavior of the circuit if $A$ is supplied with
+0 volts and $B$ is supplied with 1.2 volts.  In this case, the lower
+of the two P-type transistors produces an open circuit, and the output
+$C$ is disconnected from the 1.2-volt power supply.  However, the
+leftmost N-type transistor acts like a piece of wire, connecting the
+output $C$ to 0 volts.
+
+Note that if both $A$ and $B$ are supplied with 0 volts, the two
+P-type transistors conduct, and the output $C$ is connected to 1.2
+volts.  Note further that there is no ambiguity here, since both
+N-type transistors act as open circuits, and so $C$ is disconnected
+from ground.
+
+If either $A$ or $B$ is supplied with 1.2 volts, the corresponding
+P-type transistor results in an open circuit.  That is sufficient to
+break the connection from $C$ to the 1.2-volt source.  However, 1.2
+volts supplied to the gate of one of the N-type transistors is
+sufficient to cause that transistor to conduct, resulting in $C$ being
+connected to ground (i.e., 0 volts).
+
+Figure~3.5c summarizes the complete behavior of the circuit of
+Figure~3.5a.  It shows the behavior of the circuit for each of the
+four pairs of voltages that can be supplied to $A$ and $B$.  That is,
+\vspace{-0.1in}
+\begin{alignat*}{2}
+A &= \rm  0~\text{volts}, \quad &   B &= \rm 0~\text{volts} \\[-1.5pt]
+A &= \rm  0~\text{volts}, \quad&    B &= \rm 1.2~\text{volts} \\[-1.5pt]
+A &= \rm  1.2~\text{volts}, \quad&  B &= \rm 0~\text{volts} \\[-1.5pt]
+A &= \rm  1.2~\text{volts}, \quad&  B &= \rm 1.2~\text{volts}
+\end{alignat*}
+
+If we replace the voltages with their logical equivalents, we have the
+truth table of Figure~3.5d.  Note that the output $C$ is exactly the
+opposite of the logical OR function that we studied in Chapter~2.  In
+fact, it is the NOT-OR function, more typically abbreviated as NOR.
+We refer to the circuit that implements the NOR function as a NOR
+gate.  \index{NOR gate}
+
+If we augment the circuit of Figure~3.5a by adding an inverter at its
+output, as shown in Figure~3.6a, we have at the output $D$ the logical
+function OR.  Figure~3.6a is the circuit for an OR gate.  Figure~3.6b
+describes the behavior of this circuit if the input variable $A$ is
+set to 0 and the input variable $B$ is set to 1.  Figure~3.6c shows
+the circuit's truth table.  \index{OR gate}
+
+%Figure 3.6
+\begin{figure}
+\hspace*{-8pc}\begin{minipage}{36pc}
+\centerline{\includegraphics{pat67509_0306.eps}}
+\caption{The OR gate}\label{fig:or}
+\end{minipage}
+\vspace{-12pt}
+\end{figure}
+
+\FloatBarrier
+%3.2.3
+\subsection{Why we can't simply connect P-type to ground}
+
+Some bright students have looked at our implementation of the OR gate (a 
+NOR-gate followed by an inverter) and asked the question, why can't we
+simply connect the transistors as shown in Figure~\ref{fig:bad_OR}a.
+
+Logically, it looks very tempting.  Four transistors instead of six.
+Unfortunately, the electrical properties of transistors makes this 
+problematic.  When we connect a P-type transistor to $1.2$ volts or an N-type 
+transistor to ground, there is no voltage across the transistor, resulting in 
+outputs as shown in Figure~\ref{fig:nor}, for example, of 0 volts or 1.2 volts, 
+depending on
+the input voltages to A and B.  However, when we connect a P-type transistor
+to ground or an  N-type transistor to 1.2 volts, because of the electrical 
+requirements of the 
+transisors, we get what is usually referred to as a transmission voltage of 
+approximately 0.5 volts across the transistor.  This results in the output of 
+the transistor circuit of Figure~\ref{fig:bad_OR} being $0.5$ volts + $0.5$ 
+volts, or $1.0$ volt if A and B are both $0$, and $0.7$ volts ($1.2$ volts 
+minus $0.5$ volts) otherwise.  Figure~\ref{fig:bad_OR}b shows the actual 
+voltages in the resulting truth table, rather than 0s and 1s.  That is, even 
+though the transistor circuit looks like it would work, 
+the transmission voltages across the transistors 
+would yield an output voltage of 1 volt for a logical 0 and 0.7 volts for 
+a logical 1.  Not what we would like for an OR gate!
+
+%Figure 3.7
+\begin{figure}
+\centerline{\includegraphics{bad_OR.eps}}
+\caption{An OR gate (not really!)}\label{fig:bad_OR}
+\vspace{-6pt}
+\end{figure}
+
+\FloatBarrier
+%3.2.4
+\subsection{AND and NAND Gates}
+Figure~\ref{fig:and} shows an AND gate.  Note that if either $A$ or $B$ is
+supplied with 0 volts, there is a direct connection from $C$ to the
+1.2-volt power supply.  The fact that $C$ is at 1.2 volts means the
+N-type transistor whose gate is connected to $C$ provides a path from
+$D$ to ground.  Therefore, if either $A$ or $B$ is supplied with 0
+volts, the output $D$ of the circuit of Figure~\ref{fig:and} is 0 volts.
+
+%Figure 3.8
+\begin{figure}
+\centerline{\includegraphics{pat67509_0307.eps}}
+\caption{The AND gate}\label{fig:and}
+\vspace{-6pt}
+\end{figure}
+
+\enlargethispage{-2\baselineskip}
+
+Again, we note that there is no ambiguity.  The fact that at least one
+of the two inputs $A$ or $B$ is supplied with 0 volts means that at
+least one of the two N-type transistors whose gates are connected to
+$A$ or $B$ is open, and that consequently, $C$ is disconnected from
+ground.  Furthermore, the fact that $C$ is at 1.2 volts means the
+P-type transistor whose gate is connected to $C$ is open-circuited.
+Therefore, $D$ is not connected to 1.2 volts.
+
+On the other hand, if both $A$ and $B$ are supplied with 1.2 volts,
+then both of their corresponding P-type transistors are open.
+However, their corresponding N-type transistors act like pieces of
+wire, providing a direct connection from $C$ to ground.  Because $C$
+is at ground, the rightmost P-type transistor acts like a closed
+circuit, forcing $D$ to 1.2 volts.
+
+Figure~\ref{fig:and}b is a truth table that summarizes the behavior of 
+the circuit
+of Figure~\ref{fig:and}a.  Note that the circuit is an AND gate.  The circuit
+shown within the dashed lines (i.e., having output $C$) is a NOT-AND
+gate, which we generally abbreviate as NAND.  \index{NAND gate}
+
+\enlargethispage{-2\baselineskip}
+
+The gates just discussed are very common in digital logic circuits and
+in digital computers.  There are billions of inverters (NOT gates) in
+Intel's Skylake microprocessor.  As a convenience, we can represent
+each of these gates by standard symbols, as shown in 
+Figure~\ref{fig:logicgates}.  The bubble shown in the inverter, NAND, and 
+NOR gates signifies the complement (i.e., NOT) function.  \index{AND gate}
+From now on, we will not draw circuits showing the individual
+transistors.  Instead, we will raise our level of abstraction and use
+the symbols shown in Figure~\ref{fig:logicgates}.
+
+%Figure 3.9
+\begin{figure}[b]
+\vspace{-6pt} \centerline{\includegraphics{pat67509_0308.eps}}
+%\vspace{-1pt}
+\caption{Basic logic gates}\label{fig:logicgates}
+\end{figure}
+
+\FloatBarrier
+%3.2.5
+\subsection{Gates with more than two inputs}
+
+Before we leave the topic of logic gates, we should note that the
+notion of AND, OR, NAND, and NOR gates extends to larger numbers of
+inputs.  One could build a three-input AND gate or a four-input OR
+gate, for example.  An $n$-input AND gate has an output value of 1
+only if ALL $n$ input variables have values of 1.  If any of the $n$
+inputs has a value of 0, the output of the $n$-input AND gate is 0.
+An $n$-input OR gate has an output value of 1 if ANY of the $n$ input
+variables has a value of 1.  That is, an $n$-input OR gate has an
+output value of 0 only if ALL $n$ input variables have values of 0.
+
+Figure~\ref{fig:3and} illustrates a three-input AND gate.  Figure~3.10a shows
+its truth table.  Figure~3.10b shows the symbol for a three-input AND
+gate.
+
+%Figure 3.10
+\begin{figure}
+\centerline{\includegraphics{pat67509_0310.eps}}
+\caption{A three-input AND gate}\label{fig:3and}
+\vspace{-6pt}
+\end{figure}
+
+Question: Can you draw a transistor-level circuit for a three-input AND 
+gate?  How about a four-input AND gate?  How about a four-input OR gate?
+
+\FloatBarrier
+%3.3
+\section{Combinational Logic Circuits}
+
+Now that we understand the workings of the basic logic gates, the next
+step is to build some of the logic structures that are important
+components of the microarchitecture of a computer.
+
+There are fundamentally two kinds of logic structures, those that
+include the storage of information and those that do not.  In Sections
+3.4, 3.5, and 3.6, we will deal with structures that store
+information.  In this section, we will deal with structures that do not
+store information.
+These structures are sometimes referred to as {\em decision elements}.
+Usually, they are referred to as {\em combinational logic structures},
+because their outputs are strictly dependent on the combination of
+input values that are being applied to the structure {\em right now}.
+Their outputs are not at all dependent on any past history of
+information that is stored internally, since no information can be
+stored internally in a combinational logic circuit.
+\index{combinational logic}
+
+We will next examine three useful combinational logic circuits: a decoder, 
+a mux, and a one-bit adder.
+
+%3.3.1
+\subsection{Decoder}
+
+\looseness=1 Figure~3.11 shows a logic gate implementation of a two-input
+decoder.  A decoder has the property that exactly one of its outputs
+is 1 and all the rest are 0s.  The one output that is logically 1 is
+the output corresponding to the input pattern that it is expected to
+detect.  In general, decoders have $n$ inputs and $2^n$ outputs.  We
+say the output line that detects the input pattern is {\em asserted}.
+That is, that output \index{asserted} line has the value 1, rather
+than 0 as is the case for all the other output lines.  In Figure~3.11,
+note that for each of the four possible combinations of inputs $A$ and
+$B$, exactly one output has the value 1 at any one time.  In \nobreak
+Figure~3.11b, the input to the decoder is 10, resulting in the third
+output line being asserted.\index{decoder}
+
+%Figure 3.11
+\begin{figure}
+\centerline{\includegraphics{pat67509_0311.eps}}
+\caption{A two-input decoder}
+\label{fig:decoder}
+\end{figure}
+
+The decoder is useful in determining how to interpret a bit pattern.
+We will see in Chapter~5 that the work to be carried out by each
+instruction in the LC-3 computer is determined by a four-bit pattern 
+that is the part of the instruction called the {\em opcode}, A 4-to-16 
+decoder is a simple combinational logic structure for identifying what 
+work is to
+be performed by each instruction.
+
+%3.3.2
+\subsection{Mux}
+\FloatBarrier
+
+Figure~3.12a shows a logic gate implementation of a two-input
+multiplexer, more commonly referred to as a {\em mux}.  The function
+of a mux is to select one of the inputs (A or B) and connect it to the output.
+The select signal ($S$ in Figure~3.12) determines which input is
+connected to the output.  \index{MUX} \index{multiplexer} 
+
+The mux of
+Figure~3.12 works as follows: Suppose $S=0$, as shown in Figure~3.12b.
+Since the output of an AND gate is 0 unless all inputs are 1, the
+output of the rightmost AND gate is 0.  Also, the output of the
+leftmost AND gate is whatever the input $A$ is.  That is, if $A=0$,
+then the output of the leftmost AND gate is 0, and if $A=1$, then the
+output of the leftmost AND gate is 1.  Since the output of the rightmost 
+AND gate is 0, it has
+no effect on the OR gate.  Consequently, the output at $C$ is exactly
+the same as the output of the leftmost AND gate.  The net result of
+all this is that if $S=0$, the output $C$ is identical to the input
+$A$.
+
+%Figure 3.12
+\begin{figure}
+\centerline{\includegraphics{pat67509_0312.eps}}
+\caption{A 2-to-1 mux}
+\label{fig:mux}
+\vspace{-10pt}
+\end{figure}
+
+On the other hand, if $S=1$, it is $B$ that is ANDed with 1, resulting
+in the output of the OR gate having the value of $B$.
+
+In summary, the output $C$ is always connected to either the input $A$
+or the input $B$---which one depends on the value of the select line
+$S$.  We say $S$ selects the source of the mux (either $A$ or $B$) to
+be routed through to the output $C$. Figure~3.12c shows the standard
+representation for a mux.
+
+In general, a mux consists of $2^n$ inputs and $n$ select lines.
+Figure~3.13a shows a gate-level description of a four-input mux.
+It requires two select lines.  Figure~3.13b shows the standard
+representation for a four-input mux.
+
+%Figure 3.13
+\begin{figure}
+\centerline{\includegraphics{pat67509_0313.eps}}
+\caption{A four-input mux}
+\label{fig:4mux}
+\vspace{-6pt}
+\end{figure}
+
+Question: Can you construct the gate-level representation for an eight-input
+mux? How many select lines must you have?
+\FloatBarrier
+%3.3.3
+\subsection{A One-bit Adder (aka a Full Adder)}
+
+Recall in Chapter~2, we discussed binary addition.  A simple
+algorithm for binary addition is to proceed as you have always done in
+the case of decimal addition, from right to left, one column at a
+time, adding the two digits from the two values plus the carry in, and
+generating a sum digit and a carry to the next column.  The only
+difference here (with binary addition) is you get a carry after 1, rather 
+than after 9.
+
+Figure~\ref{fig:ttadder} is a truth table that describes the result of binary
+addition on {\bf one column} of bits within two $n$-bit operands.  At
+each column, there are three values that must be added: one bit from
+each of the two operands A and B and the carry from the previous column.  We
+designate these three bits as $A_i$, $B_i$, and $C_i$.  There are
+two results, the sum bit ($S_i$) and the carry over to the next column,
+$C_{i+1}$.  Note that if only one of the three bits equals 1, we
+get a sum of 1, and no carry (i.e., $C_{i+1} = 0$).  If two of the
+three bits equal 1, we get a sum of 0, and a carry of~1.  If all three
+bits equal 1, the sum is 3, which in binary corresponds to~a
+sum of 1 and a carry of 1.
+
+%Figure 3.14
+\begin{figure}
+\centerline{\includegraphics{pat67509_0314.eps}}
+\caption{The truth table for a one-bit adder}
+\label{fig:ttadder}
+\vspace{-12pt}
+\end{figure}
+
+Figure~\ref{fig:fulladder} shows a logic gate implementation of a 
+one-bit adder.  Note that each AND gate in Figure~3.15 produces an
+output 1 for exactly one of the eight input combinations of $A_i,
+B_i$, and $C_i$.  The output of the OR gate for $C_{i+1}$ must be 1
+in exactly those cases where the corresponding input combinations in
+Figure~\ref{fig:ttadder} produce an output 1.  Therefore the inputs to the 
+OR gate that generates $C_{i+1}$ are the outputs of the 
+AND gates corresponding to those input combinations.  Similarly, the inputs to 
+the OR gate that generates $S_i$ are the outputs of the AND gates corresponding
+to the input combinations that require an output 1 for $S_i$ in the truth
+table of Figure~\ref{fig:ttadder}.
+
+\enlargethispage{-1\baselineskip}
+
+%Figure 3.15
+\begin{figure}[hb]
+\vspace{-6pt}
+\centerline{\includegraphics{pat67509_0315.eps}}
+\caption{Gate-level description of a one-bit adder}
+\label{fig:fulladder}
+\end{figure}
+
+Note that since the input combination 000 does not result in an output
+1 for either $C_{i+1}$ or $S_i$, its corresponding AND gate is not an
+input to either of the two OR gates.
+
+Figure~\ref{fig:4bitadder} shows a circuit for adding two 4-bit 
+binary numbers, using four of the one-bit adder circuits of Figure~3.15.  
+Note that the carry out of column $i$ is an input to the addition performed 
+in column $i+1$.\vspace{10pt}
+
+%Figure 3.16
+\begin{figure}
+\centerline{\includegraphics{pat67509_0316.eps}}
+\caption{A circuit for adding two 4-bit binary numbers}
+\label{fig:4bitadder}
+ \vspace{12pt}
+\end{figure}
+
+If we wish to implement a logic circuit that adds two 16-bit numbers, we 
+could do so with a circuit of 16 one-bit adders.
+
+We should point out that historically the logic circuit of 
+Figure~\ref{fig:fulladder} that provides three inputs ($A_i$, $B_i$, 
+and $C_i$) and two outputs (the sum bit $S_i$ and the carry over to the 
+next column $C_{i+1}$) has generally been referred to as 
+a {\em full adder}  \index{full adder}
+to differentiate it from another structure which is called 
+a {\em half adder}.  The distinction between the two is the carry bit.  
+Note that the carry into the right-most column in Figure~\ref{fig:4bitadder} 
+is 0.  That is, in the right-most circuit, $S_0$ and $C_1$ depend only on two
+inputs, $A_0$ and $B_0$.  Since that circuit depends on only two inputs, it has
+been referred to as a half adder.  Since the other circuits depend on all three
+inputs, they are referred to as full adders.  We prefer the term one-bit adder
+as a simpler term for describing what is happening in each column.
+
+\FloatBarrier
+%3.3.4
+\subsection{The Programmable Logic Array (PLA)}
+
+\looseness=1
+Figure~\ref{fig:pla} illustrates a very common building block for implementing
+any collection of logic functions one wishes to implement.  The building block
+is called a programmable logic array (PLA).  It consists of an array
+of AND gates (called an AND array) followed by an array of OR gates
+(called an OR array).  The number of AND gates corresponds to the
+number of input combinations (rows) in the truth table.  For n-input
+logic functions, we need a PLA with $2^n$ $n$-input AND gates.  In
+Figure~\ref{fig:pla}, we have $2^3$ 3-input AND gates, corresponding to
+three logical input variables.  The number of OR gates
+corresponds to the number of logic functions we wish to implement, i.e., the
+number of output columns in the truth table.  The
+implementation algorithm is simply to connect the output of an AND
+gate to the input of an OR gate if the corresponding row of the truth
+table produces an output 1 for that output column.  Hence the notion
+of programmable.  That is, we say we program the connections from AND
+gate outputs to OR gate inputs to implement our desired logic functions.
+
+%Figure 3.17
+\begin{figure}
+\centerline{\includegraphics{pat67509_0317.eps}}
+\caption{A programmable logic array}
+\label{fig:pla}
+\end{figure}
+
+Figure~\ref{fig:fulladder} shows seven AND gates connected to two OR gates 
+since our requirement was to implement two functions (sum and carry) of
+three input variables.  Figure~\ref{fig:pla} shows a PLA that can implement
+any four functions of three variables by
+appropriately connecting AND gate outputs to OR gate inputs.  That is, any
+function of three variables can be implemented by connecting the outputs of
+all AND gates corresponding to input combinations for which the output is 1
+to inputs of one of the OR gates.  Thus, we could implement the one-bit adder 
+by {\em programming} the two OR gates
+in Figure~\ref{fig:pla} whose outputs are W and X by connecting 
+or not connecting the outputs of the AND gates to the inputs of those two
+Or gates as specified by the two output columns of Figure~\ref{fig:ttadder}.
+\vadjust{\pagebreak}
+
+\FloatBarrier
+%3.3.5
+\subsection{Logical Completeness}
+
+Before we leave the topic of combinational logic circuits, it is worth
+noting an important property of building blocks for logic circuits:
+{\em logical completeness}.  We showed in Section~3.3.4 that any logic
+function we wished to implement could be accomplished with a PLA.  We
+saw that the PLA consists of only AND gates, OR gates, and inverters.
+That means that any logic function can be
+implemented, provided that enough AND, OR, and NOT gates are
+available.  We say that the set of gates \{AND, OR, NOT\} is {\em
+logically complete} \index{logical completeness} because we can
+build a circuit to carry out the specification of any truth table we
+wish without using any other kind of gate.  That is, the set of gates
+\{AND, OR, and NOT\} is logically complete because a barrel of AND
+gates, a barrel of OR gates, and a barrel of NOT gates are sufficient
+to build a logic circuit that carries out the specification of any
+desired truth table.  The barrels may have to be big, but the
+point is, we do not need any other kind of gate to do the job.
+
+Question: Is there any single two-input logic gate that is logically
+complete?  For example, is the NAND gate logically complete?  Hint: Can I
+implement a NOT gate with a NAND gate?  If yes, can I then implement an AND
+gate using a NAND gate followed by a NOT gate?  If yes, can I implement an
+OR gate using just AND gates and NOT gates?  
+
+If all of the above is true, then the NAND gate is logically complete, and
+I can implement any desired logic function as described by its truth table
+with a barrel of NAND gates.  
+
+%3.4
+\section{Basic Storage Elements}
+
+Recall our statement at the beginning of Section~3.3 that there are
+two kinds of logic structures, those that involve the storage of
+information and those that do not.  We have discussed three examples
+of those that do not: the decoder, the mux, and the full adder.  Now
+we are ready to discuss logic structures that do include the storage
+of information.
+
+%3.4.1
+\subsection{The R-S Latch}
+
+A simple example of a storage element is the R-S latch.  It can store one bit 
+of information, a $0$ or a $1$.  The R-S latch can be implemented in many
+ways, the simplest being the one shown in Figure~\ref{fig:rslatch}.  Two 
+2-input NAND gates are connected such that the output of each is connected 
+to one of the inputs of the other.  The remaining inputs $S$ and $R$ are
+normally held at a logic level $1$.
+
+The R-S latch gets its name from the old designations for setting the latch to
+store a $1$ and setting the latch to store a $0$.  Setting the latch to store 
+a 1 was referred to as {\em setting} the latch, and setting the latch to store 
+a 0 was referred to as {\em reseting} the latch.  Ergo, R-S.
+
+%Figure 3.18
+\begin{figure}[h]
+\centerline{\includegraphics{pat67509_0318.eps}}
+\caption{An R-S latch}
+\label{fig:rslatch}
+\end{figure}
+
+\paragraph{The quiescent state}
+
+We describe the {\em quiescent} (or quiet) state of a latch as the state
+when the latch is storing a value, either 0 or 1, and nothing is trying to
+change that value.  This is the case when inputs $S$ and $R$ both have the 
+logic value 1.  In Figure~\ref{fig:rslatch} the letter $a$ designates the 
+value that is currently stored in the latch, which we also refer to as the
+output of the latch. 
+
+Consider first the case where the value stored and therefore the output $a$ 
+is 1.  Since that means the value $A$ is 1 (and since we know the input $R$
+is 1 because we are in the quiescent state), the NAND gate's output $b$ 
+must be 0.  That, in turn, means $B$ must be 0, which results in the
+output $a$ equal to 1.  As long as the inputs $S$ and $R$ remain 1,
+the state of the circuit will not change.  That is, the R-S latch will
+continue to store the value 1 (the value of the output~$a$).\index{latch!R-S}
+
+If, on the other hand, we assume the output $a$ is 0, then
+$A$ must be 0, and the output $b$ must be 1.  That, in turn, results
+in $B$ equal to 1, and combined with the input $S$ equal to
+1 (again due to quiescence), results in the output $a$ equal to 0.
+Again, as long as the inputs $S$ and $R$ remain 1, the state of the
+circuit will not change.  In this case, we say the R-S latch stores
+the value~0.
+
+\paragraph{Setting the latch to a $1$ or a $0$}
+
+The latch can be set to 1 by momentarily setting $S$ to 0, provided we
+\lightbulb[-18pt]
+keep the value of $R$ at 1.  Similarly, the latch can be set to 0 by
+momentarily setting $R$ to 0, provided we keep the value of $S$ at 1.
+In order for the R-S latch to work properly, both S and R must never be
+allowed to be set to 0 at the same time.
+
+We use the term {\em set} to denote setting a variable to 0 or 1, as
+\index{setting a bit} in ``set to 0'' or ``set to 1.''  In addition,
+we often use the term {\em clear } to denote the act of setting a
+variable to 0.  \index{clearing a bit}
+
+If we set $S$ to $0$ for a very brief period of time, this causes  $a$ 
+to equal 1, which in turn causes $A$ to equal 1.  Since $R$ is also 1, 
+the output at $b$ must be 0.  This causes $B$ to be 0, which in turn makes 
+$a$ equal to 1.  If, after that very brief period of time, we now return $S$ 
+to 1, it does not affect $a$.  Why?  Answer: Since $B$ is also 0, and since
+only one input $0$ to a NAND gate is enough to guarantee that the output of 
+the NAND gate is 1, the latch will continue to store a 1 long after $S$ 
+returns to 1.
+
+In the same way, we can clear the latch (set the latch to 0) by
+setting $R$ to 0 for a very short period of time.
+
+We should point out that if both $S$ and $R$ were allowed to be set to 0 
+at the same time, the outputs $a$ and $b$ would both be 1, and the final 
+state of the latch would depend on the electrical properties of the 
+transistors making up the gates and not on the logic being performed.  
+How the electrical
+properties of the transistors would determine the final state in this
+case is a subject we will have to leave for a later semester.  :-(
+
+Finally, we should note that when a digital circuit is powered on, the latch
+can be in either of its two states, 0 or 1.  It does not matter which state
+since we never use that information until {\bf after} we have set it to 1 or 0.
+
+\FloatBarrier
+\subsection{The Gated {\itshape D} Latch}
+\label{sec:gated_latch}
+To be useful, it is necessary to control when a latch is set and when
+it is cleared.  A simple way to accomplish this is with the gated
+latch.
+
+Figure~\ref{fig:gatedDlatch} shows a logic circuit that implements a gated 
+$D$ latch.  It consists of the R-S latch of Figure~3.18, plus two additional 
+NAND gates that allow the latch to be set to the value of $D$, but {\em only}
+when WE is asserted (i.e., when WE equals 1).  WE stands for 
+{\em write enable}.  When WE is
+not asserted (i.e., when WE equals 0), the outputs $S$ and $R$ are
+both equal to 1.  Since $S$ and $R$ are inputs to the R-S latch,
+if they are kept at 1, the value stored in the latch remains
+unchanged, as we explained in Section~3.4.1.  \index{latch!gated D}
+When WE is momentarily set to 1, exactly one of the
+outputs $S$ or $R$ is set to 0, depending on the value of $D$.  If $D$
+equals 1, then $S$ is set to 0.  If $D$ equals 0, then both inputs to
+the lower NAND gate are 1, resulting in $R$ being set to 0.  As we saw
+earlier, if $S$ is set to 0, the R-S latch is set to 1.  If $R$ is set
+to 0, the R-S latch is set to 0.  Thus, the R-S latch is set to 1 or 0
+according to whether $D$ is 1 or 0.  When WE returns to 0, $S$ and $R$
+return to 1, and the value stored in the R-S latch persists.
+
+%Figure 3.19
+\begin{figure}
+\centerline{\includegraphics{pat67509_0319.eps}}
+\caption{A gated {\itshape D} latch}
+\label{fig:gatedDlatch}
+\end{figure}
+
+
+\FloatBarrier
+%3.5
+\section{The Concept of Memory}
+
+We now have all the tools we need to describe one of the most
+important structures in the electronic digital computer, its {\em
+  memory}.  We will see in Chapter~4 how memory fits into the
+\index{memory} basic scheme of computer processing, and you will see
+throughout the rest of the book and indeed the rest of your work with
+computers how important the concept of memory is to computing.
+
+Memory is made up of a (usually large) number of locations, each
+uniquely identifiable and each having the ability to store a value.
+We refer to the unique identifier associated with each memory location
+as its {\em address}.  \index{address} We refer to the number of bits
+\lightbulb[-18pt]
+of information stored in each location as its {\em addressability}.
+\index{addressability}
+
+For example, an advertisement for a laptop computer might say,
+``This computer comes with 2 gigabytes of memory.''  Actually, most
+ads generally use the abbreviation 2 GB (or, often: 2 Gig).  This statement 
+means, as we will explain momentarily, that the laptop includes 
+2 billion memory locations, each containing 1 byte of information.
+
+%3.5.1
+\subsection{Address Space}
+
+We refer to the total number of uniquely identifiable locations as the
+memory's {\em address space}.  A 2 GB memory, for example, refers
+\index{address space} to a memory that consists of 2 billion uniquely
+identifiable memory locations.
+
+Actually, the number 2 billion is only an approximation, due to
+the way we specify memory locations.  Since everything else in the
+computer is represented by sequences of 0s and 1s, it should not be
+surprising that memory locations are identified by binary addresses as
+well.  With $n$ bits of address, we can uniquely identify $2^n$
+locations.  Ten bits provide 1,024 locations, which is approximately
+1,000.  If we have 20 bits to represent each address, we have $2^{20}$
+uniquely identifiable locations, which is approximately 1 million.  With
+30 bits, we have $2^{30}$ locations, which is approximately 1 billion.
+In the same way we use the prefix "kilo" to represent $2^{10}$ (approximately
+1,000, and "mega" to represent $2^{20}$ (approximately one million), we 
+use the prefix "giga" to represent $2^{30}$ (approximately one billion).
+Thus 2 giga really corresponds to the number of uniquely identifiable
+locations that can be specified with 31 address bits.  We say the
+address space is $2^{31}$, which is {\em exactly} 2,147,483,648 
+locations, rather than 2,000,000,000, although we colloquially refer to
+it as 2 billion.  
+
+%3.5.2
+\subsection{Addressability}
+
+\looseness=-1
+The number of bits stored in each memory location is the memory's
+addressability.  A 2 gigabyte memory (written 2GB) is a memory consisting of
+2,147,483,648 memory locations, each containing 1 byte (i.e., 8 bits) of
+storage.  Most memories are byte-addressable.  The reason is
+historical; most computers got their start processing data, and one
+character stroke on the keyboard corresponds to one 8-bit ASCII
+code, as we learned in Chapter~2.  If the memory is
+byte-addressable, then each ASCII character occupies one location in
+memory.  Uniquely identifying each byte of memory allows individual
+bytes of stored information to be changed easily.
+
+Many computers that have been designed specifically to perform large
+scientific calculations are 64-bit addressable.  This is due to the
+fact that numbers used in scientific calculations are often
+represented as 64-bit floating point quantities.  Recall that we
+discussed the floating point data type in Chapter~2.  Since scientific
+calculations are likely to use numbers that require 64 bits to
+represent them, it is reasonable to design a memory for such a
+computer that stores one such number in each uniquely identifiable
+memory location.
+
+
+%3.5.3
+\subsection{A $2^2$-by-3-Bit Memory}
+
+%Figure 3.20
+\begin{figure}[b]
+\centerline{\includegraphics{pat67509_0321.eps}}
+\caption{A $2^{\sf 2}$-by-3-bit memory}
+\label{fig:memory}
+\vspace{-6pt}
+\end{figure}
+
+Figure~\ref{fig:memory} illustrates a memory of size $2^2$ by 3 bits.  That is,
+the memory has an address space of four locations, and an addressability 
+of 3 bits.  A memory of size $2^2$ requires 2 bits to specify the address. 
+We describe the 2-bit address as A[1:0].  A memory of addressability 3 stores 
+3 bits of information in each memory location.  We describe the 3 bits of data 
+as D[2:0].  In both cases, our notation A[high:low] and D[high:low] reflects 
+the fact that we have numbered the bits of address 
+and data from right to left, in order, starting with the right-most bit which 
+is numbered 0.  The notation [high:low] means a sequence of $high - low + 1$ 
+bits such that "high" is the bit number of the leftmost (or {\em high}) bit 
+number in the sequence and "low" is the bit number of the rightmost 
+(or {\em low}) bit number in the sequence.  
+
+Accesses of memory require
+decoding the address bits.  Note that the address decoder takes as
+input the address bits $A$[1:0] and asserts exactly one of its four outputs,
+corresponding to the {\em word line} being addressed.  In Figure~3.20,
+each row of the memory corresponds to a unique three-bit word; thus
+the term {\em word line}.  Memory can be read by applying the address
+$A$[1:0], which asserts the word line to be read.  Note that each bit
+of the memory is ANDed with its word line and then ORed with the
+corresponding bits of the other words.  Since only one word line can
+be asserted at a time, this is effectively a mux with the output of
+the decoder providing the select function to each bit line.  Thus, the
+appropriate word is read at D[2:0].
+
+Figure~\ref{fig:memread} shows the process of reading location 3.  
+The code for 3
+is 11.  The address $A$[1:0]=11 is decoded, and the bottom word line
+is asserted.  Note that the three other decoder outputs are not
+asserted.  That is, they have the value 0.  The value stored in
+location 3 is 101.  These three bits are each ANDed with their word
+line producing the bits 101, which are supplied to the three output OR
+gates.  Note that all other inputs to the OR gates are 0, since they
+have been produced by ANDing with their unasserted word lines.  The result
+is that $D$[2:0] = 101.  That is, the value stored in location 3 is
+output by the OR gates. Memory can be written in a similar fashion.
+The address specified by $A$[1:0] is presented to the address decoder,
+resulting in the correct word line being asserted.  With write enable (WE) 
+also asserted, the three bits $D$[2:0] can be written into the three gated
+latches corresponding to that word line.
+
+%Figure 3.21
+\begin{figure}
+\centerline{\includegraphics{pat67509_0322.eps}}
+\caption{Reading location 3 in
+  our $2^{\sf 2}$-by-3-bit memory}
+\label{fig:memread}
+\vspace{6pt}
+\end{figure}
+
+\vspace{-12pt}
+
+\FloatBarrier
+%3.6
+\section{Sequential Logic Circuits}
+
+In Section~3.3, we discussed digital logic structures that process
+information (decision structures, we call them) wherein the outputs
+depend solely on the values that are present on the inputs {\bf now}.
+Examples are muxes, decoders, and full adders.  We call these
+structures combinational logic circuits.  In these circuits there is
+no sense of the past.  Indeed, there is no capability for storing any
+information about anything that happened before the present time.  In
+Sections~3.4 and~3.5, we described structures that do store
+information---in Section~3.4, some basic storage elements, and in
+Section~3.5, a simple $2^{2}$-by-3-bit memory.
+
+In this section, we discuss digital logic structures that can {\bf both} 
+process information (i.e., make decisions) {\bf and} store
+information. \lightbulb[-18pt] That is, these structures base their decisions 
+not only on the input values now present, but also (and this is very important)
+on what has happened before.  These structures are usually called {\bf
+  sequential logic circuits}.  They are distinguishable from
+combinational logic circuits because, unlike combinational logic
+circuits, they contain storage elements that allow them to keep track
+of prior history information.  Figure~\ref{fig:seq_logic_circuit} shows a block 
+diagram of a sequential logic circuit.  Note the storage elements.  Note, also,
+that the output can be dependent on both the inputs now and the values
+stored in the storage elements.  The values stored in the storage
+elements reflect the history of what has happened before.
+
+%Figure 3.22
+\begin{figure}
+\vspace{2pt}
+\centerline{\includegraphics{pat67509_0323.eps}}
+\caption{Sequential logic circuit block diagram}
+\label{fig:seq_logic_circuit}
+\end{figure}
+
+Sequential logic circuits are used to implement a very important class
+of mechanisms called {\em finite state machines}.  We use finite state
+machines in essentially all branches of engineering.  For example,
+they are used as controllers of electrical systems, mechanical
+systems, and aeronautical systems.  A traffic light
+controller that sets the traffic light to red, yellow, or green
+depends on the light that is currently on (history information) and
+input information from sensors such as trip wires on the road, 
+a timer keeping track of how long the current light has been on, and perhaps 
+optical devices that are monitoring traffic.
+
+We will see in Chapter~4 when we introduce the von Neumann model of a
+computer that a finite state machine is at the heart of the
+computer.  It controls the processing of information by the computer.
+
+%3.6.1
+\subsection{A Simple Example: The Combination Lock}
+
+A simple example shows the difference between combinational logic
+structures and sequential logic structures.  Suppose one wishes to
+secure a bicycle with a lock, but does not want to carry a key.  A
+common solution is the combination lock.  The person memorizes a
+``combination'' and uses it to open the lock.  Two common types of
+locks are shown in Figure~\ref{fig:combination_locks}.
+
+%Figure 3.23
+\begin{figure}
+\centerline{\includegraphics{pat67509_0324.eps}}
+\caption{Combination locks}\label{fig:combination_locks}
+\vspace{-6pt}
+\end{figure}
+
+In Figure~\ref{fig:combination_locks}a, the lock consists of a dial, with 
+the numbers from 0 to 30 equally spaced around its circumference.  To open the
+lock, one needs to know the ``combination.''  One such combination
+could be: R13-L22-R3.  If this were the case, one would open the
+lock by turning the dial two complete turns to the right (clockwise), and then
+continuing until the dial points to 13, followed by one complete turn to the 
+left (counterclockwise), and then continuing until the dial points to 22,
+followed by turning the dial again to the right (clockwise) until it points to
+3.  At that point, the lock opens.  What is important here is the
+{\em sequence} of the turns.  The lock will not open, for example
+if one performed two turns to the right, and then stopped on 22 (instead of 13),
+followed by one complete turn to the left, ending on 13, followed by 
+one turn to the right, ending on 3. That is, even though the
+final position of the dial is 3, and even though R22-L13-R3 uses the same
+three numbers as the combination R13-L22-R3, the lock would not open.  Why?
+Because the lock stores the previous rotations and makes its
+decision (open or don't open) on the basis of the the history of the past 
+operations, that is, on the correct {\em sequence} being performed.
+
+Another type of lock is shown in Figure~\ref{fig:combination_locks}b.  
+The mechanism consists
+of (usually) four wheels, each containing the digits 0 through 9.
+When the digits are lined up properly, the lock will open.  In this
+case, the combination is the set of four digits.  Whether or not this
+lock opens is totally independent of the past rotations of the four
+wheels.  The lock does not care at all about past rotations.  The only
+thing important is the current value of each of the four wheels.
+This is a simple example of a combinational structure.
+
+It is curious that in our everyday speech, both mechanisms are referred to 
+as ``combination locks.''  In fact, only the lock of
+Figure~\ref{fig:combination_locks}b is a combinational lock.  The lock of 
+Figure~\ref{fig:combination_locks}a would be better called a sequential lock!
+
+%3.6.2
+\subsection{The Concept of State}
+
+For the mechanism of Figure~\ref{fig:combination_locks}a to work properly, 
+it has to keep track of the sequence of rotations leading up to the opening 
+of the lock.  In particular, it has to differentiate the correct sequence
+R13-L22-R3 from all other sequences.  For example, R22-L13-R3 must not
+be allowed to open the lock.  Likewise, R10-L22-R3 must also not be
+allowed to open the lock.  
+
+For the lock of Figure~\ref{fig:combination_locks}a to work, it must identify 
+several relevant situations, as follows:
+
+\begin{list}{}{\small\ttfamily\obeylines
+    \settowidth{\labelwidth}{1.}%
+    \setlength{\itemsep}{4pt}%
+    \addtolength{\leftmargin}{\labelwidth}%
+    \addtolength{\leftmargin}{\labelsep}%
+    \def\makelabel#1{\hbox to \labelwidth{{#1}\hss}}%
+    \setlength{\labelsep}{7pt}\fontsize{9}{10}\selectfont\ttfamily\obeylines\color{seventyblack}}
+\leftskip1.75pc
+\item[A.] The lock is not open, and NO relevant operations have been
+performed.
+\item[B.] The lock is not open, but the user has just completed the
+R13 operation.
+\item[C.] The lock is not open, but the user has just completed R13,
+followed by L22.
+\item[D.] The lock is open, since the user has just completed R13, 
+followed by L22, followed by R3.
+\end{list}
+
+\noindent
+We have labeled these four situations A, B, C, and D.  We refer to
+each of these situations as the {\em state} of the lock.
+
+The notion of {\bf state} is a very important concept in computer
+\lightbulb[-5pt]
+engineering, and actually, in just about all branches of engineering.
+The state of a mechanism---more generally, the state of a system---is
+a snapshot of that system in which all relevant items are explicitly
+expressed.
+
+
+That is: {\em The state of a system is a snapshot of all the relevant
+  elements of the system at the moment the snapshot is taken.}
+
+
+In the case of the lock of Figure~\ref{fig:combination_locks}a, there are 
+four states A, B, C, and D. Either the lock is open (State D), or if it is 
+not open, we have already performed either zero (State A), one (State B), 
+or two (State C) correct operations.  This is the sum total of all possible
+states that can exist.  
+
+Question: Why are there exactly four states needed to describe the combination
+lock of Figure~\ref{fig:combination_locks}a?  Can you think of a snapshot of
+the combination lock after an operation (Rn or Ln) that requires a fifth state
+because it is not covered by one of the four states A,B,C or D?
+
+There are many examples of systems that you are familiar with that can be 
+easily described by means of states.
+
+The state of a game of basketball can be described by the scoreboard
+in the basketball arena.  Figure~\ref{fig:scoreboard} shows the state of the
+basketball game as Texas 73, Oklahoma 68, 7 minutes and 38 seconds
+left in the second half, 14 seconds left on the shot clock, Texas with
+the ball, and Texas and Oklahoma each with four team fouls.  This is a
+snapshot of the basketball game.  It describes the state of the
+basketball game at one point in time.  If, 12 seconds later, a Texas player were
+to score a two-point shot, the new state would be described by the
+updated scoreboard.  That is, the score would then be Texas 75,
+Oklahoma 68, the time remaining in the game would be 7 minutes and 26
+seconds, the shot clock would be back to 25 seconds, and Oklahoma
+would have the ball.
+
+%Figure 3.24
+\begin{figure}[b]
+\centerline{\includegraphics{pat67509_0325.eps}}
+\caption{An example of a state}\label{fig:scoreboard}
+\end{figure}
+
+\FloatBarrier
+The game of tic-tac-toe can also be described in accordance with the
+notion of state.  Recall that the game is played by two people (or, in
+our case, a person and the computer).  The state is a snapshot of the
+game in progress each time the computer asks the person to make a
+move.  The game is played as follows: There are nine locations on the
+diagram.  The person and then the computer take turns placing an X
+(the person) and an O (the computer) in an empty location.  The person
+goes first.  The winner is the first to place three symbols (three Xs
+for the person, three Os for the computer) in a straight line, either
+vertically, horizontally, or diagonally.
+
+The initial state, before either the person or computer has had a
+turn, is shown in Figure~\ref{fig:tictactoe}a.  Figure~\ref{fig:tictactoe}b 
+shows a possible state of the game when the person is prompted for a second 
+move, if he/she put an X in the upper left corner as his/her first move, and 
+the computer followed with a O in the middle square as its first move.
+Figure~\ref{fig:tictactoe}c shows a possible state of the game when the 
+person is prompted for a third move if he/she put an X in the upper right
+corner on the second move, and the computer followed by putting its second O 
+in the upper middle location.
+
+%Figure 3.25
+\begin{figure}
+\centerline{\includegraphics{pat67509_0326.eps}}
+\caption{Three states in a tic-tac-toe machine}\label{fig:tictactoe}
+\end{figure}
+
+\FloatBarrier
+One final example: a very old soft drink machine, when drinks sold for 15
+cents, and the machine would only take nickels (5 cents) and dimes (10 cents)
+and not be able to give change.
+
+The state of the machine can be described as the amount of money
+inserted, and whether the machine is open (so one can remove a bottle).
+There are only three possible states: 
+
+
+\begin{list}{}{\small\ttfamily\obeylines
+    \settowidth{\labelwidth}{1.}%
+    \setlength{\itemsep}{4pt}%
+    \addtolength{\leftmargin}{\labelwidth}%
+    \addtolength{\leftmargin}{\labelsep}%
+    \def\makelabel#1{\hbox to \labelwidth{{#1}\hss}}%
+    \setlength{\labelsep}{7pt}\fontsize{9}{10}\selectfont\ttfamily\obeylines\color{seventyblack}}
+\leftskip1.75pc
+\item[A.] The lock is open, so a bottle can be (or has been!) removed.
+\item[B.] The lock is not open, but 5 cents has been inserted.
+\item[C.] The lock is not open, but 10 cents has been inserted. 
+\end{list}
+
+%3.6.3
+\subsection{The Finite State Machine and its State Diagram}
+
+We have seen that a state is a snapshot of all relevant parts of a
+system at a particular point in time.  At other times, that system can
+be in other states.  We have described four systems: a combination lock,
+a basketball game, a tic-tac-toe machine, and a very old soft drink machine
+when a bottle of cola cost only 15 cents. The behavior of each of these systems
+can be specified by a {\em finite state machine}, and represented as a 
+{\em state diagram}.
+
+A finite state machine consists of five elements:
+
+\begin{list}{}{\small\ttfamily\obeylines
+    \settowidth{\labelwidth}{1.}%
+    \setlength{\itemsep}{0pt}%
+    \addtolength{\leftmargin}{\labelwidth}%
+    \addtolength{\leftmargin}{\labelsep}%
+    \def\makelabel#1{\hbox to \labelwidth{{#1}\hss}}%
+    \setlength{\labelsep}{7pt}\fontsize{9}{10}\selectfont\ttfamily\obeylines\color{seventyblack}}
+\leftskip1.4pc
+\item[1.] a finite number of states
+\item[2.] a finite number of external inputs
+\item[3.] a finite number of external outputs
+\item[4.] an explicit specification of all state transitions
+\item[5.] an explicit specification of what determines each external
+output value.
+\end{list}
+
+The set of states represents all possible situations (or snapshots)
+that the system can be in.  Each state transition describes what it takes
+to get from one state to another.
+
+Let's examine the finite state machines for these four systems.
+
+\paragraph{The combination lock}
+
+A state diagram is a convenient representation of a finite state machine.
+Figure~\ref{fig:statemachine_lock} is a state diagram for the combination
+lock.
+
+%Figure 3.26
+\begin{figure}
+\centerline{\includegraphics{statemachine_lock.eps}}
+\caption{State diagram of the combination lock of Figure~3.23a}
+\label{fig:statemachine_lock}
+\end{figure}
+
+Recall, we identified four states A,B,C, and D.  Which state we are in depends
+on the progress we have made in getting from a random initial state to the
+lock being open.  In the state diagram of Figure~\ref{fig:statemachine_lock}, 
+each circle corresponds to one of the four states, A,B,C, or D.
+
+The external inputs are R13, L22, R3, and R-other-than-13, L-other-than-22,
+and R-other-than-3. 
+
+The external output is either the lock is open or the lock is not open.  (One
+logical variable will suffice to describe that!)  As shown in the state 
+diagram, in states A,B, and C, the combination lock is locked.  In state D, 
+the combination lock is open.
+
+The explicit specifications of all state transistions are shown by the arrows
+in the state diagram.  The more sophisticated term for
+``arrow'' is {\em arc}.  The arrowhead on each arc specifies which state
+the system is coming from, and which state it is going to.  We refer to the
+state the system is coming from as the {\em current state}, and the state it
+is going to as the {\em next state}.  The combination lock has eight state 
+transitions.  Associated with each transition is the input that causes the 
+transition from the current state to the next state.  
+For example, R13 causes the transition from state A to state B.
+
+A couple of things are worth noting.  First, it is usually the case that from 
+a current state there are multiple transitions to next states.  The state 
+transition that occurs depends on both the current state and the value of the 
+external input.  For example, if the combination lock is in state B, and the 
+input is L22, the next state is state C.  If the current state is state B and
+the input is anything other than L22, the next state is state A.  In short, 
+the next state is determined by the combination of the current state and the 
+current external input.
+
+The output values of a system can be determined also by the combination of
+the current state~and the value of the current external input.  However, as
+is the case for the combination lock, where states A,B, and C specify the lock
+is "locked," and state D specifies the lock is "unlocked," the output can also 
+be determined solely by the current state of the system.  In all the systems we 
+will study in this book, the output values will be specified solely by the 
+current state of the system.  
+
+\paragraph{A very old soft drink machine}
+
+
+Figure~\ref{fig:statemachine_vend} is the state diagram for the soft drink
+machine.
+
+%Figure 3.27
+\begin{figure}
+\centerline{\includegraphics{statemachine_vend.eps}}
+\caption{State diagram of the soft drink machine}
+\label{fig:statemachine_vend}
+\end{figure}
+
+The soft drink machine has only three states: 5 cents has been inserted,
+10 cents has been inserted, and at least 15 cents has been inserted. 
+Transitions are caused by the insertion (the input) of a nickel or a dime. 
+The output is associated only with the states.  In states
+B and C, the machine is locked.  Not enough money has been inserted!  In 
+state A, the machine is open so a soft drink can be removed because at 
+least 15 cents has been inserted.
+
+\paragraph{A basketball game}
+We could similarly draw a state diagram for the basketball game we
+described earlier, where each state would be one possible configuration
+of the scoreboard.  A transition would occur if either the referee
+blew a whistle or the other team got the ball.  We showed earlier the
+transition that would be caused by Texas scoring a two-point shot.
+Clearly, the number of states in the finite state machine describing a
+basketball game would be huge.  
+
+Also clearly, the number of legitimate
+transitions from one state to another is small, compared to the number
+of arcs one could draw connecting arbitrary pairs of states.  For example,
+there is no arc from a score of Texas 68, Oklahoma 67 to Texas 75, Oklahoma 91,
+since no single input can cause that transition. The
+input is the activity that occurred on the basketball court since the
+last transition.  Some input values are: Texas scored two points,
+Oklahoma scored three points, Texas stole the ball, Oklahoma
+successfully rebounded a Texas shot, and so forth.  
+
+The output is the
+final result of the game.  The output has three values: Game still in
+progress, Texas wins, Oklahoma wins.
+
+Question: Can one have an arc from a state where the score is Texas 30, 
+Oklahoma 28 to a state where the score is tied, Texas 30, Oklahoma 30?  
+Is it possible to have two states, one where Texas is ahead 30-28 and
+the other where the score is tied 30-30, but no arc between the two?
+
+\paragraph{A tic-tac-toe machine}
+
+We could also draw a state diagram for a tic-tac-toe machine, in our case
+when a person is playing against a computer.  Each state
+is a representation of the position of the game when the person is asked
+to put an X into one of the empty cells.  Figure~\ref{fig:tictactoe} shows
+three states.  The transition from the state of Figure~\ref{fig:tictactoe}a
+to the state of Figure~\ref{fig:tictactoe}b is caused by the person putting
+an X in the top left cell, followed by the computer putting an O in the
+center cell.  The transition from the state of Figure~\ref{fig:tictactoe}b
+to the state of Figure~\ref{fig:tictactoe}c is caused by the person putting
+an X in the top right cell, followed by the computer putting an O in the top
+middle cell.
+
+Since there are nine cells, and each state has an X, an O, or nothing in each
+cell, there must be fewer than $3^9$ states in the tic-tac-toe machine.
+Clearly there are far fewer than that, due to various constraints of the game.
+
+There are nine inputs, corresponding to the nine cells a person can put an 
+X in.  There are three outputs: (a) game still in progress, (b) person wins, 
+and (c) computer wins.
+
+%3.6.4
+\subsection{The Synchronous Finite State Machine}
+
+Up to now a transition from a current state to a next state in our finite state
+machine happened when it happened.  For example, a person could insert a 
+nickel into the soft drink machine and then wait 10 seconds or 10 minutes 
+before inserting the next coin into the machine.  And the soft drink machine
+would not complain.  It would not dispense the soft drink until 15 cents was
+inserted, but it would wait patiently as long as necessary for the 15 cents to
+be inserted.  That is, there is no fixed amount of time between successive 
+\lightbulb[-18pt]
+inputs to the finite state machine.  This is true in the case of all four
+of the systems we discussed above.  We say these systems are {\em asynchronous}
+because there is nothing synchronizing when each state transition must occur.
+
+However, almost no computers work that way.  On the contrary, we say that
+computers are {\em synchronous} because the state transitions take place, one
+after the other, at identical fixed units of time.  They are controlled by a 
+{\em synchronous finite state machine}.  We will save for Chapter~4 and beyond
+the state transitions that occur at identical, fixed units of time that control 
+a computer.  In this chapter, we will take on a simpler task, the design of 
+a traffic controller, an admittedly  simpler structure, but one that is also 
+controlled by a synchronous finite state machine. 
+
+It is worth pointing out that both the four asynchronous finite state machines
+discussed above and the synchronous finite state machine that controls a
+digital computer share an important characteristic: they carry out work,
+one state transition at a time, moving closer to a goal.  In the case of 
+the combination lock, as long as you make the correct moves, each state 
+transition takes us closer to the lock 
+opening.  In the case of the soft drink machine, each state transition takes
+us closer to enjoying the taste of the soft drink.  In the case of a computer, 
+each state transition takes us closer to solving a problem by processing a 
+computer program that someone has written.
+
+%3.6.5
+\subsection{The Clock}
+
+A synchronous finite state machine transitions from its current state to
+its next state after an identical fixed interval of time.  Control of that 
+synchronous behavior is in part the responsibility of the clock circuit. 
+
+A clock circuit produces a signal, commonly referred to as {\em THE clock}, 
+whose value alternates between 0 volts and some specified fixed voltage.  
+In digital logic terms, the clock is a signal whose value alternates between 
+0 and 1.  Figure~\ref{fig:clock_ch03} shows the value of the clock signal 
+as a function of time.  Each of the repeated sequence of identical intervals 
+is referred to as a {\em clock cycle}.  A clock cycle starts when the clock 
+signal transitions from 0 to 1, and ends the next time the clock signal 
+transitions from 0 to 1.  
+
+We will see in Chapter~5 and beyond that in each clock cycle, a computer can
+perform a piece of useful work.  When people say their laptop computers run 
+at a frequency of 2 gigahertz, they are saying their laptop computers perform
+2 billion pieces of work each second since 2 gigahertz means 2 billion
+clock cycles each second, each clock cycle lasting for just one half of a 
+nanosecond.  The synchronous finite state machine makes one state transition
+each clock cycle.
+
+We will show by means of a traffic signal controller how the clock signal 
+controls the transition, fixed clock cycle after fixed clock cycle, from one 
+state to the next. 
+
+In electronic circuit implementations of a synchronous finite state machine, 
+the transition from one state to the next occurs at the start of
+each clock cycle.
+
+%Figure 3.28
+\begin{figure}
+\begin{minipage}{36pc}
+\centerline{\includegraphics{clock_ch03.eps}}
+\caption{A clock signal}\label{fig:clock_ch03}
+\end{minipage}
+\end{figure}
+
+\FloatBarrier
+%3.6.6
+\subsection{Example: A danger sign}
+
+Many electrical, mechanical, and aeronautical,systems are controlled by a 
+synchronous finite state machine.  In this section we will design the 
+complete logic needed for a synchronous finite state machine to control a 
+traffic danger sign.  Figure~\ref{fig:dangersign} shows the danger sign as 
+it will be placed on the highway.  Note the sign says, ``Danger, Move Right.''
+The sign contains five lights (labeled 1 through 5 in the figure).
+
+%Figure 3.29
+\begin{figure}
+\centerline{\includegraphics{pat67509_0330.eps}}
+\caption{A traffic danger sign}\label{fig:dangersign}
+\vspace{-6pt}
+\end{figure}
+
+The purpose of our synchronous finite state machine (aka a controller) is
+to direct the behavior of our system.  In our case, the system is the
+set of lights on the traffic danger sign.  The controller's job is to
+have the five lights flash on and off to warn automobile drivers to move
+to the right.  The controller is equipped with a switch.  When the switch is
+in the ON position,
+the controller directs the lights as follows: During one unit of time,
+all lights will be off.  In the next unit of time, lights 1 and 2 will be on.
+The next unit of time, lights 1, 2, 3, and 4 will be on.  Then all
+five lights will be on.  Then the sequence repeats: no
+lights on, followed by 1 and 2 on, followed by 1, 2, 3, and 4 on, and
+so forth.  Each unit of time lasts one second.  To an automobile driver
+approaching the sign, the five lights clearly direct the driver to move to the
+right.  The lights continue to sequence through these four states as long as 
+the switch is on.  If the switch is turned off, all the lights are turned off 
+and remain off.
+
+\FloatBarrier
+
+\paragraph{The State Diagram for the Danger Sign Controller}
+
+Figure~\ref{fig:statemachine_danger} is a state diagram for the synchronous
+finite state machine that controls the lights.  There are four states, one for
+each of the four conditions corresponding to which lights are on.  Note that 
+the outputs (whether each light is on or off) is determined by the current 
+state of the system.
+
+If the switch is on (input${}= 1$), the transition from each state to the next 
+state happens at one second intervals, causing the lights to flash in the 
+sequence described.  If the switch is turned off (input${}= 0$), the state 
+always transitions to state A, the ``all off'' state.
+
+%Figure 3.30
+\begin{figure}
+\centerline{\includegraphics{statemachine_danger.eps}}
+\caption{State diagram for the Danger Sign Controller}
+\label{fig:statemachine_danger}
+\vspace{-6pt}
+\end{figure}
+
+\FloatBarrier
+
+\paragraph{The Sequential Logic Circuit for the Danger Sign Controller}
+
+Recall that Figure~\ref{fig:seq_logic_circuit} shows a generic block diagram
+for a sequential logic circuit.  Figure~\ref{fig:blockdiagram_danger}
+is a block diagram of the specific sequential logic circuit we need to control
+the lights.  Several things are important to note in this figure.  
+
+%Figure 3.31
+\begin{figure}
+\centerline{\includegraphics{blockdiagram_danger.eps}}
+\caption{Sequential Logic Circuit for the danger sign controller}
+\label{fig:blockdiagram_danger}
+\vspace{-6pt}
+\end{figure}
+
+First, the two external inputs: the switch and the clock.  
+The switch determines whether the finite state machine will transition
+through the four states or whether it will transition to state A, where all
+lights are off.  The other input (the clock) controls the transition from 
+state A to B, B to C, C to D, and D to A by controlling the state of
+the storage elements.  We will see how, momentarily.
+
+Second, there are two storage elements for storing state information.  Since
+there are four states, and since each storage element can store one bit of
+information, the four states are identified by the contents of the two storage
+elements: A (00), B (01), C (10), and D (11).  Storage element 2 contains the 
+high bit; storage element 1 contains the low bit.  For example, the danger sign
+controller is in state B when storage element 2 is 0 and storage element 1
+is 1.  
+
+Third, combinational logic circuit 1 shows that the on/off behavior
+of the lights are controlled by the storage elements. That is, the input to
+the combinational logic circuit is from the two storage elements, i.e., 
+the current state of the finite state machine.
+
+Finally, combinational logic circuit 2 shows that the transition from the
+current state to the next state depends on the two storage elements and the
+switch.  If the switch is on, the output of combinational logic circuit 2 
+depends on the state of the two storage elements.  
+
+\paragraph{The Combinational Logic}
+
+Figure~\ref{fig:dangersign_logic} shows the logic that
+implements combinational logic circuits 1 and 2.  
+
+Two sets of outputs are required for the controller to work properly: a set 
+of external outputs for the lights and a set of internal outputs for
+the inputs to the two storage elements that keep track of the state.
+
+First, let us look at the outputs that control the lights.  As we have
+said, there are only three outputs necessary to control the lights.
+Light 5 is controlled by the output of the AND gate labeled V, since
+the only time light 5 is on is when the controller is in state 11.  
+Lights 3 and 4 are controlled by the output of the OR
+gate labeled X, since there are two states in which those lights are
+on, those labeled 10 and 11.  Why are lights 1 and 2 controlled by the
+output of the OR gate labeled W?  See Exercise 3.42. 
+
+Next, let us look at the internal outputs that control the storage
+elements, which specify the next state of the controller.  Storage element 2 
+should be set to 1 for the next clock cycle if the next state is 10 or 
+11.  This is true only if the switch is on and the current state is either 
+01 or 10.  Therefore the output signal that will make storage element 2 
+be 1 in the next clock
+cycle is the output of the OR gate labeled Y. Why is the next state of
+storage element 1 controlled by the output of the OR gate labeled Z?
+See Exercise 3.42.
+
+%Figure 3.32
+\begin{figure}
+\centerline{\includegraphics{dangersign_logic.eps}}
+\caption{Combinational logic circuits 1 and 2}
+\label{fig:dangersign_logic}
+\vspace{-6pt}
+\end{figure}
+
+\FloatBarrier
+
+\paragraph{The two storage elements}
+
+In order for the danger sign controller to work, the state transitions must
+occur once per second when the switch is on.
+
+\paragraph{A problem with gated latches as storage elements}
+
+What would happen if the storage elements were gated D latches?  
+If the two storage elements are gated D latches, when the write enable signal
+(the clock) is 1, the output of OR gates Y and Z would immediately change 
+the bits stored in the two gated D latches.  This would produce new input 
+values to the three AND gates that are input to OR gates Y and Z, producing 
+new outputs which would be applied to the inputs of the gated latches, which 
+would in turn change the bits stored in the gated latches, which would in turn 
+mean new inputs to the three AND gates and new outputs of OR gates Y and Z.  
+This would happen again and again, continually changing the bits stored in 
+the two storage elements as long as the Write Enable signal to the gated D 
+latches is asserted.  The result: We have no idea what the state of the finite 
+state machine would be for the next clock cycle.  And, even in the current 
+clock cycle, the state of the storage elements would change so fast that the 
+five lights would behave erratically. 
+
+The problem is the gated D latch.  We want the output of OR gates Y and Z
+to transition to the next state at the end of the current clock cycle, and 
+allow the current state to remain unchanged until then.  That is, we do
+not want the input to the storage elements to take effect until the end of the
+current clock cycle.  Since the output of a gated D latch changes immediately
+in response to its input if the Write Enable signal is asserted, it can not be 
+the storage element for our synchronous finite state machine.  We need storage 
+elements that allow us to read the current state throughout the current clock
+cycle, and not write the next state values into the storage elements until 
+the beginning of the next clock cycle.  
+
+\paragraph{The Flip-flop to the Rescue}
+
+It is worth repeating: To prevent the above from happening, we need storage 
+elements that allow us to read the current state throughout the current clock
+cycle, and not write the next state values into the storage elements until 
+the beginning of the next clock cycle.  That is, the function to be performed
+during a single clock cycle involves reading and writing a particular variable.
+\lightbulb[-18pt]
+Reading must be allowed throughout the clock cycle, and writing must occur at
+the end of the clock cycle.
+
+A flip-flop can accomplish that.  One example of a flip-flop is the master/slave
+flip-flop shown in Figure~\ref{fig:flip-flop}.  The master/slave flip-flop 
+can be constructed out of two gated $D$ latches, one referred to as the master,
+the other referred to as the slave.  Note that the write enable signal of the 
+master is 1 when the clock is 0, and the write enable signal of the slave is 1
+when the clock is 1.
+
+%Figure 3.33
+\begin{figure}
+\centerline{\includegraphics{flip_flop.eps}}
+\caption{A master/slave flip-flop}
+\label{fig:flip-flop}
+\vspace{12pt}
+\end{figure}
+
+Figure~\ref{fig:flip-flop_timing} is a timing diagram for the master/slave
+flip-flop, which shows how and why the master/slave flip-flop solves 
+the problem.  A timing diagram shows time passing from left to right.
+Note that clock cycle n starts at the time labeled 1, and ends at the time
+labeled 4.  Clock cycle n+1 starts at the time labeled 4.
+
+Consider clock cycle n, which we will discuss in terms of its first half A,
+its second half B, and the four time points labeled 1, 2, 3, and 4.  
+
+At the start of each clock cycle, the output of the storage elements are the 
+outputs of the two slave latches.  These outputs (starting at time 1) 
+are input to the AND gates, resulting in OR gates Y and Z producing the next 
+state values for the storage elements (at time 2).  The timing diagram shows the
+propagation delay of the combinational logic; that is, the time it takes for 
+the combinational logic to produce outputs of OR gates Y and Z.  Although OR 
+gates Y and Z produce the Next State value sometime during half-cycle A, 
+the write enable signal to the master latches is 0 so the the next state 
+can not be written into the master latches.  
+
+At the start of half-cycle B (at time 3), the clock signal is 0, which means 
+the write enable signal to the master latches is 1, and the master 
+latches can be written.  However, during the half-cycle B, the write enable 
+to the slave latches is 0, so the slave latches can not write the new 
+information now stored in the master latches.
+
+At the start of clock cycle n+1 (at time 4), the write enable signal to the 
+slave latches is 1 so the slave latches can store the next state value which 
+was created by the combinational logic during clock cycle n. This becomes the
+current state for clock cycle n+1.  
+
+Since the write enable signal to the master latches is now 0, the state of 
+the master latches can not change.  Thus, although the write enable signal 
+to the slave latches is 1, those latches do not change because the master 
+latches can not change.
+
+In short, the output of the slave latches contain the current state of the
+system for the duration of the clock cycle, and produce the inputs to the six
+AND gates in the combinational logic circuits.  Their state changes at the 
+start of the clock cycle by storing the next state information created by the
+combinational logic during the previous cycle but do not change again during
+the clock cycle.  The reason they do not change again during the clock cycle
+is as follows: during half-cycle A, the master latches can not change so the
+slave latches continue to see the state information that is the current state
+for the new clock cycle.  During half-cycle B, the slave latches can not change
+because the clock signal is 0.  
+
+Meanwhile, during half-cycle B, the master latches can store the next state
+information produced by the combinational logic, but they can not write it into
+the slave latches until the start of the next clock cycle, when it becomes 
+the state information for the next clock cycle.
+
+%Figure 3.34
+\begin{figure}
+\centerline{\includegraphics[scale=0.9]{flip-flop_timing.eps}}
+\caption{Timing diagram for a master/slave flip-flop}
+\label{fig:flip-flop_timing}
+\vspace{12pt}
+\end{figure}
+
+\FloatBarrier
+
+%3.7
+\section{Preview of Coming Attractions: The Data Path of the LC-3}
+
+In Chapter~5, we will specify a computer, which we call the LC-3, and
+you will have the opportunity to write computer programs to execute on
+it.  We close out Chapter~3 with a discussion of Figure~\ref{fig:lc3datapath1},
+the {\em data path} of the LC-3 computer.
+
+%Figure 3.35
+\begin{figure}
+\begin{minipage}{36pc}
+\centerline{\includegraphics[scale=0.8]{lc3datapath1.eps}}
+\caption{The data path of the LC-3 computer}
+\label{fig:lc3datapath1}
+\end{minipage}
+\vspace{24pt}
+\end{figure}
+
+\FloatBarrier
+
+The data path
+\index{LC-3!data path} consists of all the logic structures that
+combine to process information in the core of the computer.  Right
+now, Figure~\ref{fig:lc3datapath1} is undoubtedly more than a little 
+intimidating, but
+you should not be concerned by that.  You are not ready to analyze it
+yet.  That will come in Chapter~5.  We have included it here, however,
+to show you that you are already familiar with many of the basic
+structures that make up a computer.  For example, you see five MUXes in 
+the data path, and you already know how they work.  Also, an adder (shown
+as the ALU symbol with a + sign inside) and an ALU.  You know how those 
+elements are constructed from gates.  
+
+One element that we have not identified explicitly yet is a register. 
+A register is simply a set of n flip-flops which collectively are used to
+store one n-bit value.
+In Figure~\ref{fig:lc3datapath1}, PC, IR, MAR, and MDR are all 16-bit registers 
+that store 16 bits of information each.  The block labeled REG FILE consists
+of eight registers that each store 16 bits of information.  As you know, 
+one bit of information can be stored in one flip-flop.  Therefore, each of 
+these registers consist of 16 flip-flops.  The data path also shows three
+one-bit registers, $N$, $Z$, and $P$.  Those registers require only one 
+flip-flop each.  In fact, a register can be any size that we need.  The size 
+depends only on the number of bits we need to represent the value we wish to
+store.  
+
+One way to implement registers is with master/slave flip-flops.
+Figure~\ref{fig:4reg} shows a four-bit register made up of four master/slave
+flip-flops.  We usually need flip-flops, rather than latches, because it is 
+usually important 
+to be able to both read the contents of a register throughout a clock cycle 
+and also store a new value in the register at the end of that same clock 
+cycle.  As shown in Figure~\ref{fig:4reg}, the four-bit value stored in the 
+register during a clock cycle is $Q_3$, $Q_2$, $Q_1$, $Q_0$.  At the 
+end of that clock cycle.  the value $D_3$, $D_2$, $D_1$, $D_0$ is written into 
+the register. 
+
+%Figure 3.36
+\begin{figure}
+\centerline{\includegraphics{4bitreg.eps}}
+\caption{A four-bit register}
+\label{fig:4reg}
+\vspace{12pt}
+\end{figure}
+
+The arrows in Figure~\ref{fig:lc3datapath1} represent wires that transmit 
+values from one structure to another.  Most of the arrows include a 
+cross-hatch with a number next to it.  The number represents the number of 
+wires, corresponding to the number of bits being transmitted.  Thus, 
+for example, the arrow from the register labeled PC to one of the inputs of 
+the MUX labeled ADDR1MUX 
+indicates that 16 bits are transmitted from PC to an input of ADDR1MUX.
+
+In Chapter~5, we will see why these elements must be connected as
+shown in order to execute programs written for the LC-3 computer.
+For now, just enjoy the fact that the components look familiar.  In
+Chapters~4 and~5, we will raise the level of abstraction again and put
+these components together into a working computer.
+
+\FloatBarrier
+
+\begin{exercises}
+\item[3.1] In the following table, write whether each type of transistor
+  will act as an open circuit or a closed circuit.
+
+\begin{inlinetable}
+\begin{tabular}{@{}lcc@{}}
+\hline
+\rule{0pt}{10pt} & N-type & P-type \\\hline\\[-7pt]
+Gate${}=1$\\[3pt]
+Gate${}=0$ \\
+\hline
+\end{tabular}
+\end{inlinetable}
+
+\item[3.2] Replace the missing parts in the circuit below with either
+  a wire or no wire to give the output OUT a logical value of 0 when
+  the input IN is a logical 1.
+
+  \begin{figure}[h]
+  \centerline{\includegraphics{pat67509_un0301.eps}}
+  \end{figure}
+
+\item[3.3] A two-input AND and a two-input OR are both examples of
+  two-input logic functions. How many different two-input logic
+  functions are possible?
+
+\newpage
+
+\item[3.4] Replace the missing parts in the circuit below with either
+  a wire or no wire to give the output $C$ a logical value of 1.
+  Describe a set of inputs that give the output $C$ a logical value of
+  0.  Replace the missing parts with wires or no wires corresponding
+  to that set of inputs.
+
+\bigskip
+\bigskip
+
+  \begin{figure}[h]
+  \centerline{\includegraphics{pat67509_un0302.eps}}
+  \end{figure}
+
+
+\item[3.5] Complete a truth table for the transistor-level circuit in
+  Figure~3.34.
+
+\bigskip
+\bigskip
+
+%figure 3.34
+\begin{figure}[h]
+\centerline{\includegraphics{pat67509_un0303.eps}}
+\caption{Diagram for Exercise~3.5}
+\label{ex_fig:not}
+\end{figure}
+
+\newpage
+
+\item[3.6] For the transistor-level circuit in Figure~3.35, fill in
+  the truth table. What is Z in terms of A and B?
+
+\begin{inlinetable}
+\begin{tabular}{@{}ll|lll@{}}\hline
+\rule{0pt}{10pt}$A$\rule{0pt}{10pt} & $B$ & $C$ & $D$ & $Z$ \\\hline
+\rule{0pt}{10pt}  & & & & \\
+ & & & & \\
+ & & & & \\
+ & & & & \\\hline
+\end{tabular}
+\end{inlinetable}
+
+\begin{figure}[h]
+\centerline{\includegraphics{pat67509_un0304.eps}}
+\caption{Diagram for Exercise~3.6}
+\label{ex_fig:not}
+\vspace{12pt}
+\end{figure}
+
+\item[3.7] The circuit below has a major flaw. Can you identify it?
+  {\it Hint}: Evaluate the circuit for all sets of inputs.
+
+  \begin{figure}[H]
+  \centerline{\includegraphics{pat67509_un0305.eps}}
+  \end{figure}
+
+\pagebreak
+
+\item[3.8] The transistor-level circuit below implements the logic
+  equation given below. Label the inputs to all the transistors.
+
+  \begin{figure}[H]
+  \centerline{\includegraphics{pat67509_un0306.eps}}
+  \end{figure}
+
+\item[3.9] What does the following transistor circuit do?
+
+  \begin{figure}[H]
+  \centering{\includegraphics[scale=0.75]{bad_cmos.eps}}
+  \end{figure}
+
+\newpage
+
+\item[3.10] For what values of A,B,C,D,E, and F will the output of
+  the 6-input AND gate be 1.
+
+  \begin{figure}[H]
+  \centering{\includegraphics[scale=0.5]{p1-a.eps}}
+  \end{figure}
+
+\item[3.11] A student knew that an inverter contained one P-type transistor
+and one N-type transistor, but he wired them up wrong, as shown below. 
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=7cm]{p1-d.eps}
+\end{figure}
+
+\begin{center}
+\begin{tabular}{ll}
+     
+     \raisebox{1.8ex}[0pt]{What is the value of Out when A=0?} &
+\setlength{\unitlength}{1in}
+
+ \\
+     \raisebox{1.8ex}[0pt]{What is the value of Out when A=1?} & 
+\setlength{\unitlength}{1in}
+
+\\
+\end{tabular}
+
+\end{center}
+
+\pagebreak
+
+\item[3.12] A function is described by the truth table shown on the
+left below.  Your job: Complete the logic implementation shown on the right
+by adding the appropriate connections. 
+
+
+%\begin{center}
+%\begin{tabular}{c@{\hspace{1.5in}}c}
+%\begin{tabular}[t]{c || c}
+%A B C & Out \\\hline
+%0  0 0 & 1  \\\hline
+%0  0 1 & 1  \\\hline
+%0  1 0 & 0  \\\hline
+%0  1 1 & 0  \\\hline
+%1  0 0 & 1  \\\hline
+%1  0 1 & 0  \\\hline
+%1  1 0 & 0  \\\hline
+%1  1 1 & 1  \\\hline
+%\end{tabular}
+%
+
+\hspace{2.0in}
+\begin{figure}[h]
+\centering
+\includegraphics[width=5in]{pla.eps}
+\end{figure}
+
+%\setlength{\fboxrule}{1pt}\setlength{\fboxsep}{6mm}\raisebox{0.5mm}{\fbox{\
+%\ \ \ \ \ \ \ \ \ \ \ \ \ \  \ \ \ \ \ \ \ \ \ }} phase and the  
+%\setlength{\fboxrule}{1pt}\setlength{\fboxsep}{6mm}\raisebox{0.5mm}{\fbox{\
+%\ \ \ \ \ \ \ \ \ \ \ \ \ \  \ \ \ \ \ \ \ \ \ }} phase.
+
+\item[3.13] The logic diagram below produces the logical
+value OUT.
+\vspace{0.25in}
+ 
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.5]{logic.eps}
+\end{figure}
+
+\vspace{.25in}
+
+What do the values 0 or 1 for OUT signify?
+
+\pagebreak
+
+\item[3.14] The following logic circuits consists of two exclusive-OR gates.
+Construct the output truth table.
+
+\makeatletter
+\def\hlinewd#1{%
+\noalign{\ifnum0=`}\fi\hrule \@height #1 \futurelet
+\reserved@a\@xhline}
+\makeatother
+
+\vspace{.2in}
+
+\begin{figure}[h]
+\begin{minipage}[c]{.3\textwidth}
+\vspace{0pt}
+\begin{center}
+\includegraphics[scale=0.75]{314_logic.eps}
+\end{center}
+\end{minipage}\hfill
+\begin{minipage}[c]{.3\textwidth}
+\vspace{0pt}
+%\begin{Large}
+\begin{tabular}{|c|c|c||c|}
+A&B&C&output \\ \hlinewd{2pt}
+0&0&0& \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \\ \hline 
+0&0&1& \\ \hline 
+0&1&0& \\ \hline 
+0&1&1& \\ \hline 
+1&0&0& \\ \hline 
+1&0&1& \\ \hline 
+1&1&0& \\ \hline 
+1&1&1& \\ \hline 
+\end{tabular}
+%\end{Large}
+\end{minipage}
+\end{figure}
+
+
+\item[3.15] Fill in the truth table for the logical expression
+  NOT(NOT(A) OR NOT(B)). What single logic gate has the same truth
+  table?
+
+\begin{inlinetable}
+\tabcolsep=12pt
+\begin{tabular}{@{}cc|c} \hline
+{ A}\rule{0pt}{10.1pt} & { B}
+& { NOT(NOT(A) OR NOT(B))}\\ \hline
+\rule{0pt}{10.1pt}0\rule{0pt}{10.1pt} & 0 & \\[2.6pt]
+0 & 1 & \\[2.6pt]
+1 & 0 & \\[2.6pt]
+1 & 1 & \\\hline
+\end{tabular}
+\end{inlinetable}
+
+\item[3.16] Fill in the truth table for a two-input NOR gate.
+
+\begin{inlinetable}
+\tabcolsep=12pt
+\begin{tabular}{@{}cc|c} \hline
+A & B & \rule{0pt}{10pt}A NOR B\rule{0pt}{10.1pt}\\ \hline
+\rule{0pt}{10.1pt}0 & 0 & \\[2.6pt]
+0 & 1 & \\[2.6pt]
+1 & 0 & \\[2.6pt]
+1 & 1 & \\\hline
+\end{tabular}
+\end{inlinetable}
+
+\item[3.17]
+\begin{enumerate}
+\item[a.]  Draw a transistor-level diagram for a three-input AND gate
+  and a~three-input OR gate. Do this by extending the designs from
+  Figures~3.6a and~3.7a.
+
+
+\item[b.]  Replace the transistors in your diagrams from part $a$ with
+  either a wire or no wire to reflect the circuit's operation when the
+  following inputs are applied.
+\begin{enumerate}[\rm(3)]
+\item[\rm(1)] $A = 1$, $B = 0$, $C = 0$
+\item[\rm(2)] $A = 0$, $B = 0$, $C = 0$
+\item[\rm(3)] $A = 1$, $B = 1$, $C = 1$
+\end{enumerate}
+\end{enumerate}
+
+\item[3.18] Following the example of Figure~3.11a, draw the gate-level
+  schematic of~a~three-input decoder. For each output of this decoder,
+  write the input conditions under which that output will be 1.
+
+\item[3.19] How many output lines will a five-input decoder have?
+
+\item[3.20] How many output lines will a 16-input multiplexer have?
+  How many select lines will this multiplexer have?
+
+\item[3.21] If $A$ and $B$ are four-bit unsigned binary numbers, 0111
+  and 1011, complete the table obtained when using a two-bit full
+  adder from Figure~3.15 to calculate each bit of the sum, $S$, of $A$
+  and $B$. Check your answer by adding the decimal value of $A$ and
+  $B$ and comparing the sum with $S$. Are the answers the same? Why or
+  why not?
+
+\begin{inlinetable}
+\tabcolsep=12pt
+\begin{tabular}{@{}lcccc@{}} \hline
+{\itshape C}$_{\text{in}}$
+& \rule{0pt}{10pt} & & & {0}\\ \hline
+$A$\rule{0pt}{10pt} & 0 & 1 & 1 & 1 \\[2.6pt]
+$B$ & 1 & 0 & 1 & 1 \\[2.6pt]
+$S$ & & & & \\[2.6pt]
+$C_{{\rm out}}$ & & & & \\\hline
+\end{tabular}
+\end{inlinetable}
+
+\item[3.22] Given the following truth table, generate the gate-level
+  logic circuit, using the implementation algorithm referred to in
+  Section~3.3.4.
+
+\begin{inlinetable}
+\vspace{2pt}
+\tabcolsep=12pt
+\begin{tabular}{@{}ccc|c@{}}\hline
+{\em A} & {\em B} & {\em C} & \rule{0pt}{10pt}{\em Z}\rule{0pt}{10pt} \\ \hline\\[-7.8pt]
+0 & 0 & 0 & 1 \\[2.6pt]
+0 & 0 & 1 & 0 \\[2.6pt]
+0 & 1 & 0 & 0 \\[2.6pt]
+0 & 1 & 1 & 1 \\[2.6pt]
+1 & 0 & 0 & 0 \\[2.6pt]
+1 & 0 & 1 & 1 \\[2.6pt]
+1 & 1 & 0 & 1 \\[2.6pt]
+1 & 1 & 1 & 0 \\\hline
+\end{tabular}
+\end{inlinetable}
+
+
+\item[3.23]
+\begin{enumerate}
+\item[a.] Given four inputs, $A$, $B$, $C$, and $D$ and one output,
+  $Z$, create a truth table for a circuit with at least seven input
+  combinations generating 1s~at the output. (How many rows will this
+  truth table have?)
+
+\item[b.]  Now that you have a truth table, generate the gate-level
+  logic circuit that implements this truth table. Use the
+  implementation algorithm referred to in Section~3.3.4.
+\end{enumerate}
+
+\newpage
+
+\item[3.24] Implement the following functions using AND, OR, and NOT
+  logic gates. The inputs are $A$, $B$, and the output is $F$.
+
+\begin{enumerate}
+\item[a.] $F$ has the value 1 only if $A$ has the value 0 and $B$ has
+  the value 1.
+\item[b.] $F$ has the value 1 only if $A$ has the value 1 and $B$ has
+  the value 0.
+\item[c.] Use your answers from (a) and (b) to implement a 1-bit
+  adder.\break
+  The truth table for the 1-bit adder is given below.
+
+\smallskip
+
+\begin{inlinetable}
+\tabcolsep=12pt
+\begin{tabular}{@{}cc|c}\hline
+{\em A} & {\em B} & \rule{0pt}{10pt}{Sum}\rule{0pt}{10pt}\\ \hline\\[-10.6pt]
+& & \rule{0pt}{1pt}\\[-6.7pt]
+ 0 & 0 & 0 \\[2.6pt]
+ 0 & 1 & 1 \\[2.6pt]
+ 1 & 0 & 1 \\[2.6pt]
+ 1 & 1 & 0 \\\hline
+\end{tabular}
+\end{inlinetable}
+
+\smallskip
+
+\item[d.] Is it possible to create a 4-bit adder (a circuit that
+  will correctly add two 4-bit quantities) using only four copies of
+  the logic diagram from~(c)?  If not, what information is missing?
+  {\em Hint}: When $A=1$\break
+  and $B=1$, a sum of 0 is produced. What information is lost?
+\end{enumerate}
+
+\item[3.25] Logic circuit 1 in Figure~3.36 has inputs $A$, $B$, $C$.
+  Logic circuit 2 in Figure~3.37 has inputs $A$ and $B$. Both logic
+  circuits have an output $D$. There is a fundamental difference between
+  the behavioral characteristics of~these two circuits. What is it?
+  {\em Hint}: What happens when the voltage\break
+  at input $A$ goes from 0 to 1 in both circuits?
+
+%Figure 3.36
+\begin{figure}[h]
+\setlength{\multifigspace}{3pc}
+\multifig{\includegraphics{pat67509_un0307.eps}}
+{\caption{Logic circuit 1 for Exercise 3.19}}
+%\end{figure}
+%Figure 3.37
+%\begin{figure}[h]
+{\includegraphics{pat67509_un0308.eps}}
+{\caption{Logic~\rlap{circuit 2 for}\break Exercise~\rlap{3.19}}}
+\end{figure}
+
+\newpage
+
+\item[3.26] Generate the gate-level logic that implements the
+  following truth table. From the gate-level structure, generate a
+  transistor diagram that implements the logic structure. Verify that
+  the transistor diagram~implements the truth table.
+
+\begin{inlinetable}
+\vspace{-3pt}
+\tabcolsep=12pt
+\begin{tabular}{@{}cc|c@{}} \hline\\[-9.9pt]
+\rule{0pt}{10pt}${in_{0}}$\rule{0pt}{10pt}
+& ${in_{1}}$ & $f(in_{0}, in_{1})$ \\\hline
+\rule{0pt}{10pt}0\rule{0pt}{10pt} & 0 & 1 \\[2.6pt]
+0 & 1 & 0 \\[2.6pt]
+1 & 0 & 1 \\[2.6pt]
+1 & 1 & 1 \\\hline
+\end{tabular}
+\vspace{-6pt}
+\end{inlinetable}
+
+\item[3.27] You know a byte is 8 bits. We call a 4-bit quantity a
+  {\em nibble}. If a byte-addressable memory has a 14-bit address, how
+  many nibbles of storage are in this memory?
+
+\item[3.28] Implement a 4-to-1 mux using only 2-to-1 muxes making sure
+  to properly connect all of the terminals. Remember that you will
+  have 4~inputs, 2 control signals, and 1 output. Write out the
+  truth table for this~circuit.
+
+\item[3.29] Given the logic circuit in Figure~3.38, fill in the truth
+  table for the output value $Z$.
+
+\begin{inlinetable}
+\tabcolsep=12pt
+\begin{tabular}{@{}ccc|c@{}}\hline
+{\em A} & {\em B} & {\em C} & {\em Z}\rule{0pt}{10pt} \\ \hline\\[-10.6pt]
+& & \rule{0pt}{1pt}\\[-6.7pt]
+0 & 0 & 0 & \\[2.6pt]
+0 & 0 & 1 &\\[2.6pt]
+0 & 1 & 0 &\\[2.6pt]
+0 & 1 & 1 &\\[2.6pt]
+1 & 0 & 0 &\\[2.6pt]
+1 & 0 & 1 &\\[2.6pt]
+1 & 1 & 0 &\\[2.6pt]
+1 & 1 & 1 &\\\hline
+\end{tabular}
+\end{inlinetable}
+
+%Figure 3.38
+\begin{figure}[h]
+\centerline{\includegraphics{pat67509_un0309.eps}}
+\caption{Diagram for Exercise 3.23}
+\end{figure}
+
+\newpage
+
+%Figure 3.39
+\begin{figure}
+\leftskip\leftmargini
+\centerline{\includegraphics{pat67509_un0310.eps}}
+\caption{Diagram for Exercise 3.24}
+\end{figure}
+
+\item[3.30]
+\begin{enumerate}
+\item[a.]  Figure~3.39 shows a logic circuit that appears in many of
+  today's processors. Each of the boxes is a full-adder circuit. What
+  does the value on the wire $X$ do? That is, what is the difference
+  in the output\hfill\break of this circuit if $X=0$ versus if $X=1$?
+
+\item[b.]  Construct a logic diagram that implements an
+  adder/subtracter. That is, the logic circuit will compute $A+B$ or
+  $A-B$ depending on\hfill\break the value of $X$. {\em Hint}: Use the logic
+  diagram of Figure~3.39 as a building~block.
+\end{enumerate}
+
+\vspace*{\baselineskip}
+
+\item[3.31] Say the speed of a logic structure depends on the largest
+  number of logic gates through which any of the inputs must propagate
+  to reach an output. Assume that a NOT, an AND, and an OR gate all
+  count as one gate\hfill\break delay. For example, the propagation delay for a
+  two-input decoder\hfill\break shown in Figure~3.11 is 2 because some inputs
+  propagate through\hfill\break two gates.
+
+\begin{enumerate}[a.]
+\item[a.] What is the propagation delay for the two-input mux shown in
+  Figure~3.12?
+\item[b.] What is the propagation delay for the 1-bit full adder in\hfill\break
+  Figure~3.15?
+
+\item[c.] What is the propagation delay for the 4-bit adder shown
+  in Figure~3.16?
+\item[d.] What if the 4-bit adder were extended to 32 bits?
+\end{enumerate}
+
+\newpage
+
+\item[3.32] Recall that the adder was built with individual ``{\bf
+    slices}'' that produced a sum bit and carryout bit based on
+  the two operand bits $A$ and $B$ and the carryin bit. We called
+  such an element a full adder. Suppose we have a 3-to-8 decoder
+  and two six-input OR gates, as shown below. Can we connect them
+  so that we have  a full adder? If so, please do. ({\em Hint}: If
+  an input to an OR gate is not needed, we can simply put an input
+  0 on it and it will have no effect on anything. For example, see
+  the figure below.)
+
+  \begin{figure}[h]
+  \centerline{\includegraphics{pat67509_un0311.eps}}
+  \end{figure}
+
+\item[3.33] For this question, refer to the figure below.\vspace{12pt}
+
+  \begin{figure}[h]
+  \centerline{\includegraphics{pat67509_un0312.eps}}
+  \vspace{12pt}
+  \end{figure}
+
+\begin{enumerate}[a.]
+\item[a.] Describe the output of this logic circuit when the select
+  line $S$ is a logical 0. That is, what is the output $Z$ for each
+  value of $A$?
+\item[b.] If the select line $S$ is switched from a logical 0 to 1,
+  what will the output be?
+\item[c.] Is this logic circuit a storage element?
+\end{enumerate}\vfill\pagebreak
+
+\item[3.34] Having designed a binary adder, you are now ready to
+  design a 2-bit by 2-bit unsigned binary multiplier. The multiplier
+  takes two 2-bit inputs A[1:0] and B[1:0] and produces an output $Y$
+  which is the product of A[1:0] and B[1:0]. The standard notation for
+  this is:
+\begin{equation*}
+Y={\rm A}[1{:}0] \cdot {\rm B}[1{:}0]
+\end{equation*}
+\vspace{-2.5\belowdisplayskip}
+\begin{enumerate}[a.]
+\item [a.] What is the maximum value that can be represented in 2 bits
+  for $A$(A[1:0])?
+\item [b.] What is the maximum value that can be represented in 2 bits
+  for $B$(B[1:0])?
+\item [c.] What is the maximum possible value of $Y$?
+\item[d.] What is the number of required bits to represent the maximum
+  value of $Y$?
+\item[e.] Write a truth table for the multiplier described above. You
+  will have a four-input truth table with the inputs being A[1], A[0],
+  B[1], and\break B[0].
+\item [f.] Implement the third bit of output, Y[2] from the truth
+  table using only AND, OR, and NOT gates.
+\end{enumerate}
+
+
+
+\item[3.35] A 16-bit register contains a value. The value x75A2 is
+  written into it. Can the original value be recovered?\vfill\pagebreak
+
+\item[3.36] A comparator circuit has two 1-bit inputs $A$ and $B$ and
+  three 1-bit outputs $G$ (greater), $E$ (Equal), and $L$ (less than).
+  Refer to Figures~3.40 and~3.41 for this problem.
+\begin{alignat*}{6}
+  & \text{G is 1 if $A>B$} &&\qquad \text{E is 1 if $A=B$} &&\qquad \text{L is 1 if $A<B$}\\[-\jot]
+  &\text{0 otherwise} &&\qquad \text{0 otherwise} &&\qquad \text{0
+    otherwise}
+\end{alignat*}
+
+
+
+%Figure 3.43
+\begin{figure}[!h]
+\centerline{\includegraphics{pat67509_un0313.eps}}
+\caption{Diagram for Exercise 3.30}
+\end{figure}
+
+%Figure 3.44
+\begin{figure}[!h]
+\centerline{\includegraphics{pat67509_un0314.eps}}
+\caption{Diagram for Exercise 3.30}
+\end{figure}
+
+
+\smallskip
+\begin{enumerate}[a.]
+\item[a.] Draw the truth table for a 1-bit comparator.
+
+\begin{inlinetable}
+\begin{tabular}{ll|lll}
+\hline\tabcolsep=6pt
+\rule{0pt}{10pt} {\it A} & {\it B} &  {\it G} &  {\it E} & {\it L}\\
+\hline
+0 & 0& \\
+0 & 1& \\
+1 & 0& \\
+1 & 1& \\
+\hline
+\end{tabular}
+\end{inlinetable}
+
+\item[b.] Implement $G, E$, and $L$ using AND, OR, and NOT gates.
+
+\item[c.] Using the 1-bit comparator as a basic building block,
+  construct a four-bit equality checker, such that output EQUAL is 1
+  if ${\rm A}[3{:}0]={\rm B}[3{:}0]$, 0 otherwise.
+\end{enumerate}
+
+
+
+\item[3.37] If a computer has eight-byte addressability and needs
+  three bits to access a location in memory, what is the total size of
+  memory in bytes?
+
+\item[3.38] Distinguish between a memory address and the memory's
+  addressability.
+
+\item[3.39] Using Figure~3.21, the diagram of the 4-entry,
+  $2^2$-by-3-bit memory.
+\begin{enumerate}[c.]
+\item[a.] To read from the fourth memory location, what must the
+  values of $A[1{:}0]$ and WE be?
+\item[b.] To change the number of entries in the memory from 4 to 60,
+  how many address lines would be needed? What would the
+  addressability of the memory be after this change was made?
+
+\item[c.] Suppose the minimum width (in bits) of the program counter
+  (the program counter is a special register within a CPU, and we will
+  discuss it in detail in the next chapter) is the minimum number of
+  bits needed to address all 60 locations in our memory from part (b).
+  How many additional memory locations could be added to this memory
+  without having to alter the width of the program counter?
+\end{enumerate}
+
+\newpage
+
+\item[3.40] For the memory shown in Figure~3.42:
+\begin{enumerate}[c.]
+\item[a.] What is the address space?
+\item[b.] What is the addressability?
+\item[c.] What is the data at address 2?
+\end{enumerate}
+
+  \begin{figure}[h]
+\hspace*{-8pc}\begin{minipage}{36pc}
+  \centerline{\includegraphics{pat67509_un0315.eps}}
+  \caption{Diagram for Exercise 3.34}
+  \end{minipage}
+  \vspace{-6pt}
+  \end{figure}
+
+\vfill\pagebreak
+
+\newpage
+
+
+\item[3.41] Given a memory that is addressed by 22 bits and is
+  3-bit addressable, how many bits of storage does the memory
+  contain?
+
+
+\item[3.42] A combinational logic circuit has two inputs. The values
+  of those two inputs during the past ten cycles were 01, 10, 11, 01,
+  10, 11, 01, 10, 11, and 01. The values of these two inputs during
+  the current cycle are 10. Explain the effect on the current output
+  due to the values of the inputs during the previous ten cycles.
+
+
+
+\item[3.43] In the case of the lock of Figure~3.24a, there are four
+  states A, B, C, and D, as described in Section~3.6.2.  Either the
+  lock is open (State D), or if it is not open, we have already
+  performed either zero (State~A), one (State~B), or two (State~C)
+  correct operations.  This is the sum total of all possible states
+  that can exist.  Exercise: Why is that the case?  That is, what
+  would be the snapshot of a fifth state that describes a possible
+  situation for the combination lock?
+
+\item[3.44] Recall Section~3.6.2. Can one have an arc from
+  a state where the score is Texas 30, Oklahoma 28 to a state where
+  the score is tied, Texas 30, Oklahoma 30?  Draw an example of the
+  scoreboards (like the one in Figure~3.25) for the two states.
+
+\item[3.45] Recall again Section~3.6.2. Is it possible to
+  have two states, one where Texas is ahead 30-28 and the other where
+  the score is tied 30-30, but no arc between the two?  Draw an
+  example of two scoreboards, one where the score is 30-28 and the
+  other where the score is 30-30, but there can be no arc between the
+  two. For each of the three output values, game in progress, Texas
+  wins, Oklahoma wins, draw an example~of a scoreboard that
+  corresponds to a state that would produce that output.
+
+
+\item[3.46] Refer to Section~3.6.2. Draw a partial finite
+  state machine for the game of tic-tac-toe.
+
+\item[3.47] The IEEE campus society office sells sodas for 35 cents.
+  Suppose they install a soda controller that only takes the following
+  three inputs: nickel, dime, and quarter. After you put in each coin,
+  you push a pushbutton to register the coin. If at least 35 cents has
+  been put in the controller, it will output a soda and proper change
+  (if applicable). Draw a finite state machine that describes the
+  behavior of the soda controller. Each state will represent how much
+  money has been put in ({\it Hint}: There will be seven of these
+  states). Once enough money has been put in, the controller will go
+  to a final state where the person will receive a soda and proper
+  change ({\it Hint}: There are five such final states). From the
+  final state, the next coin that is put in will start the process
+  again.
+
+
+\item[3.48] Refer to Figure~3.32b. Why are lights 1 and 2 controlled
+  by the output of the OR gate labeled $Z$? Why is the next state of
+  storage element 2 controlled by the output of the OR gate labeled
+  $U$?
+
+
+\newpage
+
+\item[3.49] Shown in Figure~3.43 is an implementation of a finite
+  state machine with an input $\rm X$ and output $\rm Z$.
+
+\begin{enumerate}[b.]
+\item[a.] Complete the rest of the following table.\\
+  S1, S0 specifies the present state.\\
+  D1, D0 specifies the next state.
+
+%Figure 3.49
+\begin{figure}[h]
+\centerline{\includegraphics{pat67509_un0316.eps}}
+\caption{Diagram for Exercise 3.43}
+\vspace{-12pt}
+\end{figure}
+
+\begin{inlinetable}
+\begin{tabular}{@{}lll|lll@{}}
+\hline
+\rule{0pt}{10pt}S1\rule{0pt}{10pt} & S0 & X & D1 & D0 & Z\\
+\hline\\[-7pt]
+0 & 0 & 0\\[2.6pt]
+0 & 0 & 1\\[2.6pt]
+0 & 1 & 0\\[2.6pt]
+0 & 1 & 1 & 1 & 0 & 1\\[2.6pt]
+1 & 0 & 0\\[2.6pt]
+1 & 0 & 1\\[2.6pt]
+1 & 1 & 0\\[2.6pt]
+1 & 1 & 1\\
+\hline
+\end{tabular}
+\end{inlinetable}
+
+\item[b.] Draw the state diagram for the truth table from part $a$.
+\end{enumerate}
+
+\item[3.50] Prove that the NAND gate, by itself, is logically complete
+  (see Section~3.3.5) by constructing a logic circuit that performs
+  the AND function, a logic circuit that performs the NOT function,
+  and a logic circuit that performs the OR function. Use only NAND
+  gates in these three logic circuits.
+
+\item[3.51] We have learned that we can write one bit of information 
+  with a logic circuit called a transparent latch, and that the bit 
+  written is available to be read almost immediately
+  after being written.\\
+  Sometimes it is useful to be able to store a bit, but not be able to
+  read the value of that bit until the next cycle.  
+  An example of a logic circuit that has this 
+  property is a \underline{~~~~~~~~~~~~~~~~~~~~~}.   
+
+\newpage
+
+\item[3.52] A student decided to design a latch as
+shown below.  For what values of A and B will the latch remain in the
+quiescent state (i.e., its output will not change)?
+
+%Latch figure
+\begin{figure}[h]
+\begin{center}
+\includegraphics[scale=0.5]{352_latch.eps}
+\end{center}
+\end{figure}
+
+\item[3.53]STAR The Master-Slave flip-flop we introduced in the chapter is shown below. Note that the input value is visible at the output after the clock transitions
+from 0 to 1.\\
+
+\begin{figure}[h]
+\centering
+\includegraphics[height=2.75cm]{masterslave.eps}
+\end{figure}
+
+\noindent
+Shown below is a circuit constructed with three of these flip-flops.\\
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.5]{flip-flop_counter.eps}
+\end{figure}
+
+Fill in the entries for D2, D1, D0 for each of clock cycles shown
+\noindent
+\hspace{2.0in}
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.5]{flip-flop_table.eps}
+\end{figure}
+
+\noindent
+In 10 words or less, what is this circuit doing?\\
+
+\item[3.54]STAR An 8-to-1 mux (shown below) outputs one of the
+eight sources, A, B, C, D, E, F, G, H depending on S[2:0], as shown.  Note
+the value of S[2:0] corresponding to each source is shown just below
+the input to the mux.  For example, when S[2:0] = 001, B is provided to the
+output.
+
+\vspace{0.1in}
+\begin{figure}[h]
+\centering
+\includegraphics[width=3.5in]{mux8.eps}
+\end{figure}
+
+\noindent We can implement an 8-to-1 mux with a logic circuit of 2-to-1 muxes,
+as shown below.  In this case, the 0 and 1 below the two inputs to each
+mux correspond to the value of the select line that will cause that input
+to be provided to the output of that mux.\\
+
+
+\noindent Note that only two of the sources are shown.  Note also
+that none of the select bits are labeled.  Your task: finish the job.\\
+
+{\bf Part a} Label the select line of each mux,
+according to whether it is S[2], S[1], or S[0].\\
+
+{\bf Part b} Label the remaining six sources to
+the 2-to-1 mux circuit, so the circuit behaves exactly like the 8-to-1
+mux shown above.\\
+
+\vspace{0.1in}
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.75]{mux.eps}
+\end{figure}
+
+
+\item[3.55]STAR We wish to implement two logic functions Y(a,b,c) and Z(a,b).  Y is 1 in exactly those cases where an odd number of a, b, and c equal 1. Z is
+the exclusive-OR of a and b.\\
+
+\noindent {\bf Part a} Construct the truth tables for Y and Z.
+
+\vspace{0.1in}
+\begin{center}
+\begin{tabular}{ccc||c|c}
+    a & b & c & Y & Z \\
+    \hline
+    0& 0& 0&\ &\\
+    0& 0& 1&\ & \\
+    0& 1& 0&\ &\\
+    0& 1& 1&\ &\\
+    1& 0& 0&\ &\\
+    1& 0& 1&\ &\\
+    1& 1& 0&\ &\\
+    1& 1& 1&\ &\\
+\end{tabular}
+\end{center}
+
+\vspace{0.1in}
+\noindent {\bf Part b} : Implement the two logic functions Y and Z described
+above using ONLY the logic circuits provided below: a 3-to-8 decoder and
+two OR gates.  That is, draw the wires from the outputs of the decoder
+to the inputs of the OR gates as necessary to do the job.  You can assume
+you have as many inputs to each OR gate as you find necessary.
+
+\vspace{0.2in}
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.25]{355_pla.eps}
+\end{figure}
+
+\newpage
+
+\item[3.56]STAR Shown below is the partially completed state diagram of a
+finite state machine that takes an input string of H (heads) and T
+(tails) and produces an output of 1 every time the string HTHH occurs.
+
+\vspace{1in}
+\begin{figure}[h]
+\centering
+    \includegraphics[scale=0.5]{356_HTHH.eps}
+\end{figure}
+
+\noindent For example,\\
+
+        if the input string is: {\ttfamily H\ \ H\ \ H\ \
+          H\ \ H\ \ T\ \ H\ \ H\ \ T\ \ H\ \ H\ \ H\ \ H\ \ H\ \ T\ \ H\
+          \ H\ \ T},\\
+\indent      the output would be: {\ttfamily \ 0\ \ 0\ \ 0\ \ 0\ \
+0\ \ 0\ \ 0\ \ 1\ \ 0\ \ 0\ \ 1\ \ 0\ \ 0\ \ 0\ \ 0\ \ 0\ \ 1\ \ 0}.\\
+
+\noindent Note that the $8^{th}$ coin toss (H) is part of two HTHH sequences.
+
+\vspace{0.2in}
+
+\noindent {\bf Part a}: Complete the state diagram of the finite state machine that will do this for any input sequence of any length.
+
+\vspace{0.2in}
+
+\noindent {\bf Part b}: If we decide to implement this finite state machine
+with a sequential logic circuit (similar to the danger sign we designed
+in class), how many state variables would we need?
+
+\newpage
+
+\item[3.57]STAR Shown below is a state diagram for a 4 state
+machine, and the truth table showing the behavior of this state machine.
+Some of the entries in both are missing.
+
+\noindent Note that the states are labeled 00, 01, 10, and 11 and the output of
+each state Z (0 or 1) is shown in each state.  The input is shown as X.
+
+Your job, complete both the truth table and the state machine.
+
+\begin{center}
+\begin{tabular}{c|c}
+    S[1] S[0] X & S'[1] S'[0] Z \\
+    \hline
+    0 \ \ \ 0 \ \ \hspace{0.02in} 0 & \\ \\
+    0 \ \ \ 0 \ \ \hspace{0.02in} 1 & \hspace{-0.25in} 1 \ \ \ \ 1 \\ \\
+    0 \ \ \ 1 \ \ \hspace{0.02in} 0 & \\ \\
+    0 \ \ \ 1 \ \ \hspace{0.02in} 1 & \ \ \ \ \ \ \ \ \ \ \ \ \ \ 1\\ \\
+    1 \ \ \ 0 \ \ \hspace{0.02in} 0 & \ \ \ \ \ \ \ \ \ \ \ \ \ \ 0\\ \\
+    1 \ \ \ 0 \ \ \hspace{0.02in} 1 & \hspace{-0.25in} 0 \ \ \ \ 1 \\ \\
+    1 \ \ \ 1 \ \ \hspace{0.02in} 0 & \hspace{-0.25in} 0 \ \ \ \ 0 \\ \\
+    1 \ \ \ 1 \ \ \hspace{0.02in} 1 & \\ \\
+\end{tabular}
+\end{center}
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.5]{357.eps}
+\end{figure}
+
+
+\newpage
+
+\item[3.58]STAR The transistor circuit shown below produces the accompanying truth table.  The inputs to some of the gates of the transistors are not specified. Also, the outputs for some of the input combinations of the truth table are not specified.
+\\
+
+\vspace{0.2in}
+\noindent
+Your job: Complete both specifications.  i.e., all transistors will have their
+gates properly labeled with either A, B, or C, and all rows of the truth table
+will have a 0 or 1 specified as the output.
+\\
+
+\vspace{0.2in}
+\noindent
+Note that this is not a problematic circuit.  For every input combination,
+either the output is connected to ground (i.e.,~OUT=0) or to the positive end
+of the battery (i.e., OUT=1).
+\\
+
+\vspace{0.3in}
+\begin{tabular}{m{6cm} m{3cm}}
+\includegraphics[scale=0.5]{358_cmos.eps}
+&
+\begin{tabular}{|c|c|c||c|}
+\hline
+A & B & C & OUT \\ \hline \hline
+0 & 0 & 0 & \\ \hline
+0 & 0 & 1 & \\ \hline
+0 & 1 & 0 & \\ \hline
+0 & 1 & 1 & 1 \\ \hline
+1 & 0 & 0 & 1 \\ \hline
+1 & 0 & 1 & 0 \\ \hline
+1 & 1 & 0 & \\ \hline
+1 & 1 & 1 & \\ \hline
+\end{tabular}
+\end{tabular}
+
+\newpage
+
+\item[3.59]STAR Most word processors will correct simple errors in spelling and grammar.  Your job is to specify a finite state machine that will capitalize the personal pronoun I in certain instances if it is entered as a lower case i.
+\\
+
+\noindent
+\vspace{0.2in}
+For example, 
+\noindent 
+\\ {\bf i think i'm in love} will be corrected to {\bf I think I'm in
+love}.
+\\
+\vspace{0.2in}
+\noindent
+Input to your finite state machine will be any sequence of characters from a
+standard keyboard.  Your job is to replace the~{\bf i} with an {\bf I} if
+\\
+
+the i is the first character input or is preceded by a *space*, and
+
+the i is followed by a *space* or by an *apostrophe*.
+\\
+
+\vspace{0.2in}
+\noindent
+Shown below is a finite state machine with some of the inputs and some of the
+outputs unspecified.  Your job is to complete the specification.
+\\
+\vspace{0.2in}
+\noindent
+Inputs are from the set \{i, A, S, O\}, where 
+\par A represents an apostrophe,
+\par S represents a space,
+\par O represents any character other than i, apostrophe, or *space*.
+\\
+
+\noindent
+The output Z corresponding to each state is 0 or 1, where 
+0 means ``do nothing,"
+1 means ``change the most recent {\bf i} to an {\bf I}."
+\\
+
+\vspace{0.2in}
+\noindent
+Note: this exercise in developing a finite state machine word processor is
+only a first step since a lot of ``i to I" will not fix the problem.  For example,
+\\
+
+i' am ---$>$ I' am, i'abcd ---$>$ I'abcd, and i'i ---$>$ I'i are all bad!
+\\
+
+\noindent
+But it is a first step!
+\\
+
+\vspace{0.2in}
+\includegraphics[scale=0.5]{359_state.eps}
+
+
+\newpage
+
+\item[3.60]STAR A finite state machine is connected to a $2^{3}$ by 2 bit memory as shown below:
+\\
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.5]{360_fsm.eps}
+\end{figure}
+
+\noindent
+The contents of the memory are shown below to the left. The next state transition table is shown below to the right.
+
+\begin{tabular}{c@{\hspace{0.5in}}c}
+\begin{tabular}[t]{c||c}
+Address & Content \\
+A[2:0] & D[1:0] \\
+\hline
+000 & 11 \\
+001 & 10 \\
+010 & 01 \\
+011 & 10 \\
+100 & 01 \\
+101 & 00 \\
+110 & 00 \\
+111 & 01 \\
+\end{tabular}
+
+& 
+\begin{tabular}[t]{c||c|c|c|c}
+Current State & \multicolumn{4}{c}{Next State}\\
+%Current State & Next State & Next State & Next State & Next State\\
+S[2:0] & D[1:0] & D[1:0] & D[1:0] & D[1:0] \\
+          & 00 & 01 & 10 & 11 \\
+\hline
+000 & 001 & 010 & 110 & 100 \\
+001 & 100 & 000 & 011 & 110 \\
+010 & 010 & 100 & 111 & 010 \\
+011 & 001 & 100 & 100 & 010 \\
+100 & 110 & 011 & 011 & 111 \\
+101 & 100 & 010 & 100 & 110 \\
+110 & 001 & 110 & 100 & 010 \\
+111 & 000 & 101 & 111 & 101 \\
+\end{tabular}
+\end{tabular}
+
+\vspace{0.25in}
+
+\noindent
+The output Z0, Z1, Z2 is the current state of the finite state machine.
+That is, Z0=S0, Z1=S1, Z2=S2. The cycle time of the finite state machine is long enough so that during a single cycle, the following happens: the output of the finite state machine accesses the memory and the data supplied by the memory is input to the combinational logic which determines the next state of the machine.
+\\
+
+\begin{figure}[ht]
+\begin{minipage}[b]{0.5\linewidth}
+
+%\noindent
+{\bf Part a}: Complete the table below. 
+\vspace{.1in}
+
+\setlength{\extrarowheight}{8.0pt}
+
+\begin{tabular}[t]{c|@{\hspace{.5in}}c@{\hspace{.3in}}|@{\hspace{.3in}}c@{\hspace{.3in}}}
+Cycles & State & Data \\
+\hline
+Cycle 0 & 000 & 11 \\
+\hline
+Cycle 1 &     &    \\
+\hline
+Cycle 2 &     &    \\
+\hline
+Cycle 3 &     &    \\
+\end{tabular}
+\end{minipage}
+
+
+\vspace{0.3in}
+\noindent
+{\bf Part b}: What will the state of the FSM be just before the end of cycle 100? Why?\\
+
+\end{figure}
+
+\pagebreak
+
+\item[3.61]STAR The logic diagram shown below is a finite state machine.
+\\
+
+\hspace{2.0in}
+\begin{figure}[h]
+\centering
+\includegraphics[height=10.5cm]{361_fsm.eps}
+\end{figure}
+
+\begin{tabular} {m{8cm} m{10cm}}
+a. Construct the truth table for the 
+combinational logic: 
+
+\vspace{0.1in}
+
+\begin{tabular}{|c|c|c||c|c|c|}
+\hline
+S1 & S0 & X & Z & S1' & S0' \\ \hline \hline
+0 & 0  & 0  &   &     &  \\ \hline
+0 & 0  & 1  &   &     & \\ \hline
+0 & 1  & 0  &   &     & \\ \hline
+0 & 1  & 1  &   &     &  \\ \hline
+1 & 0  & 0  &   &     &  \\ \hline
+1 & 0  & 1  &   &     &  \\ \hline
+1 & 1  & 0  &   &     & \\ \hline
+1 & 1  & 1  &   &     & \\ \hline
+\end{tabular}
+
+\vspace{0.3in}
+
+& 
+
+\\
+b. Complete the state machine \\ (We have provided nine states. You will not need all of them.  Use only as many as you need):
+
+\includegraphics[scale=0.75]{361_fsm_circles.eps}
+
+\end{tabular}
+
+\item[3.62]STAR You are taking three courses, one each in computing (C),
+engineering (E), and math (M).  In each course, you periodically receive
+assignments.  You never receive more than one assignment at a time.  You also
+never receive another assignment in a course if you currently have an
+assignment in that course that has not been completed.  You must
+procrastinate (i.e., do nothing) unless you have unfinished assignments in
+both computing and engineering. \\ 
+
+\vspace{0.2in}
+\noindent
+Design a finite state machine to describe the state of the work you have to do
+and whether you are working or procrastinating. \\ 
+
+\vspace{0.2in}
+\noindent
+{\bf Part a} Label each state with the unfinished assignments (with letters C,E,M)
+for when you are in that state.  There are far more states
+provided than you actually need.  Use only what you need. \\ 
+
+\vspace{0.2in}
+\noindent
+{\bf Part b} There are six inputs: c, e, m, $\overline{c}$, $\overline{e}$, $\overline{m}$.
+c, e, m refer to you receiving an assignment. $\overline{c}$, $\overline{e}$,
+$\overline{m}$ refer to you completing an assignment.  Draw the transition arc
+for each state/input pair.  For example, if you had previously only had an
+unfinished assignment in Math and you received an assignment in computing,
+you would transistion from state M to state CM, as shown below. \\ 
+
+\vspace{0.2in}
+\noindent
+{\bf Part c} The output of each state is your behavior, 1 if you are
+working on an assignment, 0 if you are procrastinating.  Label the outputs
+of each state. \\ 
+
+%state machine
+\hspace{2.0in}
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.25]{362_statemachine.eps}
+\end{figure}
+
+\end{exercises}
+\end{document}

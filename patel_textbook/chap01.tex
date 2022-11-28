@@ -1,0 +1,1363 @@
+\documentclass{patt}
+\usepackage[section]{placeins}
+\graphicspath{{../art/ch01/},{../art/designelements/},{../art/designelements/UnNumberedArt/}}
+
+\setcounter{chapter}{0}
+\setcounter{page}{1}
+\setcounter{part}{1}
+
+ \makeatletter
+ \def\@makechapterhead#1{%
+  \begingroup
+  \parindent \z@%
+  \vspace*{-8.5\p@}%
+  \begin{picture}(0,0)
+    \put(432,-577){\includegraphics[width=0.723333in,height=9.52667in]{PattChp.eps}}
+    \put(428,-577){\rule{1\p@}{9.52667in}}
+    \put(381.5,-181){\vbox{%
+        \includegraphics{PattIcon1\ifnum\value{part}=4
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon2\ifnum\value{part}=4
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon3\ifnum\value{part}=4
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon4\ifnum\value{part}=4
+            a\else b\fi.eps}\vspace{1pc}\par
+        \includegraphics{PattIcon5\ifnum\value{part}=4
+            a\else b\fi.eps}\vspace{1pc}}}
+  \end{picture}%
+  \settowidth{\chapternumberwidth}{\fontsize{12}{12}\selectfont\industriasolid\trackonefifty{chapter}}%
+  \hfill\parbox{\chapternumberwidth}{%
+    \centering\industriasolid
+    \centerline{\hss\fontsize{12}{12}\selectfont\trackonefifty{chapter}\hss}\par\vspace{1.5pc}
+    \centerline{\sans\fontsize{72}{12}\selectfont\colour\thechapter}}
+  \par
+  \vspace{6.48pc}
+  {\industriasolid\fontsize{30}{32}\selectfont\trackten{#1}\par}%
+  \vspace{1.5pc}%
+  {\colour\rule{36.4pc}{4\p@}}
+  \vspace{4pt}
+  \endgroup}
+\makeatother
+
+\begin{document}
+
+\chapter{Welcome Aboard}\label{chapt:welcome}
+
+\vspace{21pt}
+
+%1.1
+\section{What We Will Try to Do}
+
+Welcome to {\em From Bits and Gates to C and Beyond}. Our intent
+is to introduce you over the next xxx pages to the world
+of computing. As we do so, we have one objective above all others:
+to show you very clearly that there is no magic to computing. The
+computer is a deterministic system---every time we hit it over the
+head in the same way and in the same place (provided, of course,
+it was in the same starting condition), we get the same response.
+The computer is not an electronic genius; on the contrary, if
+anything, it is an electronic idiot, doing exactly what we tell it
+to do. It has no mind of its own.
+
+What appears to be a very complex organism is really just a
+very large, systematically interconnected collection of very simple parts.
+Our job throughout this book is to introduce you to those very
+simple parts, and, step-by-step, build the interconnected
+structure that you know by the name {\em computer}. Like a
+house, we will start at the bottom, construct the foundation
+first, and then go on to add layer after layer, as we get
+closer and closer to what most people know as a full-blown
+computer. Each time we add a layer, we will explain what
+we are doing, tying the new ideas to the underlying fabric.
+Our goal is that when we are done, you will be able to write
+programs in a computer language such as C, using the
+sophisticated features of that language, and understand
+what is going on underneath, inside the computer.
+
+\pagebreak
+
+%1.2
+\section{How We Will Get There}
+
+We will start (in Chapter~2) by first showing that any information processed by
+the computer is represented by a sequence of 0s and 1s.  That is, we will 
+encode all information as sequences of 0s and 1s. For example, one encoding 
+of the letter $a$ that is commonly used is the sequence 01100001.  One encoding
+of the decimal number {\em 35} is the sequence 00100011.  We will see how to 
+perform operations on such encoded information.
+
+Once we are comfortable with information represented as codes
+made up of 0s and 1s and operations (addition, for example)
+being performed on these representations, we will begin the
+process of showing how a computer works.  Starting in Chapter~3, we will
+note that the computer is a piece of electronic equipment and, as such,
+consists of electronic parts operated by voltages, 
+and interconnected by wires.
+Every wire in the computer, at every moment in time, is
+either at a high voltage or a low voltage. For our representation of 0s 
+and 1s, we do not specify exactly how high. 
+We only care whether there is or is not a large enough voltage relative 
+to 0 volts to identify it as a $1$.  That is, the absence or
+presence of a reasonable voltage relative to 0 volts is what determines 
+whether it represents the value 0 or the value 1.
+\looseness=1
+
+In Chapter~3, we will
+see how the transistors that make up today's microprocessor (the heart of 
+the modern computer) works.  We will further see how those transistors 
+are combined into larger structures that perform operations, such as addition,
+and into structures that allow us to save information for later
+use.  In Chapter~4, we will combine these larger structures into
+the Von Neumann machine, a basic model that describes how a
+computer works.  We will also begin to study a simple
+computer, the LC-3.  We will continue our study of the LC-3 in
+Chapter~5.  {\em LC-3} stands for Little Computer 3.  We actually started
+with LC-1 but needed two more shots at it before (we think)
+we got it right!  The LC-3 has all the important characteristics of
+the microprocessors that you may have already heard of, for
+example, the Intel 8088, which was used in the first IBM PCs
+back in 1981.  Or the Motorola 68000, which was used in the
+Macintosh, vintage 1984.  Or the Pentium IV, one of the
+high-performance microprocessors of choice for the PC in the
+year 2003. Or today's laptop and desktop microprocessors, the Intel Core 
+processors -- I3, I5 and I7.   Or even the ARM microprocessors that are 
+used in most smartphones today.  That is,
+the LC-3 has all the important characteristics of these "real"
+microprocessors without being so complicated that it gets in
+the way of your understanding.
+
+Once we understand how the LC-3 works, the next step is to
+program it, first in its own language (Chapter~5 and Chapter~6), and
+then in a language called {\em assembly language} that is a little
+bit easier for humans to work with (Chapter~7).  Chapter~8 introduces 
+representations of information more complex than a simple number -- stacks, 
+queues, and character strings, and shows how to implement them. 
+Chapter~9 deals with the problem of getting information into (input)
+and out of (output) the LC-3.  Chapter~9 also deals with services provided 
+to a computer user by the operating system.  We conclude the first half of 
+the book (Chapter~10) with an extensive example, the simulation of a 
+calculator, an app on most smart phones today.
+
+In the second half of the book (Chapters~11--21), we turn our attention to 
+high-level programming concepts, which we introduce via the C and C++ 
+programming languages.  High level languages enable programmers to more 
+effectively develop complex software, by abstracting away the details of the 
+underlying hardware.  C and C++ in particular offer a rich set of programmer 
+friendly constructs, but are close enough to the hardware so that we can 
+examine how code is tranformed to execute on the layers below.  
+Our goal is to enable you to write short, simple programs using the core 
+parts of these programming languages, all the while being able to comprehend
+the transformations required for your code to execute on the underlying 
+hardware.
+
+We'll start with basic topics in C such as variables and operators 
+(Chapter~12), control structures (Chapter~13), and functions (Chapter~14).  
+We'll see that these are straightforward extensions of concepts introduced 
+in the first half of the textbook.  We then move on to programming concepts 
+in Chapters~15--19 that will enable us to create more powerful pieces of 
+code: Testing and Debugging (Chapter~15), Pointers and Arrays in C
+(Chapter~16), Recursion (Chapter~17), Input and Output in C (Chapter~18), and
+Data Structures in C (Chapter 19).
+
+Chapters 20 and 21 are devoted to C++, which we present as an evolution of 
+the C programming language.   Because the C++ language was intially defined 
+as a superset of C, many of the concepts covered in Chapters~11--19 directly 
+map onto the C++ language.  We will introduce some of the core notions in 
+C++ that have helped establish C++ as one of the most popular languages for 
+developing real-world software.  Chapter~20 is our Introduction to C++,  
+and Chapter~21 is an introduction to Objects, a powerful programming 
+construct in the C++ language.
+
+In almost all cases, we try to tie
+high-level C and C++ constructs to the underlying LC-3, so that you
+will understand what you demand of the computer when you use
+a particular construct in a C or C++ program.
+
+\vspace{-16pt}
+%1.3
+\section{Two Recurring Themes}
+
+Two themes permeate this book that we as professors previously
+took for granted, assuming that everyone recognized their value and
+regularly emphasized them to students of engineering and
+computer science.  However, it has become clear to us that from the git-go,
+we need to make these points explicit.  So, we state
+them here up front.  The two themes are (a) the notion of abstraction
+and (b) the importance of not separating in your mind the notions of
+hardware and software.  Their value to your development as an effective
+engineer or computer scientist goes well beyond your understanding of
+how a computer works and how to program it.
+
+The notion of abstraction is central to all that you will learn and expect
+to use in practicing your craft, whether it be in mathematics, physics,
+any aspect of engineering, or business. It is hard to think of any body
+of knowledge where the notion of abstraction is not critical.
+
+The misguided hardware/software separation is directly related to your 
+continuing study of computers and your work with them.  
+
+We will discuss each in turn.
+
+\vspace{-6pt}
+%1.3.1
+\subsection{The Notion of Abstraction}
+
+The use of abstraction is all around us.  When we get in a taxi and
+tell the driver, ``Take me to the airport,'' we are using abstraction.
+If we had to, we could probably direct the driver each step of the way:
+``Go down this street ten blocks, and make a left turn.''  And, when the
+driver got there, ``Now take this street five blocks and make a right turn.''
+And on and on.  You know the details, but it is a lot quicker to just
+tell the driver to take you to the airport.
+
+Even the statement ``Go down this street ten blocks\,$\ldots$'' can be broken
+down further with instructions on using the accelerator, the steering wheel,
+watching out for other vehicles, pedestrians, etc.
+
+Abstraction is a technique for establishing a simpler way for a person to
+interact with a system, removing the details that are unnecessary for the 
+person to interact effectively with that system.  Our ability to abstract is 
+very much a productivity enhancer.  It allows us to deal with a situation 
+at a higher level, focusing
+on the essential aspects, while keeping the component ideas in the background.
+It allows us to be more efficient in our use of time and brain activity.
+It allows us to not get bogged down in the detail when everything about the
+detail is working just fine.
+
+There is an underlying assumption to this, however: {\em when everything about 
+the detail is just fine}.  What if everything about the detail is not just
+fine? Then, to be successful, our ability to abstract must be combined with our
+ability to {\em un}-abstract.  Some people use the word {\em deconstruct}---the
+ability to go from the abstraction back to its component parts.
+
+
+Two stories come to mind.
+
+The first involves a trip through Arizona the first author made a long time ago
+in the hottest part of the summer.  At the time he was living in Palo Alto,
+California, where the temperature tends to be mild almost always.  He knew 
+enough to take the car to a mechanic before making the trip, and tell him to 
+check the cooling system.  That was the abstraction: cooling system.  What he
+ had not mastered was that the capability of a cooling system for Palo Alto, 
+California is not the same as the capability of a cooling system for the 
+summer deserts of Arizona.  The result: two days in Deer Lodge, Arizona 
+(population 3), waiting for a head gasket to be shipped in.
+
+The second story (perhaps apocryphal) is supposed to have happened during
+the infancy of electric power generation.  General Electric Co. was having
+trouble with one of its huge electric power generators and did not know what
+to do.  On the front of the generator were lots of dials containing lots of
+information, and lots of screws that could be rotated clockwise or
+counterclockwise as the operator wished.  Something on the other side of the
+wall of dials and screws was malfunctioning and no one knew what to do. 
+As the story goes, they called in one of the early giants in
+the electric power industry.  He looked at the dials and listened to the
+noises for a minute, then took a small screwdriver from his pocket
+and rotated one screw 35 degrees counterclockwise.  The problem
+immediately went away.  He submitted a bill for \$1{,}000 (a lot of money in
+those days) without any elaboration.  The controller found the bill for
+two minutes' work a little unsettling, and asked for further clarification.
+Back came the new bill:
+
+\begin{Verbatim}[fontsize=\fontsize{9}{10}]
+     Turning a screw 35 degrees counterclockwise:  $  0.75
+     Knowing which screw to turn and by how much:   999.25
+\end{Verbatim}
+%$
+
+In both stories the message is the same.  It is more efficient to
+think of entities as abstractions.  One does not want to get bogged
+down in details unnecessarily.  And as long as nothing untoward
+happens, we are OK.  If there had been no trip to Arizona,
+the abstraction ``cooling system'' would have been sufficient.  If the
+electric power generator never malfunctioned, there would have been no
+need for the power engineering guru's deeper understanding.
+
+As we will see, modern computers are comprised of transistors. These 
+transistors are combined to form logic "gates" -- an abstraction that lets us 
+think in terms of 0s and 1s instead of the varying voltages on the 
+transistors.  A logic circuit is a further abstraction of a combination of 
+gates.  When one designs a logic circuit out of gates, it is much more
+efficient to not have to think about the internals of each gate.  To
+do so would slow down the process of designing the logic circuit.  One
+wants to think of the gate as a component.  But if there is a problem
+with getting the logic circuit to work, it is often helpful to look at
+the internal structure of the gate and see if something about its
+functioning is causing the problem.
+
+When one designs a sophisticated computer application program, whether
+it be a new spreadsheet program, word processing system, or computer
+game, one wants to think of each of the components one is using as an
+abstraction.  If one spent time thinking about the details of each 
+component when it was not necessary, the distraction could easily
+prevent the total job from ever getting finished.  But when there is a
+problem putting the components together, it is often useful to examine
+carefully the details of each component in order to uncover the
+problem.
+
+The ability to abstract is a most important skill.  In our
+view, one should try to keep the level of abstraction as high as possible,
+consistent with getting everything to work effectively.  Our approach in this
+book is to continually raise the level of abstraction.  We describe logic
+gates in terms of transistors.  Once we understand the abstraction of gates,
+we no longer think in terms of transistors.  Then we build larger structures
+out of gates.  Once we understand these larger abstractions, we no longer think
+in terms of gates.
+
+\paragraph{The Bottom Line}
+
+Abstractions allow us to be much more efficient in dealing
+with all kinds of situations.  It is also true that one can be effective
+without understanding what is below the abstraction as long as everything
+behaves nicely.  So, one should not pooh-pooh the notion of abstraction.  On the
+contrary, one should celebrate it since it allows us to be more efficient.
+
+In fact, if we never have to combine a component with anything else into
+a larger system, and if nothing can go wrong with the component, then it is
+perfectly fine to understand this component only at the level of its
+abstraction.
+
+\looseness=1
+But if we have to combine multiple components into a larger system, we
+should be careful not to allow their abstractions to be the deepest level
+of our understanding.  If we don't know the components below the level of their
+abstractions, then we are at the mercy of them working together without our
+intervention.  If they don't work together, and we are unable to go below the
+level of abstraction, we are stuck.  And that is the state we should take
+care not to find ourselves~in.
+
+%1.3.2
+\subsection{Hardware versus Software}
+
+\looseness=-1
+Many computer scientists and engineers refer to themselves as hardware
+people or software people.  By hardware, they generally mean the
+physical computer and all the specifications associated with it.  By
+software, they generally mean the programs, whether operating systems
+like Android, ChromeOS, Linux or Windows, or database systems like Access, MongoDB, Oracle or DB-terrific, or application programs like Facebook, Chrome, Excel or Word.  The implication is that
+the person knows a whole lot about one of these two things and
+precious little about the other.  Usually, there is the further
+implication that it is OK to be an expert at one of these (hardware OR
+software) and clueless about the other.  It is as if there were a big
+wall between the hardware (the computer and how it actually works) and
+the software (the programs that direct the computer to do their bidding), and
+that one should be content to remain on one side of that wall or
+the~other.
+
+The power of abstraction allows us to "usually" operate at a level where we
+do not have to think about the underlying layers all the time.  This is a
+good thing. It enables us to be more productive.  But if we are clueless
+about the underlying layers, then we are not able to take advantage of the
+nuances of those underlying layers when it is very important to be able to. 
+
+That is not to say that you must work at the lower level of abstraction
+and not take advantage of the productivity enhancements that abstraction
+provides.  On the contrary, you are encouraged to work at the highest level
+of abstraction available to you.  But in doing so, if you are able to, at
+the same time, keep in mind the underlying levels, you will find yourself
+able to do a much better job. 
+
+As you approach your study and practice of computing, we urge you to take 
+the approach that hardware and software are names for components of
+two parts of a computing system that work best when they are designed by
+people who take into account the capabilities and limitations of both.
+
+Microprocessor designers who understand the needs of the programs that will
+execute on the microprocessor they are designing can design much more
+effective microprocessors than those who don't.  For example, Intel, AMD, 
+ARM and other major producers of microprocessors recognized a
+few years ago that a large fraction of future programs would contain video
+clips as part of e-mail, video games, and full-length movies.  They
+recognized that it would be important for such programs to execute 
+efficiently.  The result: most microprocessors today contain special 
+hardware capability to process those video clips.  Intel defined 
+additional instructions, initially called their MMX instruction set,
+and developed special hardware for it.  Motorola, IBM and Apple did 
+essentially the same thing, resulting in the AltiVec instruction set and
+special hardware to support it.  
+
+A similar story can be told about software designers.
+The designer of a large computer program who understands the capabilities
+and limitations of the hardware that will carry out the tasks of that program
+can design the program so it executes more efficiently than the designer 
+who does not 
+understand the nature of the hardware.  One important task that almost all
+large software systems need to carry out is called sorting, where a number of
+items have to be arranged in some order.  The words in a dictionary are
+arranged in alphabetical order.  Students in a class are often graded based 
+on a numerical order, according to their scores on the final exam.  There is 
+a large number of fundamentally different programs one can write to arrange a 
+collection of items in order.  Donald Knuth, one of the top computer 
+scientists in the world, devoted 391 pages to the task in 
+{\em The Art of Computer Programming}, vol.~3.  Which sorting program works 
+best is often very dependent on how much the software designer is aware of 
+the underlying characteristics of the hardware.
+
+\vspace{-12pt}
+\paragraph{The Bottom Line}
+
+We believe that whether your inclinations are in the direction of a computer
+hardware career or a computer software career, you will be much
+more capable if you master both.  This book is about getting you started on 
+the path to mastering both hardware and software.  Although we sometimes 
+ignore making the point explicitly when we are in the trenches of working 
+through a concept, it really is the case that each sheds light on the other.
+
+When you study data types, a software concept, in C (Chapter~12), you
+will understand how the finite word length of the computer, a hardware
+concept, affects our notion of data types.
+
+When you study functions in C (Chapter~14), you will be able to tie
+the {\em rules} of calling a function with the
+hardware implementation that makes those rules necessary.
+
+When you study recursion, a powerful algorithmic device (initially in 
+Chapter~8 and more extensively in
+Chapter~17), you will be able to tie it to the hardware.  If you take the 
+time to do that, you will better understand when the additional time to 
+execute a procedure recursively is worth it.
+
+When you study pointer variables in C (in Chapter~16), your knowledge of
+computer memory will provide a deeper understanding of what pointers provide,
+and very importantly, when they should be used, and when 
+they should be avoided.
+
+When you study data structures in C (in Chapter~19), your knowledge of
+computer memory will help you better understand
+what must be done to manipulate the actual structures in memory efficiently.
+
+We realize that most of the terms in the preceding five short paragraphs
+may not be familiar to you {\em yet}.  That is OK; you can reread this page
+at the end of
+the semester.  What is important to know right now is that there are important
+topics in the software that are very deeply interwoven with topics in the
+hardware.  Our contention is that mastering either is easier if you pay
+attention to both.
+
+Most importantly, most computing problems yield better solutions when the 
+problem solver has the capability of both at his or her disposal.
+
+%1.4
+\section{A Computer System}
+
+We have used the word {\em computer} more than two dozen times in the
+preceding pages, and although we did not say so explicitly,
+we used it to mean a system consisting of the software (i.e., computer programs)
+that directs 
+and specifies the processing of information and the hardware that performs the 
+actual processing of information in response to what the software asks the
+hardware to do.  When we say ``performing the actual processing,'' we mean 
+doing the actual additions, multiplications, and so forth in the hardware 
+that are necessary to get the job done. A more precise term for this
+hardware is a {\em central processing unit} (CPU), or simply a
+{\em processor} or {\em microprocessor}.  This textbook is primarily about 
+the processor and the programs that are executed by the processor.
+
+%1.4.1
+\subsection{A (very) little history for a (lot) better perspective}
+
+Before we get into the detail of how the processor and the software
+associated with it work, we should take a moment and note the enormous and
+unparalleled leaps of performance that the computing industry has made in the
+relatively short time computers have been around.  After all, it wasn't until
+the 1940s that the first computers showed their faces.  One of the first 
+computers was the ENIAC (the Electronic Numerical Integrator and Calculator), 
+a general purpose electronic computer that could be reprogrammed for different 
+tasks.  It was designed  and built in 1943-1945 at the University of 
+Pennsylvania by Presper Eckert and his colleagues.  It contained more than 
+17,000 vacuum tubes.  It was approximately 8 feet high, more than 100 feet wide,
+and about 3 feet deep (about 300 square feet of floor space).  It weighed 
+30 tons, and required 140 KWatts to operate.  Figure~\ref{fig:eniac} shows 
+three operators programming the ENIAC by plugging and unplugging cables 
+and switches.
+
+%Figure 1.1
+\begin{figure}[b]
+\vspace{2pt}
+\centerline{\includegraphics[width=2.9in,height=3.09in]{eniac.eps}}
+\caption{The ENIAC, designed and built at Unversity of Pennsylvania, 1943-45}
+\label{fig:eniac}
+\end{figure}
+
+
+\FloatBarrier
+About 40 years and many computer companies and computers later, in the early 
+1980s, the Burroughs A series was born.  One of the dozen or so 18 inch boards 
+that comprise that machine is shown in 
+Figure~\ref{fig:cpu_board}.  Each board contained 50 or more integrated 
+circuit packages.  Instead of 300 square feet, it took up around 50-60 square 
+feet, instead of 30 tons, it weighed about 1 ton, and instead of 140 Kwatts,
+it required approximately 25 Kwatts to operate.
+
+%Figure 1.2
+\begin{figure}
+\centerline{\includegraphics[width=4.20333in,height=3.75in]{pat67509_0101.eps}}
+\caption{A processor board, vintage 1980s (Courtesy of Emilio Salgueiro, Unisys Corporation.)}
+\label{fig:cpu_board}
+\end{figure}
+
+\FloatBarrier
+
+Fast forward another 30 or so years and we find many of today's computers 
+on desk tops (Figure~\ref{fig:desktop}), laptops (Figure~\ref{fig:laptop}) 
+and most recently in smartphones (Figure~\ref{fig:smartphone}).  Their 
+relative weights and energy requirements have decreased enormously, and the 
+speed at which they process information has increased also enormously.  
+We estimate that the computing power in a smart phone today (that is, how fast
+we can compute with a smart phone) is more than four million times 
+the computing power of the ENIAC!
+
+%Figure 1.3
+\begin{figure}
+\vspace{2pt}
+\centerline{\includegraphics[width=2.9in,height=3.09in]{desktop.eps}}
+\caption{A desktop computer.}
+\label{fig:desktop}
+\end{figure}
+
+
+%Figure 1.4
+\begin{figure}
+\centerline{\includegraphics[width=3.74in,height=2.31333in]{laptop.eps}}
+\caption{A laptop.}
+\label{fig:laptop}
+\vspace{12pt}
+\end{figure}
+
+
+%Figure 1.5
+\begin{figure}
+\centerline{\includegraphics[width=3.74in,height=2.31333in]{smartphone.eps}}
+\caption{A smartphone.}
+\label{fig:smartphone}
+\vspace{12pt}
+\end{figure}
+
+
+\FloatBarrier
+The integrated circuit packages that comprise modern digital computers have
+also seen phenomenal improvement.  An example of one of today's microprocessors
+is shown in Figure~\ref{fig:microprocessor}.  The first microprocessor, 
+the Intel 4004 in 1971,
+contained 2300 transistors, and operated at 106 KHz.  By 1992, those
+numbers had jumped to 3.1 million transistors at a frequency of 66 MHz on the
+Intel Pentium microprocessor, an increase in both parameters of a factor of
+about 1000.  
+Today's microprocessors contain upwards of 5 billion transistors and can 
+operate at upwards of 4 GHz, another increase in both parameters of about a 
+factor of 1000.
+
+This factor of one million since 1971 in both the number of transistors and 
+the frequency that the microprocessor operates at has had very important 
+implications.  The fact that each operation can be 
+performed in one millionth of the time it took in 1971 means the 
+microprocessor can do one million things today in the time it took to do one 
+thing in 1971.  The fact that there are more than a million times as many 
+transistors on a chip means we can do a lot 
+more things at the same time today than we could in 1971.  
+
+The result of all this is we have today computers that seem able to
+understand the languages people speak -- English, Spanish, Chinese, for
+example.  We have computers that seem able to recognize faces.  Many see
+this as the magic of artificial intelligence.  We will see as we get into 
+the details of how a computer works that much of what appears to be magic 
+is really due to how blazingly fast very simple mindless operations (many 
+at the same time) can be carried out.
+
+%Figure 1.6
+\begin{figure}
+\centerline{\includegraphics[width=3.74in,height=2.31333in]{microprocessor.eps}}
+\caption{A microprocessor.}
+\label{fig:microprocessor}
+\vspace{12pt}
+\end{figure}
+
+\FloatBarrier
+
+%1.4.2
+\subsection{The parts of a computer system}
+
+When most people use the word computer, they
+usually mean more than just the processor (i.e., CPU) that is in charge of 
+doing what the software directs.  They usually mean the
+collection of parts that in combination form their {\em computer
+system} \index{computer system}.  Today that computer system is often a laptop
+(see Figure~\ref{fig:laptop}), augmented with many additional devices.
+
+A computer system generally includes, in addition to the processor, a keyboard
+for typing commands, a mouse or keypad or joystick for positioning on menu 
+entries, a monitor for displaying information that the computer system has
+produced, memory for temporarily storing information, disks and USB memory 
+sticks of one sort or another for storing information for a very long
+time, even after the computer has been turned off, connections to other 
+devices such as a printer for obtaining paper copies of that information,
+and the collection of programs (the software) that the user wishes to~execute.
+
+All these items help the computer user do
+his or her job.  Without a printer, for example, the user would
+have to copy by hand what is displayed on the monitor.  Without a
+mouse, keypad, or joystick, the user would have to type each command, 
+rather than simply position the mouse, keypad, or joystick.
+
+So, as we begin our journey, which focuses on the CPU which occupies a small
+fraction of 1 square inch of silicon and the software that makes the CPU do
+our bidding, we note that the computer systems we use contain a lot of 
+additional components.
+
+%1.5
+\vspace{-6pt}
+\section{Two Very Important Ideas}
+\label{sec:two_ideas}
+
+Before we leave this first chapter, there are two
+very important ideas that we would like you to understand,
+ideas that are at the core of what computing is all about.
+
+\begin{altdescription}
+  \item[Idea 1:]  All computers (the biggest and the smallest, the fastest and
+  the slowest, the most expensive and the cheapest) are capable of
+  computing exactly the same things if they are given enough time and
+  enough memory.  That is, anything a fast computer can do, a slow
+  computer can do also.  The slow computer just does it more slowly.
+  A more expensive computer cannot figure out something that a cheaper
+  computer is unable to figure out as long as the cheaper computer can
+  access enough memory.  (You may have to go to the store to buy more memory
+  whenever it runs out of memory in order to keep increasing memory.)
+  {\bfseries All} computers can do {\bfseries exactly} the same things.  Some
+  computers can do things faster, but none can do {\bfseries more} than any\break
+  other.
+
+\item[Idea 2:] We describe our problems in English or some other language
+    spoken by people.  Yet the problems are solved by electrons running
+    around inside the computer.  It is necessary to transform our problem
+    from the language of humans to the voltages that influence the flow
+    of electrons.  This transformation is really a sequence of systematic
+    transformations, developed and improved over the last 70 years, which
+    combine to give the computer the ability to carry out what appears to
+    be some very complicated tasks.  In reality, these tasks are simple
+    and straightforward.
+\end{altdescription}
+
+The rest of this chapter is devoted to discussing these two ideas.
+
+%1.6
+\vspace{-6pt}
+\section{Computers as Universal Computational Devices}
+
+It may seem strange that an introductory textbook begins by describing
+how computers work.  After all, mechanical engineering students begin
+by studying physics, not how car engines work.  Chemical engineering
+students begin by studying chemistry, not oil refineries.  Why should
+computing students begin by studying computers?
+
+The answer is that computers are different.
+To learn the fundamental principles
+of computing, you must study computers or machines that can do what
+computers can do.  The reason for this has to do with the notion that
+computers are
+{\em universal computational devices}.  Let's see what that means.
+
+
+
+\looseness=-1
+Before modern computers, there were many kinds of
+calculating machines.  Some were {\em analog machines}---machines that
+produced an answer by measuring some physical quantity such as
+distance or voltage.  For example, a slide rule is an analog machine
+that multiplies numbers by sliding one logarithmically graded ruler
+next to another.  The user can read a logarithmic ``distance'' on the
+second ruler.  Some early analog adding machines worked by dropping
+weights on a scale.  The difficulty with analog machines is that it is
+very hard to increase their accuracy.
+
+\looseness=-1
+This is why {\em digital machines}---machines that perform
+computations by manipulating a fixed finite set of digits or
+letters---came to dominate computing.  You are familiar with the
+distinction between analog and digital watches.  An analog watch has
+hour and minute hands, and perhaps a second hand.  It gives the time
+by the positions of its hands, which are really angular measures.
+Digital watches give the time in digits.  You can increase accuracy
+just by adding more digits.  For example, if it is important for you
+to measure time in hundredths of a second, you can buy a watch that
+gives a reading like 10:35.16 rather than just 10:35.  How would you
+get an analog watch that would give you an accurate reading to one
+one-hundredth of a second?  You could do it, but it would take a
+mighty long second hand!  When we talk about computers in this book,
+we will always mean digital machines.
+
+Before modern digital computers, the most common
+digital machines in the West were adding machines.
+In other parts of the world another digital machine, the abacus,
+was common.
+Digital adding machines were mechanical or electromechanical devices
+that could perform a specific kind of computation: adding integers.
+There were also digital machines that could multiply integers.
+There were digital machines that could put a stack of cards
+with punched names in alphabetical order.  The main limitation
+of all these machines is that they could do only
+one specific kind of computation.
+If you owned only an adding machine and wanted
+to multiply two integers, you had some pencil-and-paper work to do.
+
+This is why computers are different.  You can tell a computer
+how to add numbers.  You can tell it how to multiply.  You can
+tell it how to alphabetize a list or perform any
+computation you like.
+When you think of a new kind of computation, you
+do not have to buy or design a new computer.
+You just give the old computer a new set of instructions (or program)
+to carry out the new computation.  This is why we say the computer
+is a {\em universal computational device}.  Computer
+scientists believe that
+{\em anything that can be computed, can be computed by a computer}
+provided it has enough time and enough memory.
+When we study computers, we
+study the fundamentals of all computing.
+We learn what computation is and what can be computed.
+
+\looseness=1
+The idea of a
+universal computational device is due to Alan Turing.
+\index{Turing, Alan}
+Turing proposed in 1937 that all computations could be
+carried out by a particular kind of machine, which is now called
+a Turing machine.  He gave a mathematical description of this
+kind of machine, but did not actually build one.
+Digital computers were not operating until several years later.  
+Turing was more interested in solving a \nobreak philosophical
+problem: defining computation.  He began by looking at the kinds
+of actions that people perform when they compute; these
+include making marks on paper, \nobreak writing symbols according
+to certain rules when other symbols are
+present, and so on.  He abstracted these actions and specified a mechanism
+that could carry them out.  He gave some examples
+of the kinds of things that these machines could do.  One
+Turing machine could add two integers;  another
+\index{Turing machine}
+could multiply two integers.
+
+Figure~\ref{fig:turing_machine} shows what we call ``black box''
+\index{black box model}
+models of Turing machines that add and multiply.  In each case,
+the operation to be performed is described in the box.  The data
+on which to operate is shown as inputs to the box.  The result
+of~the operation is shown as output from the box.  A black
+box model provides no information as to exactly how the
+operation is performed, and indeed, there are many ways to
+add or multiply two numbers.
+
+%Figure 1.7
+\begin{figure}[t]
+\centerline{\includegraphics{pat67509_0104.eps}}
+\caption{Black box models of Turing machines}
+\label{fig:turing_machine}
+\end{figure}
+
+Turing proposed that every computation
+can be performed by some Turing machine.  We call this
+{\em Turing's thesis}.  Although Turing's thesis has never
+been proved, there does exist a lot of evidence to suggest it is true.
+We know, for example, that various enhancements one can make to Turing machines
+do not result in machines that can compute more.
+
+Perhaps the best argument to support Turing's thesis was provided by Turing
+himself in his original paper.
+He said that one way to try to construct a machine more powerful
+than any particular Turing machine was to make a machine $U$ that could
+simulate {\em all} Turing machines.  You would simply describe to
+$U$ the particular Turing machine you wanted it to
+simulate, say a machine to add two integers, give $U$ the input
+data, and $U$ would compute the appropriate
+output, in this case the sum of the inputs.
+Turing then showed that there was, in fact, a~Turing machine that could do this, so even this attempt
+to find something that could not be computed by
+Turing machines failed.
+
+Figure~\ref{fig:utm}  further illustrates the point.  Suppose you 
+wanted to
+compute \mbox{$g\cdot(e+f)$.} You would simply provide to $U$
+descriptions of the Turing machines to add and to multiply,
+and the three inputs, $e$, $f$, and $g$.  $U$ would do the
+rest.
+
+%Figure 1.8
+\begin{figure}[hb]
+\centerline{\includegraphics{pat67509_0105.eps}}
+\caption{Black box model of a universal Turing machine}
+\label{fig:utm}
+
+\end{figure}
+
+In specifying $U$, Turing had provided us with a deep insight:
+He had given us the first description of what computers do.
+In fact, both a computer (with as much memory as
+it wants) and a universal Turing machine can compute exactly
+\index{universal Turing machine}
+the same things. In both cases you give the machine a
+description of a computation  and the data it needs,
+and the machine computes the appropriate answer.
+Computers and universal Turing
+machines can compute anything that can be computed because
+they are {\em programmable}.
+
+This is the reason that a big or expensive computer cannot do
+more than a small, cheap computer.  More money
+may buy you a faster computer, a monitor with higher resolution,
+or a nice sound system.  But if you have a small, cheap computer,
+you already have a universal computational device.
+
+\vspace{-12pt}
+%1.7
+\section{How Do We Get the Electrons to Do the Work?}
+
+%Figure 1.9
+\begin{figure}
+\vspace{-6pt}
+\centerline{\includegraphics[scale=0.8]{pat67509_0106.eps}}
+\caption{Levels of transformation}
+\label{fig:levels}
+\end{figure}
+
+Figure~\ref{fig:levels} shows the process we must go through to get the 
+electrons (which actually do the work) to do our bidding.  We call the 
+steps\vadjust{\vfill\pagebreak}
+of this process the ``Levels of Transformation.''  As we will see, at
+\index{levels of transformation}
+each level we have choices.  If we ignore any of the levels, our
+ability to make the best use of our computing system can be very adversely
+affected.
+
+\FloatBarrier
+%1.7.1
+\subsection{The Statement of the Problem}
+
+We describe the problems we wish to solve in a ``natural
+\nobreak language.''  Natural languages are languages that people speak, like
+English, French, Japanese, Italian, and so on.
+They have evolved over centuries in accordance
+with their usage.  They are fraught with a lot of things unacceptable
+for providing instructions to a computer.  Most important of these
+unacceptable attributes is ambiguity.  Natural language is filled with
+ambiguity. To infer the meaning of a sentence, a listener is often helped by
+the tone of voice of the speaker, or at the very least, the context of
+the sentence.
+
+An example of ambiguity in English is the sentence, ``Time flies like an
+arrow.''  At least three interpretations are possible, depending on whether
+(1) one~is noticing how fast time passes, (2) one is at a track meet for
+insects, or (3) one is writing a letter to the Dear Abby of Insectville.
+In the first case, a simile; one is comparing the speed of time passing
+to the speed of an arrow that
+has been released.  In the second case, one is telling the
+timekeeper to do his/her job much like an arrow would.  In the
+third case, one is relating that a particular group of flies (time flies,
+as opposed to fruit flies) are all in love with the same arrow.
+
+Such ambiguity would be unacceptable in instructions provided to a computer.
+The computer, electronic idiot that it is, can only do as it is told.  To
+tell it to do something where there are multiple interpretations would
+cause the computer to not know which interpretation to follow.
+
+%1.7.2
+\subsection{The Algorithm}
+
+The first step in the sequence of transformations is to transform the
+natural language description of the problem to an algorithm, and in so doing,
+\index{algorithm}
+get rid of the objectionable characteristics of the natural language.  
+An algorithm is a
+step-by-step procedure that is guaranteed to terminate, such that each step
+is precisely stated and can be carried out by the computer.  There
+are terms to describe each of these properties.
+
+We use the term {\em definiteness} to describe the notion that each step is
+\index{definiteness}
+precisely stated.  A recipe for excellent pancakes that instructs the
+preparer to ``stir until lumpy'' lacks definiteness, since the notion of
+lumpiness is not precise.
+
+We use the term {\em effective computability} to describe the notion that
+\index{effective computability}
+each step can be carried out by a computer.  A procedure that instructs
+the computer to ``take the largest prime number'' lacks effective computability,
+since there is no largest prime number.
+
+We use the term  {\em finiteness} to describe the notion that the procedure
+terminates.
+\index{finiteness}
+
+For every problem there are usually many different algorithms for
+solving that problem.  One algorithm may require the fewest number of
+steps.  Another algorithm may allow some steps to be performed concurrently.
+A computer that allows more than one thing to be done at a time
+can often solve the problem in less time, even though it is
+likely that the total number of steps to be performed has increased.
+
+\enlargethispage{-1pc}
+
+%1.7.3
+\subsection{The Program}
+
+The next step is to transform the algorithm into a computer program in one
+of the programming languages that are available.  Programming languages are
+``mechanical languages.''  That is, unlike natural languages, mechanical
+languages did
+not evolve through human discourse.  Rather, they were invented for use in
+specifying a sequence of instructions to a computer.  Therefore,
+mechanical languages do not suffer from failings such as ambiguity that would
+make them unacceptable for specifying a computer program.
+
+There are more than 1{,}000 programming languages.  Some have been
+designed for use with particular applications, such as Fortran for solving
+scientific calculations and COBOL for solving business data-processing 
+problems.  In the second half of this book, we will use C and C++, languages 
+that were designed for manipulating low-level hardware structures.
+
+Other languages are useful for still other purposes.  Prolog is the language
+of choice for many applications that require the design of an expert system.
+LISP was for years the language of choice of a substantial number of
+people working on problems dealing with artificial intelligence.  Pascal is
+a language invented as a vehicle for teaching beginning students how to
+program.
+
+There are two kinds of programming languages, high-level languages
+and low-level
+\index{high-level language}
+languages.  High-level languages are at a distance (a high level) from
+the underlying computer.  At their best, they are independent of
+the computer on which the programs will execute.  We say the language
+is ``machine independent.''
+All the languages mentioned thus far are high-level languages.
+Low-level languages are tied to the computer on which the programs
+will execute.  There is generally one such low-level language
+for each computer.  That language is called the {\em assembly
+language} for that computer.
+\index{assembly language}
+
+%1.7.4
+\subsection{The ISA}
+
+The next step is to translate the program into the instruction set of 
+the particular computer that will be used to carry out the work of the 
+program.  The instruction set architecture (ISA)
+\index{Instruction Set Architecture}
+\index{ISA}
+is the complete specification of
+the interface between programs that have been written and the underlying
+computer hardware that must carry out the work of those programs.
+
+An analogy that may be helpful in understanding the concept of an ISA is
+provided by the automobile.  Corresponding to a computer program, 
+represented as a sequence of 0s and 1s in the case of the computer, is 
+the human sitting in the driver's seat of a car.  Corresponding to the 
+microprocessor hardware is the car, itself.  The "ISA" of the automobile is 
+the specification of everything 
+the human needs to know to tell the automobile what to do, and everything 
+the automobile needs to know to carry out the tasks specified by the human 
+driver.  For example, one element of the automobile's "ISA" is the pedal 
+on the floor known as the "brake, and its function.  The human knows that 
+if he/she steps on the brake the car will stop.  The automobile knows that 
+if it feels pressure from the human on that pedal, the hardware of the 
+automobile must engage those elements necessary to stop the car.  The full 
+"ISA" of the car includes the specification of the other pedals, the 
+steering wheel, the ignition key, the gears, windshield wipers, etc.  
+For each, the "ISA" specifies (a) what the human has to do to tell the 
+automobile what he/she wants done, and (b) correspondingly, what the 
+automobile will interpret those actions to mean so it (the automobile) 
+can carry out the specified task.
+
+The ISA of a computer serves the same purpose as the "ISA" of an automobile,
+except instead of the driver and the car, the ISA of a computer specifies 
+the interface between the computer program directing the computer hardware
+and the hardware carrying out those directions.  For example, the set of
+instructions that the computer can carry out; that is, what operations the
+computer can perform and where to get the data that is needed to perform those
+operations.  The 
+term {\em opcode} is used to decribe the operation.  The term {\em operand} 
+is used to describe individual data values.  The ISA specifies the
+\index{operand}
+\index{data type}
+acceptable representations for operands.  They are called
+{\em data types.} A {\em data type} is
+a representation of an operand such that the computer can perform operations
+on that representation.  The ISA specifies the mechanisms that the computer 
+can use to figure out where the operands are located.
+These mechanisms are called {\em addressing modes}.\index{addressing mode}
+
+The number of opcodes, data types, and addressing modes specified by an ISA
+vary among different ISAs. Some ISAs have as few as a half dozen opcodes,
+whereas others have as many as several hundred.  Some ISAs have only one 
+data type,
+while others have more than a dozen.  Some ISAs have one or two addressing
+modes, whereas others have more than 20.  The x86, the ISA used in the PC,  
+has more than 200 opcodes, more than a dozen data types, and more than 
+two dozen addressing modes.
+
+The ISA also specifies the number of unique locations that comprise the
+computer's memory and the number of individual 0s and 1s that are
+contained in each location.
+
+Many ISAs are in use today.  The most widely-known example is the x86, 
+introduced by Intel Corporation in 1979 and currently also manufactured 
+by AMD and other companies.  Other ISAs and the companies responsible for 
+them include ARM and THUMB (ARM), POWER and z/Architecture (IBM), 
+and SPARC (Oracle).
+
+The translation from a high-level language (such as C) to the ISA of the
+computer on which the program will execute (such as x86) is usually done by a
+translating program called a {\em compiler}.  To translate from a program 
+written in C to the x86 ISA, one would need \index{compiler}
+a C to x86 compiler.  For each high-level language and each desired
+target ISA, one must provide a corresponding compiler.
+
+The translation from the unique assembly language of a computer
+to its ISA is done by an assembler.
+\index{assembler}
+
+\enlargethispage{-\baselineskip}
+
+%1.7.5
+\subsection{The Microarchitecture}
+
+The next step is the implementation of the ISA, referred to as 
+its {\em microarchitecture}.  The automobile analogy that we used in our 
+discussion of the ISA is also useful in showing the relationship between 
+an ISA and a microarchitecture that implements that ISA.  The automobile's 
+"ISA" describes what the driver needs to know as he/she sits inside the 
+automobile to make the automobile carry out the driver's wishes.  All 
+automobiles have the same ISA.  If there are three pedals on the floor, 
+it does not matter what manufacturer produced the car, the middle one is 
+always the brake.  The one on the right is always the accelerator, and the 
+more it is depressed, the faster the car will move.  Because there is only 
+one ISA for automobiles, one does not need one driver's license for Buicks 
+and a different driver's license for Hondas. 
+
+The microarchitecture (or implementation) of the automobile's ISA, on the 
+other hand, is about what goes on underneath the hood.  Here all automobile 
+makes and models can be different, depending on what cost/performance 
+trade-offs the automobile designer made before the car was manufactured.  
+Some automobiles come with disc brakes, others (in the past, at least) with 
+drums.  Some automobiles have eight cylinders, others run on six cylinders, 
+and still others have only four.  Some are turbocharged, some are not.  
+Some automobiles can travel 60 miles on one gallon of gasoline, others are
+lucky to travel from gas station to the next without running out of gas.
+Some automobiles cost 6,000 US dollars, others cost 200,000 US dollars.
+In each case, the \nobreak ``microarchitecture'' of the specific automobile 
+is a result of the automobile designers' decisions regarding the tradeoffs 
+of cost and performance.  The fact that the "microarchitecture" of every model 
+or make is different is a good reason to take one's Honda, when it is 
+malfunctioning, to a Honda repair person, and not to a Buick repair person.
+
+In the previous section we identified ISAs of several computer manufacturers, 
+including the x86 (Intel), the PowerPC (IBM and Motorola), and THUMB (ARM).
+Each has been implemented by many different 
+microarchitectures. \index{miroarchitecture} 
+For example, the x86's original implementation in 1979 was the 8086, 
+followed by the 80286, 80386, and 80486 in the 1980s.  More recently, in 2001, 
+Intel introduced the Pentium IV microprocessor.  Even more recently, in 2015, 
+Intel introduced Skylake.  Each of these x86 microprocessors has its own 
+microarchitecture.
+
+The story is the same for the PowerPC ISA, with more than a dozen 
+different microprocessors, each having its own microarchitecture.  
+
+Each microarchitecture is an opportunity for computer designers to make 
+different trade-offs between the cost of the microprocessor, the performance 
+that the microprocessor will provide, and the energy that is required to power 
+the microprocessor.  Computer design is always an exercise in trade-offs, 
+as the designer opts for higher (or lower) performance, more (or less) energy 
+required, at greater (or lesser) cost.
+
+%1.7.6
+\subsection{The Logic Circuit}
+
+The next step is to implement each element of the microarchitecture out of simple
+logic circuits.  Here, also, there are choices, as the logic designer decides how
+\index{logic circuit}
+to best make the trade-offs between cost and performance.  So, for example, 
+even for an operation as simple as addition, there are several choices of logic circuits to perform
+the operation at differing speeds and corresponding costs.
+
+%1.7.7
+\subsection{The Devices}
+
+Finally, each basic logic circuit is implemented in accordance with the requirements
+of the particular device technology used.  So, CMOS circuits are different from
+\index{CMOS}
+NMOS circuits, which are different, in turn, from gallium arsenide\break circuits.
+
+\paragraph{The Bottom Line}
+
+In summary, from the natural language description of a problem to the electrons 
+that actually solve the problem by moving from one voltage potential to 
+another, many transformations need to be performed.  If we could speak 
+electron, or if the electrons could understand English, perhaps we could just 
+walk up to the computer and get the electrons to do our bidding.  Since we 
+can't speak electron and they can't speak English, the best we can do is this
+systematic sequence of transformations.  At each level of transformation, 
+there are choices as to how to proceed.  Our handling of those choices 
+determines the resulting cost and performance of our computer.
+
+\looseness=1
+In this book, we describe each of these transformations.  We show how
+transistors combine to form logic circuits, how logic circuits combine to form
+the microarchitecture, and how the microarchitecture implements 
+a particular ISA.  In our case, the ISA is the LC-3.  We complete the process 
+by going from the
+English-language description of a problem to a C or C++ program that solves 
+the problem, and we show how that C or C++ program is translated 
+(i.e., compiled) to the ISA of the~LC-3.
+
+We hope you enjoy the ride.
+
+\begin{exercises}
+
+\item[1.1]
+[1] Explain the first of the two important ideas stated in Section~1.5.
+
+\item[1.2]
+[1] Can a higher-level programming language instruct a computer to
+compute more than a lower-level programming language?
+
+\item[1.3]
+[1] What difficulty with analog computers encourages computer designers
+to use digital designs?
+
+\item[1.4]
+[1] Name one characteristic of natural languages that prevents them
+from being used as programming languages.
+
+\item[1.5]
+[5] Say we had a ``black box,'' which takes two numbers as input and
+outputs their sum.  See Figure~1.7a. Say
+we had another box capable of multiplying two numbers together.
+See Figure~1.7b.  We can connect these boxes
+together to calculate $p\times(m+n)$.  See
+Figure~1.7c. Assume we have an unlimited number of these boxes.
+Show how to connect them together to calculate:
+
+\begin{enumerate}
+        \item[a.] $ax+b$
+
+        \item[b.] The average of the four input numbers
+$w$, $x$, $y$, and $z$
+
+        \item[c.] $a^2+2ab+b^2$ (Can you do it with one
+add box and one multiply box?)
+\end{enumerate}
+
+%Figure 1.7
+\begin{figure}[b]
+\centerline{\includegraphics{pat67509_0107.eps}}
+\caption{``Black boxes'' capable of (a) addition, (b) multiplication, and
+  (c)~a combination of addition and multiplication
+\label{ex_fig:black_boxes}}
+\end{figure}
+
+\item[1.6]
+[1] Write a statement in a natural language and offer two different
+interpre\-tations of that statement.
+
+\item[1.7]
+[3] The discussion of abstraction in Section~1.3.1 noted that one does not
+need to understand the makeup of the components as long as ``everything about
+the detail is just fine.''  The case was made that when everything is not fine,
+one must be able to deconstruct the components, or be at the mercy of the
+abstractions.  In the taxi example, suppose
+you did not understand the component, that is, you had no clue how to
+get to the airport.  Using the notion of abstraction, you simply tell the
+driver,\break
+``Take me to the airport.''  Explain when this is a productivity enhancer, and
+when it could result in very negative consequences.
+
+\item[1.8]
+[5] John said, ``I saw the man in the park with a telescope.'' What
+did he mean? How many reasonable interpretations can you provide
+for this statement? List them. What property does this sentence
+demonstrate that makes it unacceptable as a statement in a program.
+
+\item[1.9]
+[1] Are natural languages capable of expressing algorithms?
+
+\item[1.10]
+[1] Name three characteristics of algorithms. Briefly explain each
+of these three characteristics.
+
+\item[1.11]
+[4] For each characteristic of an algorithm, give an example of a
+procedure that does not have the characteristic, and is
+therefore not an algorithm.
+
+\item[1.12]
+[5] Are items $a$ through $e$ in the following list algorithms? If not, what
+qualities required of algorithms do they lack?
+
+\begin{enumerate}[b.]
+        \item[a.]
+        Add the first row of the following matrix to another
+row whose first column contains a nonzero entry. ({\em Reminder}:
+Columns run vertically; rows run horizontally.)
+$$
+        \left[
+        \begin{matrix}
+        1 & 2 & 0 & 4 \\
+        0 & 3 & 2 & 4 \\
+        2 & 3 & 10 & 22 \\
+        12 & 4 & 3 & 4
+        \end{matrix}
+        \right]
+$$
+
+\item[b.]
+In order to show that there are as many prime numbers as there are
+natural numbers, match each prime number with a natural number in
+the following manner. Create pairs of prime and natural numbers
+by matching the first prime number with 1 (which is the first
+natural number) and the second prime number with 2, the third
+with 3, and so forth. If, in the end, it turns out that each
+prime number can be paired with each natural number, then it
+is shown that there are as many prime numbers as natural
+numbers.
+
+\item[c.]
+Suppose you're given two vectors each with 20 elements
+and asked to perform the
+following operation. Take the first element of the first
+vector and multiply it by the first element of the second
+vector.  Do the same to the second elements, and so forth.
+Add all the individual products together to derive the
+dot product.
+
+\item[d.]
+Lynne and Calvin are trying to decided who will take the dog
+for a walk.  Lynne suggests that they flip a coin and pulls
+a quarter out of her pocket.  Calvin does not trust Lynne
+and suspects that the quarter may be weighted (meaning that
+it might favor a particular outcome when tossed) and suggests
+the following procedure to fairly determine who will walk the
+dog.
+
+\begin{enumerate}
+\item[\rm1.] Flip the quarter twice.
+
+\item[\rm2.] If the outcome is heads on the first flip and tails on the
+second, then I will walk the dog.
+
+\item[\rm3.] If the outcome is tails on the first flip, and heads on the
+second, then you will walk the dog.
+
+\item[\rm4.] If both outcomes are tails or both outcomes are heads,
+then we flip twice again.
+\end{enumerate}
+
+Is Calvin's technique an algorithm?
+
+
+\item [e.]
+Given a number, perform the following steps in order:
+\begin{enumerate}
+\item[\rm1.] Multiply it by four
+\item[\rm2.] Add four
+\item[\rm3.] Divide by two
+\item[\rm4.] Subtract two
+\item[\rm5.] Divide by two
+\item[\rm6.] Subtract one
+\item[\rm7.] At this point, add one to a counter to keep track of the fact
+that you performed steps 1 through 6. Then test the result you got
+when you subtracted one. If 0, write down the number of times you performed
+steps 1 through 6 and stop. If not 0, starting with the result of subtracting
+1, perform the above 7 steps again.
+\end{enumerate}
+\end{enumerate}
+
+\smallskip
+
+\item[1.13]
+[4] Two computers, A and B, are identical except for the fact that A
+has a subtract instruction and B does not. Both have add instructions.
+Both have instructions that can take a value and produce the negative
+of that value. Which computer is able to solve more problems, A or B?
+Prove your result.
+
+\smallskip
+
+\item[1.14]
+[4] Suppose we wish to put a set of names in alphabetical order. We
+call the act of doing so {\em sorting}. One algorithm that can
+accomplish that is called the bubble sort. We could then program
+our bubble sort algorithm in C, and compile the C program to
+execute on an x86 ISA. The x86 ISA can be implemented with an
+Intel Pentium IV microarchitecture. Let us call the sequence
+``Bubble Sort, C program, x86 ISA, Pentium IV microarchitecture''
+one {\em transformation process}.
+
+\hspace*{18pt}Assume we have available four sorting algorithms and can program
+in C, C++, Pascal, Fortran, and COBOL. We have available compilers
+that can translate from each of these to either x86 or SPARC, and
+we have available three different microarchitectures for x86 and
+three different microarchitectures for SPARC.
+
+\begin{enumerate}
+        \item[a.] How many transformation processes are possible?
+        \item[b.] Write three examples of transformation processes.
+        \item[c.] How many transformation processes are possible if
+instead of three different microarchitectures for x86 and three
+different microarchitectures for SPARC, there were two for x86
+and four for SPARC?
+\end{enumerate}
+
+\smallskip
+
+\item[1.15]
+[7] Identify one advantage of programming in a higher-level language compared to
+a lower-level language. Identify one disadvantage.
+
+\smallskip
+
+\item[1.16]
+[1] Name at least three things specified by an ISA.
+
+\smallskip
+
+\item[1.17]
+[1] Briefly describe the difference between an ISA and a microarchitecture.
+
+\item[1.18]
+[4] How many ISAs are normally implemented by a single
+microarchitecture? Conversely, how many microarchitectures
+could exist for a single ISA?
+
+\item[1.19]
+[1] List the levels of transformation and name an example for each level.
+
+\item[1.20]
+[4] The levels of transformation in Figure~1.6 are often referred to
+as levels of abstraction. Is that a reasonable characterization? If yes,
+give an example. If no, why not?
+
+\item[1.21]
+[7] Say you go to the store and buy some word processing software.
+What form is the software actually in?  Is it in a high-level
+programming language? Is it in assembly language? Is it in
+the ISA of the computer on which you'll run it? Justify
+your answer.
+
+\item[1.22] 
+[5] Suppose you were given a task at one of the transformation
+  levels shown in Figure~1.6, and required to tranform it to the level
+  just below. At which level would it be most difficult to perform the
+  transformation to the next lower level? Why?
+
+\item[1.23] 
+[5] Why is an ISA unlikely to change between successive
+  generations of microarchitectures that implement it?  For example,
+  why would Intel want to make certain that the ISA implemented by the
+  Pentium III is the same as the one implemented by the Pentium II?  {\em
+    Hint:} When you upgrade your computer (or buy one with a newer
+  CPU), do you need to throw out all your old software?
+\end{exercises}
+\end{document}
+
+\end{document}
