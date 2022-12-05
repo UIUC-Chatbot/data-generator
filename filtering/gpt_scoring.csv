@@ -1,0 +1,380 @@
+,questions,answers,scores
+0,"
+Q. How does the design process for a digital FSM work?","
+
+A. The design process for a digital FSM typically begins with the development of an abstract model. This model is then used to generate the functions for the next-state variables and output signals. Finally, the design is implemented using flip-flops and logic gates.",0.5699147582054138
+1,"
+Q. Why is it important to design digital systems that are compatible with other digital systems?","
+
+A. Most problems in developing large digital systems today arise because of incompatibilities when composing two or more
+separately designed pieces into an integrated system.",0.5202659368515015
+2,"
+Q. What is a Gray code?","
+
+A Gray code is a cycle over all bit patterns of a certain length in which consecutive patterns differ in exactly one bit.",0.6072943806648254
+3,"
+Q. How does a three-bit gray code counter work?","
+
+A.
+
+A three-bit gray code counter works by cycling through a sequence of states, with each state corresponding to a different output code. The output code is determined by the state of the three flip-flops in the counter. The output code is a gray code, which means that only one bit changes between successive states.",0.5386170744895935
+4,"
+Q. Is it possible to create a counter with fewer than 3 flip-flops?","
+
+A. No, it is not possible.",0.5123740434646606
+6,"
+Q. What is the mechanism for stopping and starting?","
+
+A. The mechanism for stopping and starting is that a user can stop the counter in any state by pressing the ""halt"" button, causing the counter to retain its current value until the user presses the ""go"" button.",0.5015974044799805
+7,"
+Q. What is the purpose of the two-bit Gray code?","
+
+A. The purpose of the two-bit Gray code is to allow for easy determination of the output value when the input value changes.",0.6263564229011536
+11,"
+Q. How does changing the state representation impact the design of the FSM?","
+
+A. Changing the state representation can impact the design of the FSM in several ways. For example, if the states are represented by numbers instead of by letters, the transition table and state diagram will be different. In addition, the implementation of the FSM may be more complex if the states are represented by numbers instead of by letters.",0.6466456651687622
+12,"
+Q. What is the main difference between static RAMs and dynamic RAMs?","
+
+A. Static RAMs store data in a flip-flop, while dynamic RAMs store data in a capacitor.",0.5629717707633972
+13,"
+Q. What is the main difference between SRAM and DRAM?","
+
+SRAM uses active logic elements to store data, while DRAM uses capacitive elements.",0.5188043117523193
+17,"
+Q. How does the vending machine work?","
+
+A. The vending machine uses a FSM to automatically identify coins, track the amount of money entered by the user, accept or reject coins, and emit a signal when a total of 35 cents has been accepted.",0.5747095942497253
+18,"
+Q. What is the purpose of the signal A in the timing diagram?","
+
+A. The signal A in the timing diagram serves as an output from the FSM, and
+indicates whether or not the coin should be accepted.",0.4809378385543823
+21,"
+Q. What does the T input sequence 111010010001 test for?
+Q. 
+Q. This test sequence covers all of the possible arcs, and also observes the A and P outputs in each state to check the output logic.",,0.49222531914711
+22,"
+Q. What is an encoder?","
+
+A. An encoder is a component that helps to implement an FSM design. It converts input signals into a code that can be read by a machine.",0.7227357625961304
+24,"
+Q. What is the purpose of a priority encoder?","
+
+A. The purpose of a priority encoder is to generate a signal P whenever any of its four input lines is active and encode the index of the highest active input as a two-bit unsigned number S.",0.5344017744064331
+28,"
+Q. What is the difference between an FSM and a computer?","
+
+A. The difference between an FSM and a computer is that an FSM is a specific type of finite state machine that is used to execute simple pieces of a flow chart, while a computer is a more general model that allows the pieces to be executed to be specified after the FSM is built.",0.5362258553504944
+29,"
+Q. How many variables does the code use?","
+
+A. The code uses three variables.",0.6376276612281799
+34,"
+Q. What is the goal of this extension?
+Q. 
+Q. The goal of this extension is to illustrate how we can make use of components such as registers and counters as building blocks for our FSMs without fully expanding the design to explicitly illustrate all possible states.",,0.5279192924499512
+36,"
+Q. How does the design of a finite state machine differ from that of a counter?","
+
+The design of a finite state machine differs from that of a counter in a few ways. For one, a finite state machine has a finite number of states that it can be in, while a counter can have an infinite number of states. Additionally, a finite state machine's output is determined by its current state, while a counter's output is determined by its current state and the inputs it receives. Finally, a finite state machine can have multiple inputs and outputs, while a counter usually has a single input and a single output.",0.4947148263454437
+37,"
+Q. What are the tradeoffs of a serial design compared to a bit-sliced design?","
+
+The main tradeoff of a serial design is that it is usually slower than a bit-sliced design. However, it requires less area, which may be important in some applications.",0.493255615234375
+41,"
+Q. What is a ripple counter?","
+
+A. A ripple counter is a type of digital counter which uses a clock signal to trigger the flip-flops and feed the outputs of those flip-flops back into the clock inputs of other flip-flops. This type of counter is called a ripple counter because the effect of a clock edge ripples through the flip-flops.",0.5655438303947449
+42,"
+Q. What is the difference between clock gating and power gating?","
+
+A. Clock gating uses logic to control the visibility of a clock signal to flip-flops (or latches). Power gating uses logic to control the voltage difference between the flip-flops (or latches).",0.5130539536476135
+45,"
+Q. What are some design principles that are important to consider when designing an ISA?","
+
+A. Some design principles that are important to consider when designing an ISA include:
+
+-Ease of use: the ISA should be easy for programmers to use and understand.
+
+-Efficiency: the ISA should be designed to be efficient in terms of both execution time and memory usage.
+
+-Compatibility: the ISA should be compatible with existing software and hardware.",0.5193658471107483
+48,"
+Q. What is the purpose of the zero register?","
+
+A. The zero register is used as a constant and as a destination for operations performed only for their side-effects.",0.5895450115203857
+49,"
+Q. What are some of the reasons that RISC machines were viewed as the proper design for future ISAs?","
+
+A. RISC machines were viewed as the proper design for future ISAs because they employed fixed-length instructions and a load-store architecture, which allowed only a few addressing modes and small offsets. This combination of design decisions enabled deep pipelines and multiple instruction issues in a single cycle (termed superscalar implementations), and for years, RISC machines were viewed by many researchers as the proper design for future ISAs.",0.5137487053871155
+51,"
+Q. What is an interrupt?","
+
+An interrupt is an asynchronous signal from an external device indicating that it requires attention.",0.4620862901210785
+52,"
+Q. What are the advantages and disadvantages of using special-purpose registers to store status bits?","
+
+A. The advantage of using special-purpose registers to store status bits is that it is the shortest instruction. The disadvantage is that it is the most general and simplest to implement.",0.4885345995426178
+53,"
+Q. How does stack spill code work?","
+
+A. When the compiler encounters a situation where there are more values in use than there are registers available, it generates code to store the excess values on the stack and to restore them when they are needed.",0.5620664954185486
+54,"
+Q. What is the difference between independent I/O and memory-mapped I/O?","
+
+
+
+A. Independent I/O uses separate instructions to access I/O ports, while memory-mapped I/O uses the same load and store instructions as are used to access memory.",0.5607022643089294
+55,"
+Q. What are the inputs to the control unit?","
+
+A. The inputs to the control unit are the instructions and data from memory, and the condition codes from the processing unit.",0.5903677940368652
+56,"
+Q. 
+Q. 25","
+Q. 23
+Q. 26",0.5500762462615967
+57,"
+Q. What is the control word for the state that implements the ADD instruction?","
+
+A. LD.REG = 1, LD.CC = 1, GateALU = 1, ALUK = 0, and MIO.EN = 0",0.6091673374176025
+58,"
+Q. The RTL for the state is: MAR  BaseR + off6, but BaseR is
+Q. abbreviated to ``B'' in the state diagram.
+Q. 
+Q. What is the control word for this state?","
+
+The control word for this state is:
+
+LD.MAR=1, GateMARMUX=1, ADDR1MUX=IR[8:6], ADDR2MUX=off6, MARMUX=ADDR+, PCMUX=X, DRMUX=X, ALUK=X, MIO.EN=0, R.W=X.",0.5632416605949402
+62,"
+Q. What is the purpose of using a sparsely populated representation?","
+
+A. The purpose of using a sparsely populated representation is to
+protect against accidental changes to bits.",0.5949521064758301
+63,"
+Q. What is a 2-out-of-5 code?","
+
+A. A 2-out-of-5 code is a code in which five bits are used to encode each digit, and only patterns with exactly two 1s are used.",0.5263538956642151
+64,"
+Q. What if the system needs to represent a different digit?","
+
+A. If the system needs to represent a different digit, the pattern with no errors will still have exactly two 1s. If a bit error occurs, the resulting error pattern will have either one 1 or three 1s, which will not have a meaning in the 2-out-of-5 code. So this representation will still enable the digital system to detect any single bit error.",0.4802089035511017
+65,"
+Q. What is the purpose of a parity bit?","
+
+A. A parity bit is used to detect single bit errors in a representation.",0.4701170027256012
+66,"
+Q. How many bit errors can a representation with Hamming distance 2 detect?","
+
+A. A representation with Hamming distance 2 can detect 1 bit error.",0.45140698552131653
+67,"
+Q. What is error correction?","
+
+Error correction is the process of detecting and correcting errors in digital data.",0.4608285129070282
+69,"
+Q. What is the Hamming distance of a SEC-DED code?","
+
+A. The Hamming distance of a SEC-DED code is 4.",0.6322951316833496
+71,"
+Q. What is the difference between a ripple-carry adder and a traditional adder?","
+
+A. A ripple-carry adder is a type of adder that uses a ripple-carry technique to propagate the carry bit through each stage of the addition process. A traditional adder, on the other hand, does not use this technique and instead propagates the carry bit through each stage in a different way.",0.615245521068573
+72,"
+Q. Q. What is the advantage of using a bit-sliced adder circuit?
+Q. 
+Q. A. The advantage of using a bit-sliced adder circuit is that it is much simpler to design than an adder circuit that is optimized for a specific purpose.",,0.5676061511039734
+73,"
+Q. How does a full adder work?","
+
+A. A full adder works by adding three input bits and producing two output bits.",0.5361401438713074
+75,"
+Q. What is an adder?","
+
+A.
+
+An adder is a device that can add two numbers.  The adder is important enough to computer systems to merit its own symbol in logic diagrams, which is shown to the right with the inputs and outputs from our design added as labels.  The width of the operand input and output lines then tells you the size of the adder.",0.47066983580589294
+77,"
+Q. What is a register?
+Q. 
+Q. A register is an abstraction used for storage of groups of bits in digital systems.",,0.5242546796798706
+78,"
+Q. How does the extended flip-flop work?","
+
+A. The extended flip-flop uses a mux and a feedback loop from the flip-flop's output to reload its current value when LOAD is low. When LOAD is high, the mux selects the IN input, and the register loads a new value.",0.5461380481719971
+80,"
+Q. What is the value of underspecifying a logic function?","
+
+A. The value of underspecifying a logic function is that it allows for selection of the simplest possible implementation.",0.5351470708847046
+81,"
+Q. The principle of duality states that any theorem or identity has the same truth value in dual form. What does this mean?","
+
+A. The principle of duality states that any theorem or identity has the same truth value in dual form. This means that any theorem or identity has the same truth value in its dual form.",0.6194360256195068
+82,"
+Q. Why is it beneficial to use ""don't care"" values when implementing a Boolean logic function?","
+
+A. Using ""don't care"" values allows you to choose from among several possible logic functions, all of which produce the desired results. This can often enable the logic needed for implementation to be simpler.",0.5474121570587158
+84,"
+Q. Who is the audience for this text?","
+
+A. The audience for this text is primarily students in an introductory digital design class.",0.5017333626747131
+85,"
+Q. What is the best way to express a Boolean function?","
+
+A. The best way to express a Boolean function is to use a truth table.",0.541041910648346
+89,"
+Q. What is the canonical SOP form of a logic function?","
+
+The canonical SOP form of a logic function is the sum of minterms.",0.472821980714798
+90,"
+Q. What is the significance of two-level logic?","
+
+A. Two-level logic is a popular way of expressing logic functions.
+The two levels refer simply to the number of functions through which an
+input passes to reach an output.",0.5665044188499451
+92,"
+Q. What is the main purpose of introducing logic components?","
+
+A. The main purpose of introducing logic components is to store bits and build up from the idea of a pair of cross-coupled inverters.",0.5450854897499084
+95,"
+Q. Which type of hazard does not occur in two-level SOP circuits?","
+
+A. Static-0 hazards.",0.5392228364944458
+96,,"
+The output Q of the circuit will have a value of 1 at time t because:
+
+A. The output of the gate with input B is 1.
+
+B. The output of the gate with input B is 0.
+
+C. The output of the gate with input B is 1, and the output of the gate with input D is 0.
+
+D. The output of the gate with input B is 0, and the output of the gate with input D is 1.",0.5466097593307495
+97,"
+Q. Hazards are inherent to the function of a circuit.","
+
+A. True",0.5141527652740479
+99,"
+Q. How does abstraction help to simplify problems?","
+
+A. Abstraction helps to simplify problems by breaking them down into smaller pieces that can be more easily solved.",0.5502129793167114
+102,"
+Q. What is the advantage of using a design based on comparators or adders when checking for a lower-case letter?","
+
+A. The advantage of using a design based on comparators or adders when checking for a lower-case letter is that the design becomes trivial: simply change the numbers that we input to these components.",0.563990592956543
+104,"
+Q. What is the difference between unsigned and 2's complement numbers?","
+
+A.
+
+The difference between unsigned and 2's complement numbers is that 2's complement numbers can represent both positive and negative numbers, while unsigned numbers can only represent positive numbers.",0.7015286087989807
+105,"
+Q. What is the advantage of starting the comparison from the most significant bit?","
+
+A. If a difference is found in the most significant bit, the comparison can be stopped, saving time.",0.5763325095176697
+106,"
+Q. What does the bit slice logic need to be able to do?","
+
+A. The bit slice logic needs to be able to accept three possible answers from the bit slice logic for bit M-1 and must be able to pass one of three possible answers to the logic for bit M+1.",0.5134705305099487
+108,"
+Q. Why is it advantageous to have a shorter path from the A and B inputs to the outputs?","
+
+A. A shorter path from the A and B inputs to the outputs results in a faster overall comparator.",0.4989589750766754
+109,"
+Q. What is the difference between the two's complement comparator and the unsigned comparator?","
+
+A. The only difference is that the two A=B cases are reversed.",0.4799428880214691
+110,"
+Q. What is the difference between the original representation and the alternate representation?","
+
+A. The difference between the original representation and the alternate representation is that in the alternate representation, C_0=1 whenever A=B.",0.4655808210372925
+111,"
+Q. What is the main idea of this text?
+Q. 
+Q. The main idea of this text is to introduce Boolean logic operations, truth tables, and their implications.",,0.567834198474884
+112,"
+Q. What is the purpose of a truth table?","
+
+A. The purpose of a truth table is to show the carry out C and the sum S produced by adding two unsigned 2-bit numbers.",0.5357272624969482
+116,"
+Q. Why is the idea of logical completeness important?","
+
+A. The idea of logical completeness is important because it assures us that no matter what we want to do with bits, implementing a handful of operations correctly is enough to guarantee that we never have to worry.",0.48269757628440857
+118,"
+Q. What is the rationale for using the 2's complement representation for signed integers?","
+
+A. The rationale for using the 2's complement representation is that it allows for the addition function to be equivalent to addition using the unsigned representation.",0.6686704158782959
+119,"
+Q. Why is it important that any given pattern of bits corresponds to only one value?","
+
+A. It is important that any given pattern of bits corresponds to only one value because it allows us to unambiguously represent any value using a finite number of bits.",0.5921487808227539
+120,"
+Q. Why is it important to be able to reasoning about the relative merits of representations from a practical engineering perspective?","
+
+A. Reasoning about the relative merits of representations from a practical engineering perspective is important because it allows engineers to optimize digital systems for energy efficiency, simplicity, and speed.",0.5278111100196838
+121,"
+Q. What is the value of A in the equation A = 2 mod 7?
+Q. 
+Q. 4",,0.47302764654159546
+122,"
+Q. What is the effect of choosing to represent -8 instead of 8 in a 4-bit 2's complement system?","
+
+A. The effect of choosing to represent -8 instead of 8 in a 4-bit 2's complement system is that all patterns starting with a 1 bit then represent negative numbers.",0.5436732769012451
+123,"
+Q. Assuming that the bit patterns for negative numbers are disjoint from those that we used for positive numbers, what is the meaning of each pattern?","
+
+A. The meaning of each pattern is unambiguous.",0.5969632863998413
+124,"
+Q. Why is negation of integers in a 2's complement representation straightforward with the algebraic approach?","
+
+A. The algebraic approach makes understanding negation of an integer in a 2's complement representation straightforward because it is simply a matter of subtracting the value from 2^N-1 and then adding 1.",0.6403169631958008
+125,"
+Q. What is the first problem known to be undecidable?","
+
+A. The first problem known to be undecidable is the halting problem.",0.5310277342796326
+126,"
+Q. What is the significance of the Church-Turing conjecture?","
+
+A. The significance of the Church-Turing conjecture is that it is a statement that has yet to be proven or disproven. If it were to be proven, it would mean that there is a systematic technique or machine that can solve a problem that cannot be solved by a Turing machine. As of now, no one has been able to do so.",0.536762535572052
+127,"
+Q. What does the halting problem prove?","
+
+A. That some problems are incomputable, or insolvable by any computer.",0.48535865545272827
+128,"
+Q. What is the purpose of introducing the C programming language in this course?","
+
+A. The purpose of introducing the C programming language in this course is to give students time to become familiar with the syntax and meaning of the language, not to teach them how to program.",0.4800325930118561
+129,"
+Q. What is the difference between variables in algebra and variables in programs?","
+
+A. In algebra, variables are unchanging values that are used to represent other values in equations. In programs, variables can change from step to step of execution, and are used to store data that can be used by the program.",0.47335827350616455
+131,"
+Q. What is the meaning of the term ""uninitialized variable?""","
+
+A. A variable that has not been assigned a value.",0.6184496879577637
+136,"
+Q. How does the compiler work?","
+
+A. The compiler converts the human-readable instructions in the source code into machine code, which is a set of instructions that can be executed by a processor. The machine code is then stored in an executable image, which can be run on a computer.",0.5436221361160278
+137,"
+Q.  What is the name of the directive that allows for the inclusion of common information into multiple source files?","
+
+A. The name of the directive that allows for the inclusion of common information into multiple source files is the include directive.",0.5444350242614746
+138,"
+Q. What is the most common form of implicit type conversion?","
+
+A. The most common form of implicit type conversion is with binary arithmetic operations.",0.48414215445518494
+140,"
+Q. What is the overflow condition for unsigned addition?","
+
+A. An unsigned overflow occurs when the result of an unsigned addition operation is too large to be represented within the allotted space.",0.5564000606536865
+141,"
+Q. Why is the converse of an implication not always true?","
+
+The reason that the converse of an implication is not always true is that the implication may be false.",0.49178004264831543
+142,"
+Q. -Why is it important to know when an addition operation has overflowed?","
+
+A. Knowing when an addition operation has overflowed is important in order to avoid errors in computation. If an addition operation overflows, the result will not be the correct sum of the two numbers being added.",0.5191372632980347
